@@ -7,3 +7,10 @@
 */*.dep
 */*.Kitten
 */*.d
+*/*.scvd
+*/Flash/*.*
+*/samples/
+*/*.s
+*/*.ini
+*/*.uvgui
+*/*.uvopt
