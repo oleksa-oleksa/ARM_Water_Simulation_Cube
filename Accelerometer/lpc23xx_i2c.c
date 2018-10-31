@@ -58,6 +58,7 @@
 #include <errno.h>
 
 #include "include/chip.h"
+#include "include/i2c.h"
 #include "include/lpc23xx_pinsel.h"
 #include "include/lpc23xx_scb.h"
 #include "include/lpc23xx_i2c.h"

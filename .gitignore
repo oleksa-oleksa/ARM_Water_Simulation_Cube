@@ -1,1 +1,9 @@
 *.o
+
+# Keil IDE Files
+*/*.axf
+*.htm
+*.map
+*.dep
+*.Kitten
+*.d

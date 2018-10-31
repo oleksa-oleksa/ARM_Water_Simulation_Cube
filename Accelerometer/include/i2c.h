@@ -246,10 +246,10 @@ struct i2c_dev_s;
 struct i2c_msg_s;
 struct i2c_ops_s
 {
-  uint32_t (*setfrequency)(FAR struct i2c_dev_s *dev, uint32_t frequency);
-  int    (*setaddress)(FAR struct i2c_dev_s *dev, int addr, int nbits);
-  int    (*write)(FAR struct i2c_dev_s *dev, const uint8_t *buffer, int buflen);
-  int    (*read)(FAR struct i2c_dev_s *dev, uint8_t *buffer, int buflen);
+  uint32_t (*setfrequency)(struct i2c_dev_s *dev, uint32_t frequency);
+  int    (*setaddress)(struct i2c_dev_s *dev, int addr, int nbits);
+  int    (*write)(struct i2c_dev_s *dev, const uint8_t *buffer, int buflen);
+  int    (*read)(struct i2c_dev_s *dev, uint8_t *buffer, int buflen);
 #ifdef CONFIG_I2C_WRITEREAD
   int    (*writeread)(FAR struct i2c_dev_s *inst, const uint8_t *wbuffer, int wbuflen,
                         uint8_t *rbuffer, int rbuflen);
@@ -315,7 +315,7 @@ extern "C" {
  *
  ****************************************************************************/
 
-EXTERN FAR struct i2c_dev_s *up_i2cinitialize(int port);
+EXTERN struct i2c_dev_s *up_i2cinitialize(int port);
 
 /****************************************************************************
  * Name: up_i2cuninitialize
@@ -332,7 +332,7 @@ EXTERN FAR struct i2c_dev_s *up_i2cinitialize(int port);
  *
  ****************************************************************************/
 
-EXTERN int up_i2cuninitialize(FAR struct i2c_dev_s *dev);
+EXTERN int up_i2cuninitialize(struct i2c_dev_s *dev);
 
 /************************************************************************************
  * Name: up_i2creset
