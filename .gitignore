@@ -2,8 +2,8 @@
 
 # Keil IDE Files
 */*.axf
-*.htm
-*.map
-*.dep
-*.Kitten
-*.d
+*/*.htm
+*/*.map
+*/*.dep
+*/*.Kitten
+*/*.d
