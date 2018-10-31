@@ -1,29 +1,0 @@
-Dependencies for Project 'accelerometer', Target 'LPC2378 Flash': (DO NOT MODIFY !)
-F (.\LPC2300.s)(0x559D2FD2)(--cpu ARM7TDMI --pd "__EVAL SETA 1" -g --apcs=interwork --pd "__MICROLIB SETA 1"-IC:\Keil_v5\ARM\RV31\INC-IC:\Keil_v5\ARM\CMSIS\Include-IC:\Keil_v5\ARM\INC\Philips--pd "__UVISION_VERSION SETA 526"--list .\flash\lpc2300.lst --xref -o .\flash\lpc2300.o --depend .\flash\lpc2300.d)
-F (.\Retarget.c)(0x559D2FD2)(-c --cpu ARM7TDMI -D__EVAL -D__MICROLIB -g -O0 --apcs=interwork -IC:\Keil_v5\ARM\RV31\INC-IC:\Keil_v5\ARM\CMSIS\Include-IC:\Keil_v5\ARM\INC\Philips-D__UVISION_VERSION="526"-o .\flash\retarget.o --depend .\flash\retarget.d)
-I (C:\Keil_v5\ARM\ARMCC\include\stdio.h)(0x599F2F9C)
-I (C:\Keil_v5\ARM\ARMCC\include\rt_misc.h)(0x599F2F9E)
-I (C:\Keil_v5\ARM\ARMCC\include\stddef.h)(0x599F2F9C)
-I (C:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x599F2F9E)
-F (.\Serial.c)(0x559D2FD2)(-c --cpu ARM7TDMI -D__EVAL -D__MICROLIB -g -O0 --apcs=interwork -IC:\Keil_v5\ARM\RV31\INC-IC:\Keil_v5\ARM\CMSIS\Include-IC:\Keil_v5\ARM\INC\Philips-D__UVISION_VERSION="526"-o .\flash\serial.o --depend .\flash\serial.d)
-I (C:\Keil_v5\ARM\INC\Philips\LPC23xx.H)(0x559D2F68)
-F (.\LCD_4bit.c)(0x559D2FD2)(-c --cpu ARM7TDMI -D__EVAL -D__MICROLIB -g -O0 --apcs=interwork -IC:\Keil_v5\ARM\RV31\INC-IC:\Keil_v5\ARM\CMSIS\Include-IC:\Keil_v5\ARM\INC\Philips-D__UVISION_VERSION="526"-o .\flash\lcd_4bit.o --depend .\flash\lcd_4bit.d)
-I (C:\Keil_v5\ARM\INC\Philips\LPC23xx.H)(0x559D2F68)
-F (.\IRQ.c)(0x5BD76B06)(-c --cpu ARM7TDMI -D__EVAL -D__MICROLIB -g -O0 --apcs=interwork -IC:\Keil_v5\ARM\RV31\INC-IC:\Keil_v5\ARM\CMSIS\Include-IC:\Keil_v5\ARM\INC\Philips-D__UVISION_VERSION="526"-o .\flash\irq.o --depend .\flash\irq.d)
-I (C:\Keil_v5\ARM\INC\Philips\LPC23xx.H)(0x559D2F68)
-F (.\accelerometer.c)(0x5BD76314)(-c --cpu ARM7TDMI -D__EVAL -D__MICROLIB -g -O0 --apcs=interwork -IC:\Keil_v5\ARM\RV31\INC-IC:\Keil_v5\ARM\CMSIS\Include-IC:\Keil_v5\ARM\INC\Philips-D__UVISION_VERSION="526"-o .\flash\accelerometer.o --depend .\flash\accelerometer.d)
-I (C:\Keil_v5\ARM\ARMCC\include\stdio.h)(0x599F2F9C)
-I (C:\Keil_v5\ARM\INC\Philips\LPC23xx.H)(0x559D2F68)
-I (LCD.h)(0x559D2FD2)
-F (.\lpc23xx_i2c.c)(0x5BD77A87)(-c --cpu ARM7TDMI -D__EVAL -D__MICROLIB -g -O0 --apcs=interwork -IC:\Keil_v5\ARM\RV31\INC-IC:\Keil_v5\ARM\CMSIS\Include-IC:\Keil_v5\ARM\INC\Philips-D__UVISION_VERSION="526"-o .\flash\lpc23xx_i2c.o --depend .\flash\lpc23xx_i2c.d)
-I (include/types.h)(0x5BD77067)
-I (C:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x599F2F9E)
-I (C:\Keil_v5\ARM\ARMCC\include\stdbool.h)(0x599F2F9E)
-I (C:\Keil_v5\ARM\ARMCC\include\stdlib.h)(0x599F2F9C)
-I (C:\Keil_v5\ARM\ARMCC\include\string.h)(0x599F2F9C)
-I (C:\Keil_v5\ARM\ARMCC\include\errno.h)(0x599F2F9C)
-I (include/chip.h)(0x5BD765A8)
-I (include/lpc23xx_pinsel.h)(0x5BD7278F)
-I (include/lpc23xx_scb.h)(0x5BD76609)
-I (include/lpc23xx_vic.h)(0x5BD7697D)
-I (include/lpc23xx_i2c.h)(0x5BD76BC0)
