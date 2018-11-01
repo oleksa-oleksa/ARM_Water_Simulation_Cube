@@ -23,12 +23,14 @@ typedef struct
     //color
 } particle_t;
 
+
 typedef struct particle_list_element_s
 {
-    particle_t* particle;
+    particle_t particle;
     struct particle_list_element_s* prev;
     struct particle_list_element_s* next;
 } particle_list_element_t;
+
 
 typedef struct
 {
@@ -37,8 +39,17 @@ typedef struct
 } particle_grid_element_t;
 
 
-bool init_particle_list(particle_list_element_t* list, particle_t* particle_array, uint32_t size);
 
-bool init_particle_grid(particle_grid_element_t grid[PARTICLE_GRID_X][PARTICLE_GRID_Y], particle_list_element_t* list, uint32_t size);
+
+bool particle_init_list(particle_list_element_t* list, uint32_t size);
+
+bool particle_init_grid(particle_grid_element_t grid[PARTICLE_GRID_X][PARTICLE_GRID_Y], particle_list_element_t* list, uint32_t size);
+
+bool particle_move(particle_grid_element_t grid[PARTICLE_GRID_X][PARTICLE_GRID_Y], uint32_t time, double ex_force[2]);
+
+
+
+
+
 
 #endif
