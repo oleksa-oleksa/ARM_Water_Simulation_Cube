@@ -1,0 +1,16 @@
+*.o
+
+# Keil IDE Files
+*/*.axf
+*/*.htm
+*/*.map
+*/*.dep
+*/*.Kitten
+*/*.d
+*/*.scvd
+*/Flash/*.*
+*/samples/
+*/*.s
+*/*.ini
+*/*.uvgui
+*/*.uvopt
