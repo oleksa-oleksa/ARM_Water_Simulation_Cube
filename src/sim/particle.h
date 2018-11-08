@@ -4,12 +4,15 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#define PARTICLE_MASS       50
-#define PARTICLE_DENSITY    12
-#define PARTICLE_PREASURE   10
+#define PARTICLE_MASS       65
 
 #define PARTICLE_GRID_X     32
 #define PARTICLE_GRID_Y     32
+
+#define PARTICLE_GRID_CELL_WIDTH  1
+#define PARTICLE_GRID_CELL_HEIGHT 1
+
+#define PARTICLE_GRID_SMOOTH_DISTANCE 1
 
 
 typedef struct
@@ -18,7 +21,7 @@ typedef struct
     double velocity[2];
     double mass;
     double density;
-    double preasure;
+    double pressure;
     double force[2];
     //color
 } particle_t;
