@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-
+#define SEC_TO_USEC(sec) (sec * 1000000)
 
 #include <particle.h>
 #include <particle_linux_display.h>
@@ -22,10 +22,13 @@ int main(int argc, char const *argv[])
     particle_linux_display_init();
     particle_linux_display_draw_pixels(grid);
     
+    double force[2] = {0, 9.8};
 
     while(1)
     {
-        ;
+        usleep(SEC_TO_USEC(0.5));
+        particle_move(grid, 0.25, force);
+        particle_linux_display_draw_pixels(grid);
     }
 
     particle_linux_display_close();

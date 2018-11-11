@@ -14,6 +14,7 @@
 #define DISPLAY_PARTICLE_SIZE 2
 #define X 0
 #define Y 1
+#define SEC_TO_USEC(sec) (sec * 1000000)
 
 
 Display* display;   ///< pointer to X Display structure.
@@ -133,13 +134,22 @@ void particle_linux_display_init(void)
     XSync(display, False);
 
     XFlush(display);
-    usleep(30000);  //20ms needed to let X11 initialise everyting
+    // usleep(SEC_TO_USEC(0.05));  //20ms needed to let X11 initialise everyting
+    sleep(1);
 }
 
 void particle_linux_display_draw_pixels(particle_grid_element_t grid[PARTICLE_GRID_X][PARTICLE_GRID_Y])
 {
     (void)grid;
     unsigned int i, j, k;
+    XColor black;
+    Status rc;            /* return status of various Xlib functions.  */
+    Colormap screen_colormap;     /* color map to use for allocating colors.   */
+    XClearWindow(display, win);
+    screen_colormap = DefaultColormap(display, DefaultScreen(display));
+    rc = XAllocNamedColor(display, screen_colormap, "black", &black, &black);
+    XSetForeground(display, gc, black.pixel);
+    XFlush(display);
     for(i = 0; i <= PARTICLE_GRID_X; ++i)
     {
         XDrawLine(display, win, gc, 
@@ -153,8 +163,6 @@ void particle_linux_display_draw_pixels(particle_grid_element_t grid[PARTICLE_GR
                     /*x1*/DISPLAY_GRID_BORDER_OFFSET + (DISPLAY_GRID_WIDTH * PARTICLE_GRID_Y), /*y1*/DISPLAY_GRID_BORDER_OFFSET + (DISPLAY_GRID_WIDTH * i));
     }
     XColor blue;
-    Status rc;            /* return status of various Xlib functions.  */
-    Colormap screen_colormap;     /* color map to use for allocating colors.   */
     screen_colormap = DefaultColormap(display, DefaultScreen(display));
     rc = XAllocNamedColor(display, screen_colormap, "blue", &blue, &blue);
     if (rc == 0) {
@@ -187,7 +195,8 @@ void particle_linux_display_draw_pixels(particle_grid_element_t grid[PARTICLE_GR
     }
     // flush all pending requests to the X server.
     XFlush(display);
-    usleep(1000); //X11 needs some tome to display everything
+    // usleep(SEC_TO_USEC(0.05)); //X11 needs some tome to display everything
+    sleep(1);
 }
 
 
