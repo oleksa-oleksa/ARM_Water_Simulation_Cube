@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <LPC23xx.H>                    /* LPC23xx definitions                */
 #include "LCD.h"                        /* Graphic LCD function prototypes    */
+//#include "include/Adafruit_BNO055.h"
 
 /* Global variables */
 unsigned char I2Cdata; // data to send into I2C
@@ -26,6 +27,12 @@ void lcd_print_greeting(void) {
   set_cursor (0, 1);
   lcd_print ("Beuth Hochschule");
 }
+
+ void lcd_print_message(unsigned char *msg) {
+	lcd_clear();
+  lcd_print(msg);
+}
+
 
 /* I2C Interrupt Service Routine
  state machine examines the status  register on  each  interrupt  
@@ -80,7 +87,8 @@ void i2c_isr(void) {
 }
 
 void I2CTransferByte(unsigned Addr, unsigned Data) {    
-	I21DAT = I2Cdata;    
+	I2CAddress = Addr;
+	I21DAT = Data;    
 	I21CONCLR = 0x000000FF; // Clear all I2C settings    
 	I21CONSET = 0x00000040; // Enable the I2C interface    
 	I21CONSET = 0x00000020; // Start condition }
@@ -94,7 +102,7 @@ void I2CTransferByte(unsigned Addr, unsigned Data) {
 void i2c_init(void) {
 	
 	VICVectCntl1 = 0x00000029;       // select a priority slot for a given interrupt
-	VICVectAddr1 = (unsigned)i2c_init; //pass the address of the IRQ into the VIC slot 
+	VICVectAddr1 = (unsigned)i2c_isr; //pass the address of the IRQ into the VIC slot 
 	VICIntEnable = 0x00000200; // enable interrupt 
 	PINSEL1 = 0x50; //Switch GPIO to I2C pins
 	I21SCLH = 0x08; //Set bit rate to 57.6KHz
@@ -104,17 +112,18 @@ void i2c_init(void) {
 
 
 int main (void) {
- 
+	int i = 0;
+  unsigned char message[100];
   init_serial();
 
   lcd_init();
 	lcd_print_greeting();
 
 	i2c_init();
-
-	
-  while (1) {   
-       
-    }
-    
+	  
+	while (1) {
+			sprintf(message, "%i", (int)I2Cmessage);
+      lcd_print_message(message); 
+			for(i = 0; i < 200000; i++){};
+  }  
 }
