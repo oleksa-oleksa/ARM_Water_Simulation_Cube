@@ -1,5 +1,7 @@
 *.o
 
+src/sim/simulation_test
+
 # Keil IDE Files
 */*.axf
 */*.htm
