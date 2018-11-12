@@ -14,10 +14,10 @@ int main(int argc, char const *argv[])
     (void) argc;
     (void) argv;
 
-    particle_list_element_t particles[20];
+    particle_list_element_t particles[50];
     particle_grid_element_t grid[PARTICLE_GRID_X][PARTICLE_GRID_Y];
-    particle_init_list(particles, 20);
-    particle_init_grid(grid, particles, 20);
+    particle_init_list(particles, 50);
+    particle_init_grid(grid, particles, 50);
 
     particle_linux_display_init();
     particle_linux_display_draw_pixels(grid);

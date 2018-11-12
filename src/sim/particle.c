@@ -120,8 +120,9 @@ bool particle_init_list(particle_list_element_t* list, uint32_t size)
     uint32_t i;
     for(i = 0; i < size; ++i)
     {
-        list[i].particle.position[0] = i % PARTICLE_GRID_X;
-        list[i].particle.position[1] = i % PARTICLE_GRID_Y;
+
+        list[i].particle.position[X] = 2 + (i % (PARTICLE_GRID_X/2));
+        list[i].particle.position[Y] = 2 + (i / (PARTICLE_GRID_Y/2));
         list[i].particle.velocity[0] = 0;
         list[i].particle.velocity[1] = 0;
         list[i].particle.mass        = PARTICLE_MASS;
@@ -163,6 +164,7 @@ bool particle_init_grid(particle_grid_element_t grid[PARTICLE_GRID_X][PARTICLE_G
 
     for(i = 0; i < size; ++i)
     {
+        // printf("%2"PRIu32": %5.2lf %5.2lf\n", i, list[i].particle.position[X], list[i].particle.position[Y]);
         if(grid[(int)list[i].particle.position[X]][(int)list[i].particle.position[Y]].particle_count == 0)
         {
             grid[(int)list[i].particle.position[X]][(int)list[i].particle.position[Y]].particle_count = 1;
