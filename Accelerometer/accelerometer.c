@@ -5,11 +5,14 @@
 /* Advanced ARM Programming 	                              */
 /* Wintersemester 2018/2019                                 */
 /******************************************************************************/
-                  
+#define BNO055_ADDRESS_A (0x28)
+
 #include <stdio.h>
 #include <LPC23xx.H>                    /* LPC23xx definitions                */
 #include "LCD.h"                        /* Graphic LCD function prototypes    */
-//#include "include/Adafruit_BNO055.h"
+#include "include/Adafruit_BNO055.h"
+#include <stdint.h>
+#include "include/bno055.h"
 
 /* Global variables */
 unsigned char I2Cdata; // data to send into I2C
@@ -19,7 +22,11 @@ unsigned int I2CAddress = 0xE005C000;
 /* Import external functions from Serial.c file                               */
 extern       void init_serial    (void);
 
-/* Greeting message before I2C init */
+/**************************************************************************/
+/*!
+    @brief  Greeting message before I2C init
+*/
+/**************************************************************************/
 void lcd_print_greeting(void) {
 	
 	lcd_clear();
@@ -33,11 +40,13 @@ void lcd_print_greeting(void) {
   lcd_print(msg);
 }
 
-
-/* I2C Interrupt Service Routine
- state machine examines the status  register on  each  interrupt  
-and  performs  the  necessary  action 
+/**************************************************************************/
+/*!
+    @brief  I2C Interrupt Service Routine
+		State machine examines the status  register on  each  interrupt  
+		and  performs  the  necessary  action 
 */
+/**************************************************************************/
 void i2c_isr(void) {
 
 	switch (I21STAT) // Read result code and switch to next action 
@@ -86,7 +95,13 @@ void i2c_isr(void) {
 
 }
 
-void I2CTransferByte(unsigned Addr, unsigned Data) {    
+/**************************************************************************/
+/*!
+    @brief  I2C Write Data Transfer
+		Once the I2C peripheral is initialised in master mode we can start a write data transfer
+*/
+/**************************************************************************/
+void I2CTransferByteWrite(unsigned char Addr, unsigned char Data) {    
 	I2CAddress = Addr;
 	I21DAT = Data;    
 	I21CONCLR = 0x000000FF; // Clear all I2C settings    
@@ -94,11 +109,28 @@ void I2CTransferByte(unsigned Addr, unsigned Data) {
 	I21CONSET = 0x00000020; // Start condition }
 } 
 
-/* I2C init 
-1. configure the VIC to respond to a I2C interrupt
-2. configure pinselect block to connect the I2C data and clock lines to the external pins
-3. set the bit rate by programming I2SCLH and I2SCLL. Only the first 16 bits are used to hold the timing values
+/**************************************************************************/
+/*!
+    @brief  I2C Read Data Transfer
+		Once the I2C peripheral is initialised in master mode we can start a write data transfer
 */
+/**************************************************************************/
+void I2CTransferByteRead(unsigned char Addr, unsigned char Data) {    
+	I2CAddress = Addr;
+	I21DAT = Data;    
+	I21CONCLR = 0x000000FF; // Clear all I2C settings    
+	I21CONSET = 0x00000040; // Enable the I2C interface    
+	I21CONSET = 0x00000020; // Start condition }
+} 
+
+/**************************************************************************/
+/*!
+    @brief  I2C init
+    1. configure the VIC to respond to a I2C interrupt
+		2. configure pinselect block to connect the I2C data and clock lines to the external pins
+		3. set the bit rate by programming I2SCLH and I2SCLL. Only the first 16 bits are used to hold the timing values
+*/
+/**************************************************************************/
 void i2c_init(void) {
 	
 	VICVectCntl1 = 0x00000029;       // select a priority slot for a given interrupt
@@ -109,21 +141,62 @@ void i2c_init(void) {
 	I21SCLL  = 0x08;
 }
 
+/**************************************************************************/
+/*!
+    @brief  Adafruit BNO055 Init
+    Note: I2C should be already enabled
+*/
+/**************************************************************************/
+int accelerometer_init() {
+	
+	
+	 /* Make sure we have the right device */
+  uint8_t id = I2CTransferByte(I2CAddress, BNO055_CHIP_ID_ADDR);
+  if (id != BNO055_ID)
+  {
+    for(int i = 0; i < 200000; i++){}; // hold on for boot
+    id = I2CTransferByte(I2CAddress, BNO055_CHIP_ID_ADDR);
+    if(id != BNO055_ID) {
+      return 0;  // still not? ok bail
+    }
+  }
+	
+	return 1;
+}
+
+/**************************************************************************/
+/*!
+    @brief  Puts the chip in the specified operating mode
+*/
+/**************************************************************************/
+void Adafruit_BNO055::setMode(adafruit_bno055_opmode_t mode)
+{
+  _mode = mode;
+  write8(BNO055_OPR_MODE_ADDR, _mode);
+  delay(30);
+}
 
 
 int main (void) {
-	int i = 0;
+	
   unsigned char message[100];
-  init_serial();
+	
+	// UART Init
+	init_serial();
 
+	// LCD Init
   lcd_init();
 	lcd_print_greeting();
 
+	// I2C Init 
 	i2c_init();
+
+	// BNO055 Adafruit Init
+	accelerometer_init();
 	  
 	while (1) {
 			sprintf(message, "%i", (int)I2Cmessage);
       lcd_print_message(message); 
-			for(i = 0; i < 200000; i++){};
+			for(int i = 0; i < 200000; i++){};
   }  
 }
