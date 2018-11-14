@@ -5,12 +5,11 @@
 /* Advanced ARM Programming 	                              */
 /* Wintersemester 2018/2019                                 */
 /******************************************************************************/
-#define BNO055_ADDRESS_A (0x28)
+#define BNO055_ID (0xA0)
 
 #include <stdio.h>
 #include <LPC23xx.H>                    /* LPC23xx definitions                */
 #include "LCD.h"                        /* Graphic LCD function prototypes    */
-#include "include/Adafruit_BNO055.h"
 #include <stdint.h>
 #include "include/bno055.h"
 
@@ -21,6 +20,18 @@ unsigned int I2CAddress = 0xE005C000;
 
 /* Import external functions from Serial.c file                               */
 extern       void init_serial    (void);
+
+/**************************************************************************/
+/*!
+    @brief  delay
+*/
+/**************************************************************************/
+void delay(void) {
+	int i;
+	for (i = 0; i < 200000; i++) {
+		// just a hadrcore delay
+	};
+}
 
 /**************************************************************************/
 /*!
@@ -115,9 +126,9 @@ void I2CTransferByteWrite(unsigned char Addr, unsigned char Data) {
 		Once the I2C peripheral is initialised in master mode we can start a write data transfer
 */
 /**************************************************************************/
-void I2CTransferByteRead(unsigned char Addr, unsigned char Data) {    
+void I2CTransferByteRead(unsigned char Addr) {    
 	I2CAddress = Addr;
-	I21DAT = Data;    
+	I21DAT = I2Cmessage; // global variable    
 	I21CONCLR = 0x000000FF; // Clear all I2C settings    
 	I21CONSET = 0x00000040; // Enable the I2C interface    
 	I21CONSET = 0x00000020; // Start condition }
@@ -143,37 +154,79 @@ void i2c_init(void) {
 
 /**************************************************************************/
 /*!
+    @brief  Puts the chip in the specified operating mode
+*/
+/**************************************************************************/
+void setBNOMode(unsigned char mode)
+{
+  I2CTransferByteWrite(I2CAddress, BNO055_OPR_MODE_ADDR);
+	I2CTransferByteWrite(I2CAddress, mode);
+  delay();
+}
+
+
+/**************************************************************************/
+/*!
     @brief  Adafruit BNO055 Init
     Note: I2C should be already enabled
 */
 /**************************************************************************/
-int accelerometer_init() {
-	
-	
+int accelerometer_init(unsigned char requestedMode) {
+	uint8_t id = 0; 
 	 /* Make sure we have the right device */
-  uint8_t id = I2CTransferByte(I2CAddress, BNO055_CHIP_ID_ADDR);
+	I2CTransferByteWrite(I2CAddress, BNO055_CHIP_ID_ADDR);
+  I2CTransferByteRead(I2CAddress);
+	id = I2Cmessage;
+	
   if (id != BNO055_ID)
   {
-    for(int i = 0; i < 200000; i++){}; // hold on for boot
-    id = I2CTransferByte(I2CAddress, BNO055_CHIP_ID_ADDR);
-    if(id != BNO055_ID) {
+    delay();
+			
+		// repeat 
+    I2CTransferByteRead(I2CAddress);
+		id = I2Cmessage;
+    
+		if(id != BNO055_ID) {
       return 0;  // still not? ok bail
     }
   }
 	
-	return 1;
-}
+  /* Switch to config mode (just in case since this is the default) */
+  setBNOMode(BNO055_OPERATION_MODE_CONFIG);
+	
+	  /* Reset */
+  I2CTransferByteWrite(I2CAddress, BNO055_SYS_TRIGGER_ADDR);
+	I2CTransferByteWrite(I2CAddress, 0x20);
 
-/**************************************************************************/
-/*!
-    @brief  Puts the chip in the specified operating mode
-*/
-/**************************************************************************/
-void Adafruit_BNO055::setMode(adafruit_bno055_opmode_t mode)
-{
-  _mode = mode;
-  write8(BNO055_OPR_MODE_ADDR, _mode);
-  delay(30);
+	do {
+		
+		I2CTransferByteRead(I2CAddress);
+		id = I2Cmessage;
+		delay();
+		
+	} while (id != BNO055_ID);
+  
+	delay();
+		
+  /* Set to normal power mode */
+	I2CTransferByteWrite(I2CAddress, BNO055_PWR_MODE_ADDR);
+  I2CTransferByteWrite(I2CAddress, BNO055_POWER_MODE_NORMAL);
+ 
+	delay();
+	
+	I2CTransferByteWrite(I2CAddress, BNO055_PAGE_ID_ADDR);
+  I2CTransferByteWrite(I2CAddress, 0);
+	
+	I2CTransferByteWrite(I2CAddress, BNO055_SYS_TRIGGER_ADDR);
+  I2CTransferByteWrite(I2CAddress, 0x0);
+	
+  delay();
+ 
+	 /* Set the requested operating mode */
+  setBNOMode(requestedMode);
+  delay();
+	
+	return 1;
 }
 
 
@@ -192,11 +245,11 @@ int main (void) {
 	i2c_init();
 
 	// BNO055 Adafruit Init
-	accelerometer_init();
+	accelerometer_init(BNO055_OPERATION_MODE_ACCGYRO);
 	  
 	while (1) {
 			sprintf(message, "%i", (int)I2Cmessage);
       lcd_print_message(message); 
-			for(int i = 0; i < 200000; i++){};
+			delay();
   }  
 }
