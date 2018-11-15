@@ -7,13 +7,16 @@
 */*.dep
 */*.Kitten
 */*.d
-*/*.scvd
+*.scvd
 */Flash/*.*
 */samples/
-*/*.s
+*.s
 */*.ini
-*/*.uvgui
-*/*.uvopt
+*.uvgui*
+*.uvopt
+*.uvproj
+Objects/
+Listings/
 
 # Mac
 .DS_Store
