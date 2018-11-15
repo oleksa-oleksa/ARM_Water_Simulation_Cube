@@ -4,12 +4,13 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#define PARTICLE_MASS       50
-#define PARTICLE_DENSITY    12
-#define PARTICLE_PREASURE   10
-
 #define PARTICLE_GRID_X     32
 #define PARTICLE_GRID_Y     32
+
+#define PARTICLE_GRID_CELL_WIDTH  1
+#define PARTICLE_GRID_CELL_HEIGHT 1
+
+#define PARTICLE_GRID_SMOOTH_DISTANCE 1
 
 
 typedef struct
@@ -18,7 +19,7 @@ typedef struct
     double velocity[2];
     double mass;
     double density;
-    double preasure;
+    double pressure;
     double force[2];
     //color
 } particle_t;
@@ -45,7 +46,7 @@ bool particle_init_list(particle_list_element_t* list, uint32_t size);
 
 bool particle_init_grid(particle_grid_element_t grid[PARTICLE_GRID_X][PARTICLE_GRID_Y], particle_list_element_t* list, uint32_t size);
 
-bool particle_move(particle_grid_element_t grid[PARTICLE_GRID_X][PARTICLE_GRID_Y], uint32_t time, double ex_force[2]);
+bool particle_move(particle_grid_element_t grid[PARTICLE_GRID_X][PARTICLE_GRID_Y], double d_time, double ex_force[2]);
 
 
 
