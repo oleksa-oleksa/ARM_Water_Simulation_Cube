@@ -142,13 +142,13 @@ void particle_linux_display_draw_pixels(particle_grid_element_t grid[PARTICLE_GR
 {
     (void)grid;
     unsigned int i, j, k;
-    XColor black;
+    XColor grey;
     Status rc;            /* return status of various Xlib functions.  */
     Colormap screen_colormap;     /* color map to use for allocating colors.   */
     XClearWindow(display, win);
     screen_colormap = DefaultColormap(display, DefaultScreen(display));
-    rc = XAllocNamedColor(display, screen_colormap, "black", &black, &black);
-    XSetForeground(display, gc, black.pixel);
+    rc = XAllocNamedColor(display, screen_colormap, "grey", &grey, &grey);
+    XSetForeground(display, gc, grey.pixel);
     XFlush(display);
     for(i = 0; i <= PARTICLE_GRID_X; ++i)
     {
@@ -182,11 +182,11 @@ void particle_linux_display_draw_pixels(particle_grid_element_t grid[PARTICLE_GR
                 particle_list_element_t* curr = grid[i][j].particle_list;
                 for(k = 0; k < grid[i][j].particle_count; ++k)
                 {
-                    int posx =  DISPLAY_GRID_BORDER_OFFSET + (i * DISPLAY_GRID_WIDTH) + 
-                                ((curr->particle.position[X] - i) * DISPLAY_GRID_WIDTH) + (DISPLAY_GRID_WIDTH / 2);
+                    int posx =  DISPLAY_GRID_BORDER_OFFSET + //(i * DISPLAY_GRID_WIDTH) + 
+                                ((curr->particle.position[X] / PARTICLE_GRID_CELL_WIDTH)  * DISPLAY_GRID_WIDTH);
                     // printf("[%d][%d] %d %lf \r\n", i, j, posx, curr->particle.position[X]);
-                    int posy =  DISPLAY_GRID_BORDER_OFFSET + (j * DISPLAY_GRID_WIDTH) + 
-                                ((curr->particle.position[Y] - i) * DISPLAY_GRID_WIDTH) + (DISPLAY_GRID_WIDTH / 2);
+                    int posy =  DISPLAY_GRID_BORDER_OFFSET + //(j * DISPLAY_GRID_WIDTH) + 
+                                ((curr->particle.position[Y] / PARTICLE_GRID_CELL_HEIGHT) * DISPLAY_GRID_WIDTH);
                     XFillRectangle(display, win, gc, posx, posy, DISPLAY_PARTICLE_SIZE, DISPLAY_PARTICLE_SIZE);
                     curr = curr->next;
                 }

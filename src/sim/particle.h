@@ -4,8 +4,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#define PARTICLE_MASS       65
-
 #define PARTICLE_GRID_X     32
 #define PARTICLE_GRID_Y     32
 
