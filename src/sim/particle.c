@@ -13,8 +13,8 @@
 #endif
 
 #define PARTICLE_MASS       65.0    ///< 
-#define REST_DENS           100.0    ///< rest density
-#define GAS_CONST           200.0    ///< gas constant for euation of state
+#define REST_DENS           1.0    ///< rest density
+#define GAS_CONST           2.0    ///< gas constant for euation of state
 #define VISCOSITY            2.5    ///< viscosity
 #define BOUNDARY_DAMPENING  -0.5    ///< 
 #define UPPER_BOUNDS_DELTA 0.001    ///< Stop the position from becomming PARTICLE_GRID_X or PARTICLE_GRID_Y
@@ -70,8 +70,8 @@ static inline void _update_grid_position(particle_grid_element_t grid[PARTICLE_G
     uint32_t i;
     particle_list_element_t* curr;
 
-    new_grid_x = element->particle.position[X] * PARTICLE_GRID_CELL_WIDTH;   //c always rounds down when converding double to int
-    new_grid_y = element->particle.position[Y] * PARTICLE_GRID_CELL_HEIGHT;  //c always rounds down when converding double to int
+    new_grid_x = element->particle.position[X] * PARTICLE_GRID_CELL_WIDTH;   //c always cuts off decimal places double to int
+    new_grid_y = element->particle.position[Y] * PARTICLE_GRID_CELL_HEIGHT;  //c always cuts off decimal places double to int
 
 
     if((new_grid_x != orig_grid_x) ||
@@ -146,7 +146,7 @@ static inline void _update_grid_position(particle_grid_element_t grid[PARTICLE_G
         grid[new_grid_x][new_grid_y].particle_count += 1;
         // printf("[%d][%d] %"PRIu32"\r\n", new_grid_x, new_grid_y, grid[new_grid_x][new_grid_y].particle_count);
         // printf("%p %p %p\r\n", (void*)element->next, (void*)element->prev, (void*)grid[new_grid_x][new_grid_y].particle_list);
-        printf("done moving\r\n\r\n");
+        // printf("done moving\r\n\r\n");
     }
 }
 
@@ -241,6 +241,7 @@ bool particle_move(particle_grid_element_t grid[PARTICLE_GRID_X][PARTICLE_GRID_Y
     int i_x, i_y;
     uint32_t part;
     particle_list_element_t* curr;
+    particle_list_element_t* following;
     _compute_density_pressure(grid);
     _compute_forces(grid, ex_force);
     _integrate(grid, d_time);
@@ -252,12 +253,15 @@ bool particle_move(particle_grid_element_t grid[PARTICLE_GRID_X][PARTICLE_GRID_Y
             curr = grid[i_x][i_y].particle_list;
             for(part = 0; part < grid[i_x][i_y].particle_count; ++part)
             {
+                following = curr->next;
+                // printf("[%2d][%2d] %2d(%2d)"PRIu32" %p\r\n", i_x, i_y, part, grid[i_x][i_y].particle_count-1, (void*)curr);
+                // printf("next: %p\r\n", (void*)curr->next);
                 _update_grid_position(grid, i_x, i_y, curr);
-                curr = curr->next;
+                curr = following;
             }
         }
     }
-    printf("---------------------------------\r\n");
+    // printf("---------------------------------\r\n");
 
     // for(i_y = 0; i_y < PARTICLE_GRID_X; ++i_y)
     // {

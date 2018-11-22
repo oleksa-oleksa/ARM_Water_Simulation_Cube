@@ -11,7 +11,7 @@
 
 #define DISPLAY_GRID_WIDTH 21
 #define DISPLAY_GRID_BORDER_OFFSET 10
-#define DISPLAY_PARTICLE_SIZE 2
+#define DISPLAY_PARTICLE_SIZE 4
 #define X 0
 #define Y 1
 #define SEC_TO_USEC(sec) (sec * 1000000)
@@ -171,7 +171,7 @@ void particle_linux_display_draw_pixels(particle_grid_element_t grid[PARTICLE_GR
     XSetForeground(display, gc, blue.pixel);
     XFlush(display);
 
-    printf("start printing of particles\r\n");
+    // printf("start printing of particles\r\n");
     for(i = 0; i < PARTICLE_GRID_X; ++i)
     {
         for(j = 0; j < PARTICLE_GRID_Y; ++j)
@@ -195,7 +195,7 @@ void particle_linux_display_draw_pixels(particle_grid_element_t grid[PARTICLE_GR
     // flush all pending requests to the X server.
     XFlush(display);
     // usleep(SEC_TO_USEC(0.05)); //X11 needs some tome to display everything
-    sleep(1);
+    // sleep(1);
 }
 
 
