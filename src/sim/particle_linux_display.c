@@ -140,7 +140,6 @@ void particle_linux_display_init(void)
 
 void particle_linux_display_draw_pixels(particle_grid_element_t grid[PARTICLE_GRID_X][PARTICLE_GRID_Y])
 {
-    (void)grid;
     unsigned int i, j, k;
     XColor grey;
     Status rc;            /* return status of various Xlib functions.  */
