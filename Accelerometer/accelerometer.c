@@ -131,7 +131,7 @@ extern       void init_serial    (void);
 /**************************************************************************/
 void delay(void) {
 	int i;
-	for (i = 0; i < 200000; i++) {
+	for (i = 0; i < 2000008; i++) {
 		// just a hadrcore delay
 	};
 }
@@ -147,10 +147,14 @@ void lcd_print_greeting(void) {
   lcd_print ("Accelerometer");
   set_cursor (0, 1);
   lcd_print ("Beuth Hochschule");
+	set_cursor (0, 0);
+	delay();
+
 }
 
  void lcd_print_message(unsigned char *msg) {
 	lcd_clear();
+	set_cursor (0, 0);
   lcd_print(msg);
 }
 
@@ -161,7 +165,7 @@ void lcd_print_greeting(void) {
 		and  performs  the  necessary  action 
 */
 /**************************************************************************/
-void i2c_isr(void) {
+__irq void i2c_irq(void) {
 
 	switch (I21STAT) // Read result code and switch to next action 
 		{    
@@ -247,12 +251,17 @@ void I2CTransferByteRead(unsigned char Addr) {
 /**************************************************************************/
 void i2c_init(void) {
 	
-	VICVectCntl1 = 0x00000029;       // select a priority slot for a given interrupt
-	VICVectAddr1 = (unsigned)i2c_isr; //pass the address of the IRQ into the VIC slot 
-	VICIntEnable = 0x00000200; // enable interrupt 
-	PINSEL1 = 0x50; //Switch GPIO to I2C pins
-	I21SCLH = 0x08; //Set bit rate to 57.6KHz
-	I21SCLL  = 0x08;
+	VICVectCntl19 = 0x0000001;       // select a priority slot for a given interrupt
+	VICVectAddr19 = (unsigned)i2c_irq; //pass the address of the IRQ into the VIC slot 
+	VICIntEnable = 0x00080000; // enable interrupt 	
+	PINSEL1 |= 0x000003C0; //Switch GPIO to I2C pins
+	I21SCLH = 0xF;  //Set bit rate to 500KHz 
+									// Fcco = 2 * M * Fin / N = 2 * (MSEL +1 ) * 12 MHz / 1 = 2 * 12 * 12 * 10^6 = 288 * 10^6
+									// Devider CCLKCFG_Val = 0x00000005 ==> 288 /6 = 48 * 10^6
+									// CCLKCFG_Val =  0x00000000 ===> 48 / 4 = 12 * 10^6 == Input Frequency
+									// BNO055 max frequency 400 KHz = 4 * 10^5
+									// SCLH + SCLL = 30
+	I21SCLL  = 0xF;
 }
 
 /**************************************************************************/
@@ -281,6 +290,7 @@ int accelerometer_init(unsigned char requestedMode) {
   I2CTransferByteRead(I2CAddress);
 	id = I2Cmessage;
 	
+	/*
   if (id != BNO055_ID)
   {
     delay();
@@ -288,11 +298,13 @@ int accelerometer_init(unsigned char requestedMode) {
 		// repeat 
     I2CTransferByteRead(I2CAddress);
 		id = I2Cmessage;
-    
+   
+		
 		if(id != BNO055_ID) {
       return 0;  // still not? ok bail
     }
   }
+	*/
 	
   /* Switch to config mode (just in case since this is the default) */
   setBNOMode(BNO055_OPERATION_MODE_CONFIG);
@@ -474,6 +486,7 @@ int main (void) {
 
 	// LCD Init
   lcd_init();
+	delay();
 	lcd_print_greeting();
 	delay();
 
@@ -481,26 +494,34 @@ int main (void) {
 	i2c_init();
 	delay();
 	
+	
 	// BNO055 Adafruit Init
 	if(!accelerometer_init(BNO055_OPERATION_MODE_ACCGYRO))
   {
-    printf("Ooops, no BNO055 detected ... Check your wiring or I2C ADDR!");
-    while(1); // user should manually reboot the system after solving the problem
+    lcd_print_message("NO BNO055 found");
+    delay();
   }
 	
 	delay();
 	
-	setExtCrystalUse(1);
-  
+	setExtCrystalUse(1);		
+	
 	while (1) {
-		
-			/* Get a new sensor event */ 
 			sensors_event_t event; 
+		
+			lcd_print_message("ACCGYRO started");
+			/* Get a new sensor event */ 
 			getBNOEvent(&event, VECTOR_ACCELEROMETER, BNO_AccVector);
 			getBNOEvent(&event, VECTOR_GYROSCOPE, BNO_GyrVector);
 
-			sprintf(message, "%i", (int)I2Cmessage);
-      lcd_print_message(message); 
+			sprintf(message, "%8.2f", event.orientation.x);
+			lcd_print_message(message);
+			delay();
+			delay();
+
+		
+		  sprintf(message, "%i", (int)I2Cmessage);
+		  //lcd_print_message(message); 
 			delay();
   }  
 }
