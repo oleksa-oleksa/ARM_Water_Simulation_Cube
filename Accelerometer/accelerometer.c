@@ -243,7 +243,7 @@ __irq void i2c_irq(void) {
 			I21CONSET = 0x20; // Resend Start condition 
 	break;		
 		
-		default   :      
+		default:      
 			break;      
 		}      
 		
@@ -265,10 +265,10 @@ void I2CWriteReg(unsigned char addr, unsigned char reg, unsigned char data) {
 	I21CONSET = 0x00000040; // Enable the I2C interface    
 	I21CONSET = 0x00000020; // Start condition
 	
-	
-	while((GlobalI2CState != I2C_ERR) && (GlobalI2CState != I2C_DONE)) {
+
+/*	while((GlobalI2CState != I2C_ERR) && (GlobalI2CState != I2C_DONE)) {
 	;
-	}
+	} */
 }
 /**************************************************************************/
 /*!
@@ -327,8 +327,8 @@ void i2c_init(void) {
 /**************************************************************************/
 void setBNOMode(unsigned char mode)
 {
-  I2CTransferByteWrite(I2CAddress, BNO055_OPR_MODE_ADDR);
-	I2CTransferByteWrite(I2CAddress, mode);
+ 	I2CWriteReg(0x50, 0x07, BNO055_OPR_MODE_ADDR);
+	I2CWriteReg(0x50, 0x07, mode);
   delay();
 }
 
@@ -343,26 +343,22 @@ int accelerometer_init(unsigned char requestedMode) {
 	uint8_t id = 0; 
 	 /* Make sure we have the right device */
 	I2CWriteReg(0x50, 0x07, 0x00);
-		//for(;;){;}
-	I2CTransferByteWrite(I2CAddress, BNO055_CHIP_ID_ADDR);
-  I2CTransferByteRead(I2CAddress);
+	delay();
+  I2CTransferByteRead();
 	id = I2Cmessage;
 	
-	/*
   if (id != BNO055_ID)
   {
     delay();
 			
 		// repeat 
-    I2CTransferByteRead(I2CAddress);
+    I2CTransferByteRead();
 		id = I2Cmessage;
-   
-		
+   	
 		if(id != BNO055_ID) {
       return 0;  // still not? ok bail
     }
   }
-	*/
 	
   /* Switch to config mode (just in case since this is the default) */
   setBNOMode(BNO055_OPERATION_MODE_CONFIG);
@@ -373,7 +369,7 @@ int accelerometer_init(unsigned char requestedMode) {
 
 	do {
 		
-		I2CTransferByteRead(I2CAddress);
+		I2CTransferByteRead();
 		id = I2Cmessage;
 		delay();
 		
@@ -450,7 +446,7 @@ int readLen(unsigned char Addr, unsigned char reg, unsigned char * buffer, uint8
  
   for (i = 0; i < len; i++)
   {
-    I2CTransferByteRead(I2CAddress);
+    I2CTransferByteRead();
   }
 
   return 1;
