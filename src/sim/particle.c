@@ -12,11 +12,13 @@
 #define M_PI 3.141592653589793238
 #endif
 
-#define PARTICLE_MASS       65.0    ///< 
+#define PARTICLE_MASS       6.5    ///< 
 #define REST_DENS           1.0    ///< rest density
-#define GAS_CONST           2.0    ///< gas constant for euation of state
+#define GAS_CONST           2.0    ///< gas constant for equation of state
 #define VISCOSITY            2.5    ///< viscosity
 #define BOUNDARY_DAMPENING  -0.5    ///< 
+#define KERNEL_RADIUS 1
+#define KERNEL_RADIUS_SQ (KERNEL_RADIUS * KERNEL_RADIUS)
 #define UPPER_BOUNDS_DELTA 0.001    ///< Stop the position from becomming PARTICLE_GRID_X or PARTICLE_GRID_Y
 
 #define X 0
@@ -30,38 +32,6 @@ inline double _kernel_smoothing_viscosity(double distance);
 void _integrate(particle_grid_element_t grid[PARTICLE_GRID_X][PARTICLE_GRID_Y], double d_time);
 
 
-static inline void _switch_list_elements(particle_list_element_t* part_a, particle_list_element_t* part_b)
-{
-    particle_list_element_t hand = *part_a;
-    *part_a = *part_b;
-    *part_b = hand;
-}
-
-
-/**
- * @brief                       Move an element of the list to a new position.
- * @details                     Inserts the 'move'-element after the 'position'-element.
- * @param[inout]    move        Element to move.
- * @param[inout]    position    Element after which the move-element should be inserted
- */
-static inline void _move_list_element(particle_list_element_t* move, particle_list_element_t* position)
-{
-    if(move->next != NULL)
-    {
-        move->next->prev = move->prev;
-    }
-    if(move->prev != NULL)
-    {
-        move->prev->next = move->next;
-    }
-    move->next = position->next;
-    move->prev = position;
-    if(position->next != NULL)
-    {
-        position->next->prev = move;
-    }
-    position->next = move;
-}
 
 
 static inline void _update_grid_position(particle_grid_element_t grid[PARTICLE_GRID_X][PARTICLE_GRID_Y], int orig_grid_x, int orig_grid_y, particle_list_element_t* element)
@@ -70,8 +40,8 @@ static inline void _update_grid_position(particle_grid_element_t grid[PARTICLE_G
     uint32_t i;
     particle_list_element_t* curr;
 
-    new_grid_x = element->particle.position[X] * PARTICLE_GRID_CELL_WIDTH;   //c always cuts off decimal places double to int
-    new_grid_y = element->particle.position[Y] * PARTICLE_GRID_CELL_HEIGHT;  //c always cuts off decimal places double to int
+    new_grid_x = element->particle.position[X] / PARTICLE_GRID_CELL_WIDTH;   //c always cuts off decimal places double to int
+    new_grid_y = element->particle.position[Y] / PARTICLE_GRID_CELL_HEIGHT;  //c always cuts off decimal places double to int
 
 
     if((new_grid_x != orig_grid_x) ||
@@ -160,8 +130,8 @@ bool particle_init_list(particle_list_element_t* list, uint32_t size)
     for(i = 0; i < size; ++i)
     {
 
-        list[i].particle.position[X] = 2 + (i % (PARTICLE_GRID_X/2));
-        list[i].particle.position[Y] = 2 + (i / (PARTICLE_GRID_Y/2));
+        list[i].particle.position[X] = (2 + (i % (PARTICLE_GRID_X/2))) * PARTICLE_GRID_CELL_WIDTH;
+        list[i].particle.position[Y] = (2 + (i / (PARTICLE_GRID_Y/2))) * PARTICLE_GRID_CELL_HEIGHT;
         list[i].particle.velocity[0] = 0;
         list[i].particle.velocity[1] = 0;
         list[i].particle.mass        = PARTICLE_MASS;
@@ -206,8 +176,8 @@ bool particle_init_grid(particle_grid_element_t grid[PARTICLE_GRID_X][PARTICLE_G
 
     for(i = 0; i < size; ++i)
     {
-        particle_x = (int)list[i].particle.position[X] * PARTICLE_GRID_CELL_WIDTH;
-        particle_y = (int)list[i].particle.position[Y] * PARTICLE_GRID_CELL_HEIGHT;
+        particle_x = (int)list[i].particle.position[X] / PARTICLE_GRID_CELL_WIDTH;
+        particle_y = (int)list[i].particle.position[Y] / PARTICLE_GRID_CELL_HEIGHT;
         // printf("%2"PRIu32": %5.2lf %5.2lf\n", i, list[i].particle.position[X], list[i].particle.position[Y]);
         if(grid[particle_x][particle_y].particle_count == 0)
         {
@@ -222,7 +192,7 @@ bool particle_init_grid(particle_grid_element_t grid[PARTICLE_GRID_X][PARTICLE_G
             //                    &grid[particle_x][particle_y].particle_list[ 
             //                     grid[particle_x][particle_y].particle_count - 1]);
             curr = grid[particle_x][particle_y].particle_list;
-            for(j = 0; j < grid[particle_x][particle_y].particle_count; ++j)
+            for(j = 1; j < grid[particle_x][particle_y].particle_count; ++j)
             {
                 curr = curr->next;
             }
@@ -317,12 +287,12 @@ void _compute_density_pressure(particle_grid_element_t grid[PARTICLE_GRID_X][PAR
                 curr->particle.density = 0;
                 // printf("[%2d][%2d] no. %"PRIu32": density  = %lf\r\n", i_x, i_y, i_part, curr->particle.density);
                 //now use the particles within the smoothing-distance (surounding grid-cells) to calculate the density at the current particle
-                for(d_x = pow(PARTICLE_GRID_SMOOTH_DISTANCE, 2) * (-1); d_x <= pow(PARTICLE_GRID_SMOOTH_DISTANCE, 2); ++d_x)
+                for(d_x = KERNEL_RADIUS_SQ * (-1); d_x <= KERNEL_RADIUS_SQ; ++d_x)
                 {
                     if( (i_x + d_x > 0) && 
                         (i_x + d_x < PARTICLE_GRID_X) )
                     {
-                        for(d_y = pow(PARTICLE_GRID_SMOOTH_DISTANCE, 2) * (-1); d_y <= pow(PARTICLE_GRID_SMOOTH_DISTANCE, 2); ++d_y)
+                        for(d_y = KERNEL_RADIUS_SQ * (-1); d_y <= KERNEL_RADIUS_SQ; ++d_y)
                         {
                             if( (i_y + d_y > 0) && 
                                 (i_y + d_y < PARTICLE_GRID_Y) )
@@ -333,7 +303,7 @@ void _compute_density_pressure(particle_grid_element_t grid[PARTICLE_GRID_X][PAR
                                     //density is sum of: particlemass * kernel-smoothing
                                     double distance = sqrt( pow(curr->particle.position[X] - partner->particle.position[X], 2) +  
                                                             pow(curr->particle.position[Y] - partner->particle.position[Y], 2) );
-                                    if(pow(distance, 2) < pow(PARTICLE_GRID_SMOOTH_DISTANCE, 2))
+                                    if(pow(distance, 2) < KERNEL_RADIUS_SQ)
                                     {
                                         curr->particle.density += partner->particle.mass * _kernel_smoothing_density(distance);
                                         // printf("distance = %lf\r\n", distance);
@@ -362,7 +332,7 @@ void _compute_density_pressure(particle_grid_element_t grid[PARTICLE_GRID_X][PAR
 double _kernel_smoothing_density(double distance)
 {
     //poly6 kernel funciton
-    return 315.0 / (65.0 * M_PI * pow(PARTICLE_GRID_SMOOTH_DISTANCE, 9.0) * pow(pow(PARTICLE_GRID_SMOOTH_DISTANCE, 2) - pow(distance, 2), 3.0));
+    return 315.0 / (65.0 * M_PI * pow(KERNEL_RADIUS, 9.0) * pow(KERNEL_RADIUS_SQ - pow(distance, 2), 3.0));
 }
 
 
@@ -390,12 +360,12 @@ void _compute_forces(particle_grid_element_t grid[PARTICLE_GRID_X][PARTICLE_GRID
                 f_viscosity[Y] = 0;
                 f_gravity[X] = ex_force[X] * curr->particle.density;
                 f_gravity[Y] = ex_force[Y] * curr->particle.density;
-                for(d_x = PARTICLE_GRID_SMOOTH_DISTANCE * (-1); d_x <= PARTICLE_GRID_SMOOTH_DISTANCE; ++d_x)
+                for(d_x = KERNEL_RADIUS * (-1); d_x <= KERNEL_RADIUS; ++d_x)
                 {
                     if( (i_x + d_x > 0) && 
                         (i_x + d_x < PARTICLE_GRID_X) )
                     {
-                        for(d_y = PARTICLE_GRID_SMOOTH_DISTANCE * (-1); d_y <= PARTICLE_GRID_SMOOTH_DISTANCE; ++d_y)
+                        for(d_y = KERNEL_RADIUS * (-1); d_y <= KERNEL_RADIUS; ++d_y)
                         {
                             if( (i_y + d_y > 0) && 
                                 (i_y + d_y < PARTICLE_GRID_Y) )
@@ -441,28 +411,29 @@ void _compute_forces(particle_grid_element_t grid[PARTICLE_GRID_X][PARTICLE_GRID
 double _kernel_smoothing_pressure(double distance)
 {
     //spiky gradient kernel (constant scalar)
-    return (-45.0) / (M_PI * pow(PARTICLE_GRID_SMOOTH_DISTANCE, 6.0))  * pow(PARTICLE_GRID_SMOOTH_DISTANCE - distance, 2.0);
+    return (-45.0) / (M_PI * pow(KERNEL_RADIUS, 6.0))  * pow(KERNEL_RADIUS - distance, 2.0);
 }
 
 
 double _kernel_smoothing_viscosity(double distance)
 {
     //viscosity kernel (laplacian scalar)
-    return (45) / (M_PI * pow(PARTICLE_GRID_SMOOTH_DISTANCE, 6.0)) * (PARTICLE_GRID_SMOOTH_DISTANCE - distance);
+    return (45) / (M_PI * pow(KERNEL_RADIUS, 6.0)) * (KERNEL_RADIUS - distance);
 }
 
 
 void _integrate(particle_grid_element_t grid[PARTICLE_GRID_X][PARTICLE_GRID_Y], double d_time)
 {
     int i_x, i_y;
-    uint32_t part;
+    // uint32_t part;
     particle_list_element_t* curr;
     for(i_x = 0; i_x < PARTICLE_GRID_X; ++i_x)
     {
         for(i_y = 0; i_y < PARTICLE_GRID_Y; ++i_y)
         {
             curr = grid[i_x][i_y].particle_list;
-            for(part = 0; part < grid[i_x][i_y].particle_count; ++part)
+            // for(part = 0; part < grid[i_x][i_y].particle_count; ++part)
+            while(curr != NULL)
             {
                 //forward Euler integration
                 if(curr->particle.density != 0)
@@ -483,22 +454,22 @@ void _integrate(particle_grid_element_t grid[PARTICLE_GRID_X][PARTICLE_GRID_Y], 
                 curr->particle.position[Y] += d_time * curr->particle.velocity[Y];
 
                 //enforce boundary conditions
-                if(curr->particle.position[X] < 0)
+                if(curr->particle.position[X] <= 0 + UPPER_BOUNDS_DELTA)
                 {
-                    curr->particle.position[X] = 0;
+                    curr->particle.position[X] = 0 + UPPER_BOUNDS_DELTA;
                     curr->particle.velocity[X] *= BOUNDARY_DAMPENING;
                 }
-                if(curr->particle.position[X] >= PARTICLE_GRID_X * PARTICLE_GRID_CELL_WIDTH)
+                if(curr->particle.position[X] >= (PARTICLE_GRID_X * PARTICLE_GRID_CELL_WIDTH) - UPPER_BOUNDS_DELTA)
                 {
                     curr->particle.position[X] = (PARTICLE_GRID_X * PARTICLE_GRID_CELL_WIDTH) - UPPER_BOUNDS_DELTA;
                     curr->particle.velocity[X] *= BOUNDARY_DAMPENING;
                 }
-                if(curr->particle.position[Y] < 0)
+                if(curr->particle.position[Y] <= 0 + UPPER_BOUNDS_DELTA)
                 {
-                    curr->particle.position[Y] = 0;
+                    curr->particle.position[Y] = 0 + UPPER_BOUNDS_DELTA;
                     curr->particle.velocity[Y] *= BOUNDARY_DAMPENING;
                 }
-                if(curr->particle.position[Y] >= PARTICLE_GRID_Y * PARTICLE_GRID_CELL_HEIGHT)
+                if(curr->particle.position[Y] >= (PARTICLE_GRID_Y * PARTICLE_GRID_CELL_HEIGHT) - UPPER_BOUNDS_DELTA)
                 {
                     curr->particle.position[Y] = (PARTICLE_GRID_Y * PARTICLE_GRID_CELL_HEIGHT) - UPPER_BOUNDS_DELTA;
                     curr->particle.velocity[Y] *= BOUNDARY_DAMPENING;
