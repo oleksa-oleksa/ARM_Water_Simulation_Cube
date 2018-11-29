@@ -21,11 +21,16 @@
 /* Global variables */
 unsigned char I2Cdata; // data to send into I2C
 unsigned char I2Cmessage; // received data fron I2C
-unsigned int I2CAddress = 0xE005C000;
+unsigned int I2CAddress = 0x50; //01010000
 unsigned char BNOMode;
 unsigned char *BNO_AccVector;
 unsigned char *BNO_GyrVector;
 
+unsigned char GlobalI2CAddr;
+unsigned char GlobalI2CReg;
+unsigned char GlobalI2CData;
+unsigned char GlobalI2CRead;
+volatile enum {I2C_REG, I2C_DAT, I2C_ERR, I2C_DONE} GlobalI2CState;
 
 typedef enum
     {
@@ -169,24 +174,49 @@ __irq void i2c_irq(void) {
 
 	switch (I21STAT) // Read result code and switch to next action 
 		{    
-		case ( 0x08): // Start bit       
+		case ( 0x08): // A START condition has been transmitted. Next: 0x18       
 			I21CONCLR = 0x20;    // Clear start bit       
-		  I21DAT = I2CAddress; // Send address and write bit 
-		break;      
-		
-		case (0x18): // Slave address+W, ACK       
-			I21DAT = I2Cdata; // Write data to TX register    
-		break;      
-		
-		case (0x20): // Slave address +W, Not ACK       
-			I21DAT = I2CAddress; // Resend address and write bit    
-		break;      
-		
-		case (0x28): // Data sent, Ack       
-			I21CONSET = 0x10; // Stop condition    
-		break; 
+		  I21DAT = GlobalI2CAddr; // Send address and write bit 
+		break;  
 
-		case (0x40) : // Slave Address +R, ACK    
+		case (0x10): // A repeated START condition has been transmitted. Next: 0x18
+			I21CONCLR = 0x20;    // Clear start bit       
+		  I21DAT = GlobalI2CAddr; // Send address and write bit
+			break;
+		
+		case (0x18): // SLA+W has been transmitted; ACK has been received. Next: 0x28       
+			I21DAT = GlobalI2CReg; // Write data to TX register    
+		break;      
+		
+		case (0x20): // SLA+W has been transmitted; NOT ACK has been received      
+			GlobalI2CState = I2C_ERR;    
+		break;      
+		
+		case (0x28): // Data byte in I2DAT has been transmitted; ACK has been received.
+      switch(GlobalI2CState) {
+				case I2C_REG:
+					I21DAT = GlobalI2CReg;
+				  GlobalI2CState = I2C_DAT;
+					break;
+				case I2C_DAT:
+					I21CONSET = 0x10; // Stop condition
+				  GlobalI2CState = I2C_DONE;
+					break;
+				default:
+					GlobalI2CState = I2C_ERR;
+					break;
+			}				
+		break; 
+		
+		case (0x30): // Data sent, Not Ack 
+			GlobalI2CState = I2C_ERR;          
+		break;
+
+    case (0x38): // Arbitration lost 
+			GlobalI2CState = I2C_ERR;          
+		break;		
+
+		case (0x40) : // SLA+R has been transmitted; ACK has been received. Next: 0x50   
 			I21CONSET = 0x04; // Enable ACK for data byte 
 		break; 
 	
@@ -196,8 +226,17 @@ __irq void i2c_irq(void) {
 	
 		case (0x50) : // Data Received, ACK     
 			I2Cmessage = I21DAT;    
-			I21CONSET = 0x10; // Stop condition    
-			//lock = 0;         // Signal end of I2C activity 
+			I21CONSET = 0x10; // Stop condition
+			switch(GlobalI2CState) {
+				case I2C_DAT:
+					I21CONSET = 0x10; // Stop condition
+				  GlobalI2CState = I2C_DONE;
+				  I2Cmessage = I21DAT; // saving received data to a global variable
+					break;
+				default:
+					GlobalI2CState = I2C_ERR;
+					break;
+			}    
 		break; 
 	
 	case (0x58): // Data Received, Not Ack    
@@ -209,19 +248,37 @@ __irq void i2c_irq(void) {
 		}      
 		
 		I21CONCLR = 0x08;   // Clear I2C interrupt flag    
-		VICVectAddr = 0x00000000; // Clear interrupt in  } 
+		VICVectAddr = 0x00000000; // Clear interrupt in 
 
 }
 
+void I2CWriteReg(unsigned char addr, unsigned char reg, unsigned char data) {
+  GlobalI2CAddr = addr;
+	GlobalI2CReg = reg;
+	GlobalI2CData = data;
+	GlobalI2CRead = 0;
+	GlobalI2CState = I2C_REG;
+	
+	I21DAT = 0x00;
+
+	I21CONCLR = 0x000000FF; // Clear all I2C settings    
+	I21CONSET = 0x00000040; // Enable the I2C interface    
+	I21CONSET = 0x00000020; // Start condition
+	
+	
+	while((GlobalI2CState != I2C_ERR) && (GlobalI2CState != I2C_DONE)) {
+	;
+	}
+}
 /**************************************************************************/
 /*!
     @brief  I2C Write Data Transfer
 		Once the I2C peripheral is initialised in master mode we can start a write data transfer
 */
 /**************************************************************************/
-void I2CTransferByteWrite(unsigned char Addr, unsigned char Data) {    
-	I2CAddress = Addr;
-	I21DAT = Data;    
+void I2CTransferByteWrite(unsigned char addr, unsigned char data) {    
+
+	I21DAT = data;    
 	I21CONCLR = 0x000000FF; // Clear all I2C settings    
 	I21CONSET = 0x00000040; // Enable the I2C interface    
 	I21CONSET = 0x00000020; // Start condition }
@@ -233,8 +290,7 @@ void I2CTransferByteWrite(unsigned char Addr, unsigned char Data) {
 		Once the I2C peripheral is initialised in master mode we can start a write data transfer
 */
 /**************************************************************************/
-void I2CTransferByteRead(unsigned char Addr) {    
-	I2CAddress = Addr;
+void I2CTransferByteRead(void) {    
 	I21DAT = I2Cmessage; // global variable    
 	I21CONCLR = 0x000000FF; // Clear all I2C settings    
 	I21CONSET = 0x00000040; // Enable the I2C interface    
@@ -255,7 +311,7 @@ void i2c_init(void) {
 	VICVectAddr19 = (unsigned)i2c_irq; //pass the address of the IRQ into the VIC slot 
 	VICIntEnable = 0x00080000; // enable interrupt 	
 	PINSEL1 |= 0x000003C0; //Switch GPIO to I2C pins
-	I21SCLH = 0xF;  //Set bit rate to 500KHz 
+	I21SCLH = 0xF;  //Set bit rate to 400KHz (max BNO frequency from datasheet)
 									// Fcco = 2 * M * Fin / N = 2 * (MSEL +1 ) * 12 MHz / 1 = 2 * 12 * 12 * 10^6 = 288 * 10^6
 									// Devider CCLKCFG_Val = 0x00000005 ==> 288 /6 = 48 * 10^6
 									// CCLKCFG_Val =  0x00000000 ===> 48 / 4 = 12 * 10^6 == Input Frequency
@@ -286,6 +342,8 @@ void setBNOMode(unsigned char mode)
 int accelerometer_init(unsigned char requestedMode) {
 	uint8_t id = 0; 
 	 /* Make sure we have the right device */
+	I2CWriteReg(0x50, 0x07, 0x00);
+		//for(;;){;}
 	I2CTransferByteWrite(I2CAddress, BNO055_CHIP_ID_ADDR);
   I2CTransferByteRead(I2CAddress);
 	id = I2Cmessage;
