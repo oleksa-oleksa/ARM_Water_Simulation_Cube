@@ -10,6 +10,8 @@
 
 #include <LPC23xx.H>
 
+#include "paint_tool.h"
+
 /********************************************************************
  * Configuration for PWM1 on port 2
  ********************************************************************/
@@ -36,28 +38,8 @@
 #define LED32X32_PIN_C   5
 #define LED32X32_PIN_D   6
 
-
-typedef struct T_RGB
-{
-    int r;
-    int g;
-    int b;
-} RGB;
-
-typedef struct T_Address
-{
-    int a;
-    int b;
-    int c;
-    int d;
-} Address;
-
-typedef enum E_Color
-{
-    Black = 0, Red, Green, Blue, White
-} Color;
-
 void led32x32_init(void);
+void led32x32_pwmInit(void);
 
 /*****************************************************************************
  * Static Functions to set pin high/low
@@ -66,13 +48,6 @@ static void lp32x32_setCtrlPin(int pin);
 static void lp32x32_clearCtrlPin(int pin);
 static void sp32x32_setRgbPin(int pin);
 static void sp32x32_clearRgbPin(int pin);
-
-static void lp32x32_pinR1(int level);  // P2.0: PWM1[1]
-static void lp32x32_pinG1(int level);  // P2.1: PWM1[2]
-static void lp32x32_pinB1(int level);  // P2.2: PWM1[3]
-static void lp32x32_pinR2(int level);  // P2.3: PWM1[4]
-static void lp32x32_pinG2(int level);  // P2.4: PWM1[5]
-static void lp32x32_pinB2(int level);  // P2.5: PWM1[6]
 
 /*****************************************************************************
  * Communication Steps
@@ -83,38 +58,24 @@ void lp32x32_clock(void);
 
 void lp32x32_latch(void);
 
-RGB lp32x32_itoRgb(int i);
-
-Address lp32x32_itoAddr(int i);
-
+/**
+ * @brief Set target row by setting control signals A,B,C,D
+ */
 void lp32x32_setRow(int row);
 /**
  * @brief Set color for upper half of the panel
  */
-void lp32x32_setTopColor(Color color);
+void lp32x32_setTopColor(RGB color);
 /**
  * @brief Set color for lower half of the panel
  */
-void lp32x32_setBottomColor(Color color);
+void lp32x32_setBottomColor(RGB color);
 /**
  * @brief Refresh the panel
  * @details Each pixel condition has to previously be defined before
  *          calling this function
  */
-void lp32x32_refresh(void);
-
-void lp32x32_refresh_demo(void);
-
-/*****************************************************************************
- * Drawing Tools
- *****************************************************************************/
-void lp32x32_drawPixel(short x, short y, RGB rgb);
-
-void lp32x32_fillRect(short p0, short p1, short p2, short p3, RGB rgb);
-
-void lp32x32_drawRect(short p0, short p1, short p2, short p3, RGB rgb);
-
-void lp32x32_drawLine(short px_start, short py_start, short px_end, short py_end, RGB rgb);
-
+void lp32x32_refresh_fixed(void);
+void lp32x32_refresh(RGB panel[ROW_NUM][COL_NUM]);
 
 #endif // LED32X32_H_
