@@ -18,8 +18,6 @@ void led_selectOn(unsigned int nums);
 /********************************************************************
  * On-board LEDs PWM Mode
  ********************************************************************/
-void _pwm_registersInit(void);
 void led_pwmInit(void);
-
 
 #endif // UTILS_H_

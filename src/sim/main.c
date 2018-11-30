@@ -26,8 +26,8 @@ int main(int argc, char const *argv[])
 
     while(1)
     {
-        usleep(SEC_TO_USEC(0.1));
-        particle_move(grid, 0.05, force);
+        // usleep(SEC_TO_USEC(0.1));
+        particle_move(grid, 0.005, force);
         particle_linux_display_draw_pixels(grid);
     }
 

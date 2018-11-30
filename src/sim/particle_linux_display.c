@@ -194,7 +194,7 @@ void particle_linux_display_draw_pixels(particle_grid_element_t grid[PARTICLE_GR
     }
     // flush all pending requests to the X server.
     XFlush(display);
-    // usleep(SEC_TO_USEC(0.05)); //X11 needs some tome to display everything
+    usleep(SEC_TO_USEC(0.015)); //X11 needs some tome to display everything
     // sleep(1);
 }
 

@@ -1,0 +1,216 @@
+
+\documentclass[12pt, a4paper]{book}
+
+%% Übersetzen als Entwurf
+%\usepackage[entwurf]{bhtThesis}
+%% Übersetzen für die Abgabe
+\usepackage[abgabe]{bhtThesis}
+\let\ifpdf\relax	%bhtThesis nutzt \ifpdf
+
+\usepackage{blindtext}   %für Blindtext in Kapitel 2
+
+\usepackage{listings}             % Include the listings-package
+\renewcommand\lstlistlistingname{Quelltextverzeichnis}	%Übersetzung
+\renewcommand{\lstlistingname}{Quelltext}	%Übersetzung
+
+\newcommand*\ttvar[1]{\texttt{\expandafter\dottvar\detokenize{#1}\relax}}
+\newcommand*\dottvar[1]{\ifx\relax#1\else
+	\expandafter\ifx\string_#1\string_\allowbreak\else#1\fi
+	\expandafter\dottvar\fi}
+
+\usepackage{xcolor}
+\usepackage{xparse}% to define star variant of macro
+\makeatletter
+\def\lst@MSkipToFirst{%
+	\global\advance\lst@lineno\@ne
+	\ifnum \lst@lineno=\lst@firstline
+	\def\lst@next{\lst@LeaveMode \global\lst@newlines\z@
+		\lst@OnceAtEOL \global\let\lst@OnceAtEOL\@empty
+		\ifnum \c@lstnumber>0
+		\vspace{2 mm}
+		\fi
+		\lst@InitLstNumber % Added to work with modified \lsthk@PreInit.
+		\lsthk@InitVarsBOL
+		\c@lstnumber=\numexpr-1+\lst@lineno % this enforces the displayed line numbers to always be the input line numbers
+		\lst@BOLGobble}%
+	\expandafter\lst@next
+	\fi}
+\makeatother
+
+\lstset{ 
+  literate={ö}{{\"o}}1
+           {ä}{{\"a}}1
+           {ü}{{\"u}}1
+           {Ö}{{\"O}}1
+           {Ä}{{\"A}}1
+           {Ü}{{\"U}}1
+           {ß}{{\ss}}1,
+%  language=C,
+  numbers=left,
+  stepnumber=1,
+  tabsize=2,
+  breaklines=true,
+  basicstyle=\ttfamily\footnotesize,
+  columns=fullflexible,
+  frame=single,
+  alsoother={_-},
+%  breakatwhitespace=false,
+  alsoletter={()[]=},
+  postbreak=\mbox{\textcolor{red}{$\hookrightarrow$}},
+  keepspaces=true
+}
+
+\usepackage{multirow}
+\usepackage{array}
+\newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{C}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{R}[1]{>{\raggedleft\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+
+\usepackage[breaklinks=true]{hyperref}
+
+\usepackage{textcomp}
+
+\usepackage{wrapfig}	%wrapfigure
+
+\renewcommand{\textdownarrow}{$\downarrow$}
+\renewcommand{\textleftarrow}{$\leftarrow$}
+
+\usepackage{pdfpages}	%includepdf
+\usepackage{grffile}	%spaces in filenames
+\usepackage{chngcntr}	%continous footnote numbering (no reset from chapter to chapter)
+\counterwithout{footnote}{chapter}	%setting for package chngcntr
+\usepackage[n, operators, logic]{cryptocode}	%for crypto, pseudocode and protocol flow graphs
+\usepackage{placeins}	%for \FloatBarrier
+%\usepackage{float}		%for H option for floats
+\usepackage{caption}	%captionof in minipage und source (siehe unten)
+
+\newcommand{\source}[1]{\vspace{-10pt}\caption*{{#1}}}
+
+\usepackage{xargs}                      % Use more than one optional parameter in a new commands
+\definecolor{OliveGreen}{cmyk}{0.64,0,0.95,0.40}
+\definecolor{Plum(traditional)}{rgb}{0.56, 0.27, 0.52}
+\usepackage[colorinlistoftodos,prependcaption,textsize=tiny]{todonotes}
+\newcommandx{\unsure}[2][1=]{\todo[linecolor=red,backgroundcolor=red!25,bordercolor=red,#1]{#2}}
+\newcommandx{\change}[2][1=]{\todo[linecolor=blue,backgroundcolor=blue!25,bordercolor=blue,#1]{#2}}
+\newcommandx{\info}[2][1=]{\todo[linecolor=OliveGreen,backgroundcolor=OliveGreen!25,bordercolor=OliveGreen,#1]{#2}}
+\newcommandx{\improvement}[2][1=]{\todo[linecolor=Plum(traditional),backgroundcolor=Plum(traditional)!25,bordercolor=Plum(traditional),#1]{#2}}
+\newcommandx{\thiswillnotshow}[2][1=]{\todo[disable,#1]{#2}}
+
+\usepackage{microtype}	%better typesetting
+\usepackage[nopostdot, acronyms, nonumberlist, style=altlist, toc]{glossaries} %glossary, option: no location within the glossary %section=chapter, 
+%\usepackage{glossaries-extra} %print all unused glossary entries
+\makeglossaries
+\loadglsentries{glossary}
+\glsaddall
+
+
+\hyphenation{Schlüs-sel-aus-tausch hash-en-den} %Worttennungen
+
+\usepackage[]{appendix}
+
+\usepackage{dirtree} %directory tree
+
+\usepackage[bottom]{footmisc} %figures not below footnotes
+
+%Bibliographie:
+\usepackage[numbers, round]{natbib}
+\bibliographystyle{alphadin}
+
+%Flowcharts
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows}
+
+\tikzstyle{startstop} = [rectangle, rounded corners, minimum width=3cm, minimum height=1cm,text centered, draw=black, fill=red!30]
+\tikzstyle{io} = [trapezium, trapezium left angle=70, trapezium right angle=110, minimum width=3cm, minimum height=1cm, text centered, text width=3cm, draw=black, fill=blue!30]
+\tikzstyle{process} = [rectangle, minimum width=3cm, minimum height=1cm, text centered, text width=3cm, draw=black, fill=orange!30]
+\tikzstyle{decision} = [diamond, minimum width=3cm, minimum height=1cm, text centered, text width=3cm, draw=black, fill=green!30]
+\tikzstyle{arrow} = [thick,->,>=stealth]
+%Flowcharts end
+
+
+%%
+%% Es folgen einige Zusätze, die in Kapitel 1 beschriben sind. 
+%% Alles was nicht notwendig ist, kann auskommentiert werden
+%%
+\usepackage{trsym}
+\usepackage{bytefield}
+
+%%
+%% Use git metadata
+%%
+\usepackage[missing={gitHeadInfo.gin not found!}]{gitinfo2}
+
+%%
+%% Pfad zu den Bildern
+%%
+\graphicspath{
+  {pictures/}
+}
+
+%%
+%% Persönliche macros 
+%%
+
+
+%% Message
+\typeout{---------------------------------------------------------------}
+\typeout{----> document.tex ---- Zentrales Dokument---------------------}
+\typeout{---------------------------------------------------------------}
+
+%TODO: add gitinfo
+\version{}
+\datum{\today}
+%%
+%% Titel, Autor und Betreuer
+%%
+\fachbereich{VI -- Informatik und Medien --} 
+\studiengang{Technische Informatik - Embedded Systems}
+\autor{Kayoko Abe, Oleksandra Baga, Heiko Radde}
+\edvnr{826058, 849852, 887027}
+\titel{Dynamische Flüssigkeitssimulation auf einem RGB-Würfel}
+
+%%\renewcommand{\baselinestretch}{1.05} 
+\begin{document}
+\pagestyle{fancy}
+%\pagenumbering{empty}
+
+\input{titelseiten.tex}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Die Kapitel der Arbeit
+
+%\todo{Todo}
+%\unsure{unsure}
+%\change{change}
+%\info{info}
+%\improvement{improvement}
+
+\pagenumbering{arabic}
+
+\clearpage
+\chapter{Einführung}
+\label{chap:einfuehrung}
+%verbale Formulierung der Aufgabenstellung, erste Abschätzung der Aufwände
+\input{chapters/einfuehrung.tex}
+
+\chapter{Implementierung}
+\input{chapters/implementierung.tex}
+\section{Flüssigkeitssimulation}
+\input{chapters/impl/sph.tex}
+\section{Gyro}
+\input{chapters/impl/gyro.tex}
+\section{Display}
+\input{chapters/impl/display.tex}
+
+\chapter{Ergebnis}
+
+
+\clearpage
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Literaturverzeichnis
+
+\end{document}
