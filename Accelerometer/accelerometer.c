@@ -81,21 +81,18 @@ __irq void i2c_irq(void) {
 	switch (I21STAT) // Read result code and switch to next action 
 		{    
 		case ( 0x08): // A START condition has been transmitted. Next: 0x18    
-      
-			I21CONCLR = 0x20;    // Clear start bit       
-		  I21DAT = GlobalI2CAddr; // Send address and write bit
-      I21CONSET = 0x04;		
+      I21DAT = GlobalI2CAddr; // Send address and write bit
+			I21CONCLR = 0x28;    // Clear start bit       
 		break;  
 
 		case (0x10): // A repeated START condition has been transmitted. Next: 0x18
-			I21CONCLR = 0x20;    // Clear start bit       
-		  I21DAT = GlobalI2CAddr; // Send address and write bit
+			I21DAT = GlobalI2CAddr; // Send address and write bit
+			I21CONCLR = 0x28;    // Clear start bit       
 			break;
 		
 		case (0x18): // SLA+W has been transmitted; ACK has been received. Next: 0x28 
-      I21CONCLR = 0x04;		      
 			I21DAT = GlobalI2CReg; // Write data to TX register 
-      I21CONSET = 0x04;		
+      I21CONCLR = 0x08;		
 		break;      
 		
 		case (0x20): // SLA+W has been transmitted; NOT ACK has been received      
@@ -107,10 +104,10 @@ __irq void i2c_irq(void) {
 				case I2C_REG:
 					I21DAT = GlobalI2CReg;
 				  GlobalI2CState = I2C_DAT;
-				  I21CONSET = 0x04; // AA
+				  //I21CONSET = 0x04; // AA
 					break;
 				case I2C_DAT:
-					I21CONSET = 0x14; // Stop condition and AA
+					I21CONSET = 0x10; // Stop condition
 				  GlobalI2CState = I2C_DONE;
 					break;
 				default:
@@ -160,7 +157,6 @@ __irq void i2c_irq(void) {
 		
 		I21CONCLR = 0x08;   // Clear I2C interrupt flag    
 		VICVectAddr = 0x00000000; // Clear interrupt in 
-
 }
 
 void I2CWriteReg(unsigned char addr, unsigned char reg, unsigned char data) {
@@ -297,7 +293,7 @@ int main (void) {
 	delay();
 	
 	
-	I2CWriteReg(0x50, 0x07, 0x00);
+	I2CWriteReg(0x50, 0x3e, 0x00);
 	// BNO055 Adafruit Init
 	//if(!accelerometer_init(BNO055_OPERATION_MODE_ACCGYRO))
   //{
