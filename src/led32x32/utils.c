@@ -69,34 +69,33 @@ void led_selectOn(unsigned int nums)
 /********************************************************************
  * On-board LEDs PWM Mode
  ********************************************************************/
-void _pwm_registersInit(void)
-{
-    PWM1TC = 0;     ///< Reset timer counter
-    PWM1TCR = 0x2;  ///< Reset counter and prescaler
-
-    PWM1MR0 = 1000; ///< Set cycle rate of PWMs
-    
-    PWM1MR1 = 500; ///< Set rising edge of PWM1
-    PWM1MR2 = 200; ///< Set rising edge of PWM2
-    PWM1MR3 = 100; ///< Set rising edge of PWM3
-    
-    PWM1MR4 = 70; ///< Set rising edge of PWM4
-    PWM1MR5 = 50; ///< Set rising edge of PWM5
-    PWM1MR6 = 10; ///< Set rising edge of PWM6
-    
-    PWM1PCR = 0x7F00; ///< Set sin edge mode and enable output of PWM1-6
-    PWM1TCR = 0x9;    ///< Enable counter and PWM, clear reset, release counter from reset
-    PWM1LER = 0xFF;   ///< Enable shadow latch for match 0-6
-}
-
 void led_pwmInit(void)
 {
     led_init();
 
     PCONP |= (1 << 6);  ///< Enable power of PWM1 on port 2.0-2.5
     PCLKSEL0 |= 0x2000; ///< Select peripheral clock for PWM1 and set to be equal to CCLK
-    PINSEL4 |= 0x555; ///< Set function PWM 1.1-1.6 on port 2
-    FIO2MASK = 0;     ///< Enable write, set, clear, and read to R/W port 2
+    PINSEL4 |= 0x555;   ///< Set function PWM 1.1-1.6 on port 2
+    FIO2MASK = 0;       ///< Enable write, set, clear, and read to R/W port 2
 
-    _pwm_registersInit();
+    PWM1PCR = 0x7F00; ///< PWM Control Register: set single edge mode and enable output of PWM1-6
+    PWM1LER = 0xFF;   ///< Load Enable Register: enable use of new PWM match values
+}
+
+void led_setPwmLvl(uint32_t mr0, uint32_t mr1, uint32_t mr2, uint32_t mr3, uint32_t mr4, uint32_t mr5, uint32_t mr6)
+{
+    PWM1TC = 0;    ///< Reset timer counter
+    PWM1TCR = 0x2; ///< Reset counter and prescaler
+
+    PWM1MR0 = mr0; ///< Set cycle rate of PWMs
+
+    PWM1MR1 = mr1; ///< Set rising edge of PWM1
+    PWM1MR2 = mr2; ///< Set rising edge of PWM2
+    PWM1MR3 = mr3; ///< Set rising edge of PWM3
+
+    PWM1MR4 = mr4; ///< Set rising edge of PWM4
+    PWM1MR5 = mr5; ///< Set rising edge of PWM5
+    PWM1MR6 = mr6; ///< Set rising edge of PWM6
+
+    PWM1TCR = 0x9; ///< Enable counter, clear reset and release counter from reset, and enable PWM
 }
