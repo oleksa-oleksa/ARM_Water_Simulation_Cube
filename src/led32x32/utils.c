@@ -71,29 +71,28 @@ void led_selectOn(unsigned int nums)
  ********************************************************************/
 void _pwm_registersInit(void)
 {
-    PWM1IR = 0x70F; ///< Generate interrupts 0-6
     PWM1TC = 0;     ///< Reset timer counter
     PWM1TCR = 0x2;  ///< Reset counter and prescaler
-    PWM1PR = 0x1;   ///< Load prescale register
 
-    PWM1MR0 = 0x10; ///< Set cycle rate of PWMs to 16 ticks
+    PWM1MR0 = 1000; ///< Set cycle rate of PWMs
     
-    PWM1MR1 = 0x0f; ///< Set rising edge of PWM1
-    PWM1MR2 = 0x06; ///< Set rising edge of PWM2
-    PWM1MR3 = 0x06; ///< Set rising edge of PWM3
+    PWM1MR1 = 500; ///< Set rising edge of PWM1
+    PWM1MR2 = 200; ///< Set rising edge of PWM2
+    PWM1MR3 = 100; ///< Set rising edge of PWM3
     
-    PWM1MR4 = 0x0F; ///< Set rising edge of PWM4
-    PWM1MR5 = 0x05; ///< Set rising edge of PWM5
-    PWM1MR6 = 0x02; ///< Set rising edge of PWM6
+    PWM1MR4 = 70; ///< Set rising edge of PWM4
+    PWM1MR5 = 50; ///< Set rising edge of PWM5
+    PWM1MR6 = 10; ///< Set rising edge of PWM6
     
-    PWM1MCR = 0x03;   ///< Generate interrupt and reset counter on match
-    PWM1LER = 0x7F;   ///< Enable shadow latch for match 0-6
     PWM1PCR = 0x7F00; ///< Set sin edge mode and enable output of PWM1-6
-    PWM1TCR = 0x09;   ///< Enable counter and PWM, clear reset, release counter from reset
+    PWM1TCR = 0x9;    ///< Enable counter and PWM, clear reset, release counter from reset
+    PWM1LER = 0xFF;   ///< Enable shadow latch for match 0-6
 }
 
 void led_pwmInit(void)
 {
+    led_init();
+
     PCONP |= (1 << 6);  ///< Enable power of PWM1 on port 2.0-2.5
     PCLKSEL0 |= 0x2000; ///< Select peripheral clock for PWM1 and set to be equal to CCLK
     PINSEL4 |= 0x555; ///< Set function PWM 1.1-1.6 on port 2

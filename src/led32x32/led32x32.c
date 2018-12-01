@@ -158,7 +158,7 @@ void lp32x32_refresh_fixed(void)
 }
 
 // TODO use pwm
-void lp32x32_refresh(RGB panel[ROW_NUM][COL_NUM])
+void lp32x32_refresh(uint32_t panel[ROW_NUM][COL_NUM])
 {    
     for (int row = 0; row < (ROW_NUM/2); ++row)
     {
@@ -168,8 +168,9 @@ void lp32x32_refresh(RGB panel[ROW_NUM][COL_NUM])
 
         for (int col = 0; col < (COL_NUM - 1); ++col)
         {
-            lp32x32_setTopColor(panel[row][col]);
-            lp32x32_setBottomColor(panel[row + (ROW_NUM/2) - 1][col]);
+            // TODO fix
+            //lp32x32_setTopColor(panel[row][col]);
+            //lp32x32_setBottomColor(panel[row + (ROW_NUM/2) - 1][col]);
 
             lp32x32_clock();
         }

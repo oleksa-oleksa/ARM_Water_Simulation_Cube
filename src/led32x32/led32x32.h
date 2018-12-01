@@ -9,6 +9,7 @@
 #define LED32X32_H_
 
 #include <LPC23xx.H>
+#include <stdint.h>
 
 #include "paint_tool.h"
 
@@ -76,6 +77,6 @@ void lp32x32_setBottomColor(RGB color);
  *          calling this function
  */
 void lp32x32_refresh_fixed(void);
-void lp32x32_refresh(RGB panel[ROW_NUM][COL_NUM]);
+void lp32x32_refresh(uint32_t panel[ROW_NUM][COL_NUM]);
 
 #endif // LED32X32_H_

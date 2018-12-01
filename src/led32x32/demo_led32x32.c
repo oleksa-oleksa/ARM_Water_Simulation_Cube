@@ -2,25 +2,24 @@
 #include "led32x32.h"
 #include "paint_tool.h"
 
-#include <stdio.h>
+#define LED32X32_PWMMODE 0
+#define LED32X32         1
+#define LED_PWMMODE      2
+#define LED_DEFAULT      3
 
-#define LED32X32_PWMMODE
-#define LED32X32
-#define LED_PWMMODE
-#define LED_DEFAULT
+#define MODE LED_PWMMODE
 
 int main(void)
 {
-    RGB panel[ROW_NUM][COL_NUM];
-    // TODO fill panel
+    uint32_t demoGrid[ROW_NUM][COL_NUM]; ///< Include information on particle density per LED pixel
 
-    #if defined(LED32X32_PWMMODE)
+    #if MODE == 0
        led32x32_pwmInit();
-    #elif defined(LED32X32)
+    #elif MODE == 1
        led32x32_init();
-    #elif defined(LED_PWMMODE)
+    #elif MODE == 2
        led_pwmInit();
-    #elif defined(LED_DEFAULT)
+    #elif MODE == 3
        led_init();
        delay();
        led_on(0);
@@ -31,10 +30,9 @@ int main(void)
        led_selectOn(0xF1);
     #endif
 
-    led32x32_init();
     while(1)
     {
         //lp32x32_refresh_fixed();
-        lp32x32_refresh(panel);
+        //lp32x32_refresh(demoGrid);
     }
 }
