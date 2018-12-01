@@ -39,8 +39,10 @@
 #define LED32X32_PIN_C   5
 #define LED32X32_PIN_D   6
 
+/**
+ * @brief Initialize LED functionality and enable output on port 3
+ */
 void led32x32_init(void);
-void led32x32_pwmInit(void);
 
 /*****************************************************************************
  * Static Functions to set pin high/low
@@ -63,14 +65,17 @@ void lp32x32_latch(void);
  * @brief Set target row by setting control signals A,B,C,D
  */
 void lp32x32_setRow(int row);
+
 /**
  * @brief Set color for upper half of the panel
  */
 void lp32x32_setTopColor(RGB color);
+
 /**
  * @brief Set color for lower half of the panel
  */
 void lp32x32_setBottomColor(RGB color);
+
 /**
  * @brief Refresh the panel
  * @details Each pixel condition has to previously be defined before

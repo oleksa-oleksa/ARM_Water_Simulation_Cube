@@ -34,10 +34,10 @@ void delay(void)
  ********************************************************************/
 void led_init(void)
 {
-    PINSEL10 = 0;          ///< Disable ETM interface, enable LEDs (turn all LEDs on)
-    PINSEL4 = 0;           ///< Set function GPIO on port 2
+    PINSEL10 = 0;    ///< Disable ETM interface, enable LEDs (turn all LEDs on)
+    PINSEL4 = 0;     ///< Set function GPIO on port 2
     FIO2DIR  = 0xFF; ///< P2.0..7 defined as output
-    FIO2MASK = 0; ///< Enable write, set, clear, and read to R/W port 2
+    FIO2MASK = 0;    ///< Enable write, set, clear, and read to R/W port 2
 }
 
 void led_on(unsigned int num)
@@ -69,17 +69,16 @@ void led_selectOn(unsigned int nums)
 /********************************************************************
  * On-board LEDs PWM Mode
  ********************************************************************/
-void led_pwmInit(void)
-{
-    led_init();
 
+void led_setPwm(void)
+{
     PCONP |= (1 << 6);  ///< Enable power of PWM1 on port 2.0-2.5
     PCLKSEL0 |= 0x2000; ///< Select peripheral clock for PWM1 and set to be equal to CCLK
     PINSEL4 |= 0x555;   ///< Set function PWM 1.1-1.6 on port 2
     FIO2MASK = 0;       ///< Enable write, set, clear, and read to R/W port 2
 
-    PWM1PCR = 0x7F00; ///< PWM Control Register: set single edge mode and enable output of PWM1-6
-    PWM1LER = 0xFF;   ///< Load Enable Register: enable use of new PWM match values
+    PWM1PCR = 0x7F00;   ///< PWM Control Register: set single edge mode and enable output of PWM1-6
+    PWM1LER = 0xFF;     ///< Load Enable Register: enable use of new PWM match values
 }
 
 void led_setPwmLvl(uint32_t mr0, uint32_t mr1, uint32_t mr2, uint32_t mr3, uint32_t mr4, uint32_t mr5, uint32_t mr6)

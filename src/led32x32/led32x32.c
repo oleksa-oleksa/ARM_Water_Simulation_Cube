@@ -31,6 +31,7 @@ static void lp32x32_clearCtrlPin(int pin)
 /*****************************************************************************
  * Communication Steps
  *****************************************************************************/
+/*
 void _led32x32_pwm_registersInit(void)
 {
     PWM1IR = 0x70F; ///< Generate interrupts 0-6
@@ -54,32 +55,15 @@ void _led32x32_pwm_registersInit(void)
     PWM1PCR = 0x7F00; ///< Set sin edge mode and enable output of PWM1-6
     PWM1TCR = 0x09;   ///< Enable counter and PWM, clear reset, release counter from reset
 }
-
+*/
 void led32x32_init(void)
 {
-    PCONP |= (1 << 6);  ///< Enable power of PWM1 on port 2.0-2.5
-    PCLKSEL0 |= 0x2000; ///< Select peripheral clock for PWM1 and set to be equal to CCLK
-    
-    // Set port 2 as GPIO
-    PINSEL10 = 0;    ///< Disable ETM interface, enable LEDs (turn all LEDs on)
-    PINSEL4 = 0;     ///< Set function GPIO on port 2.0..7
-    FIO2DIR  = 0xFF; ///< P2.0..7 defined as output
-    FIO2MASK = 0;    ///< Enable write, set, clear, and read to R/W port 2
+    led_init();
 
     // Set port 3
     PINSEL6 = 0;     ///< Set function GPIO on port 3.0..5
     FIO3DIR = 0xFF;  ///< P3.0..7 defined as output
     FIO3MASK = 0;    ///< Enable write, set, clear, and read to R/W port 3
-}
-
-void led32x32_pwmInit(void)
-{
-    led32x32_init();
-    
-    // Set port 2 as pwm
-    PINSEL4 |= 0x555;              ///< Set function PWM 1.1-1.6 on port 2
-    FIO2MASK = 0;                  ///< Enable write, set, clear, and read to R/W port 2
-    _led32x32_pwm_registersInit();
 }
 
 void lp32x32_setpixels(void)
@@ -137,33 +121,32 @@ void lp32x32_setBottomColor(RGB color)
 
 void lp32x32_refresh_fixed(void)
 {    
-    for (int row = 0; row < (ROW_NUM/2); ++row)
-    {
-        lp32x32_setCtrlPin(LED32X32_PIN_OE); ///< Set OE high
-        lp32x32_setTopColor(RGB_BLACK);      ///< All LEDs on the panell off        
-        lp32x32_setRow(row);                 ///< Set address between 0 - 15
+    int row;
+    int col;
 
-        for (int col = 0; col < (COL_NUM - 1); ++col)
+    for (row = 0; row < (ROW_NUM/2); ++row)
+    {
+        for (col = 0; col < COL_NUM; ++col)
         {
-            lp32x32_setTopColor(RGB_GREEN);
+            lp32x32_setCtrlPin(LED32X32_PIN_OE); ///< Set OE high
+            lp32x32_setRow(row);                 ///< Set address between 0 - 15
+
+            lp32x32_setTopColor(RGB_BLUE);
             lp32x32_setBottomColor(RGB_RED);
 
             lp32x32_clock();
+            lp32x32_latch();
+            lp32x32_clearCtrlPin(LED32X32_PIN_OE); ///< Set OE low
         }
-
-        lp32x32_latch();
-        lp32x32_clearCtrlPin(LED32X32_PIN_OE); ///< Set OE low
-        delay(); // TODO remove later. This is used for debug purpose.
     }
 }
 
 // TODO use pwm
 void lp32x32_refresh(uint32_t panel[ROW_NUM][COL_NUM])
-{    
+{
     for (int row = 0; row < (ROW_NUM/2); ++row)
     {
         lp32x32_setCtrlPin(LED32X32_PIN_OE); ///< Set OE high
-        lp32x32_setTopColor(RGB_BLACK);      ///< All LEDs on the panell off        
         lp32x32_setRow(row);                 ///< Set address between 0 - 15
 
         for (int col = 0; col < (COL_NUM - 1); ++col)
@@ -171,10 +154,8 @@ void lp32x32_refresh(uint32_t panel[ROW_NUM][COL_NUM])
             // TODO fix
             //lp32x32_setTopColor(panel[row][col]);
             //lp32x32_setBottomColor(panel[row + (ROW_NUM/2) - 1][col]);
-
-            lp32x32_clock();
         }
-
+        lp32x32_clock();
         lp32x32_latch();
         lp32x32_clearCtrlPin(LED32X32_PIN_OE); ///< Set OE low
         delay(); // TODO remove later. This is used for debug purpose.
