@@ -1,32 +1,40 @@
 #include "utils.h"
 #include "led32x32.h"
+#include "paint_tool.h"
 
-//#define LED_DEFAULT 1
-#define LED_PWMMODE 1
-#define LED32X32 1
+#include <stdio.h>
+
+#define LED32X32_PWMMODE
+#define LED32X32
+#define LED_PWMMODE
+#define LED_DEFAULT
 
 int main(void)
 {
-#ifdef LED32X32
+    RGB panel[ROW_NUM][COL_NUM];
+    // TODO fill panel
+
+    #if defined(LED32X32_PWMMODE)
+       led32x32_pwmInit();
+    #elif defined(LED32X32)
+       led32x32_init();
+    #elif defined(LED_PWMMODE)
+       led_pwmInit();
+    #elif defined(LED_DEFAULT)
+       led_init();
+       delay();
+       led_on(0);
+       delay();
+       led_on(1);
+       delay();
+       led_allOff();
+       led_selectOn(0xF1);
+    #endif
+
     led32x32_init();
-    lp32x32_refresh_demo();
-
-#elif LED_DEFAULT
-    led_init();
-    delay();
-    led_on(0);
-    delay();
-    led_on(1);
-    delay();
-    led_all_off();
-    led_select_on(0xF1);
-#elif LED_PWMMODE
-    led_pwmInit();
-#endif
-
-    while (1)
+    while(1)
     {
-        lp32x32_refresh_demo();
+        //lp32x32_refresh_fixed();
+        lp32x32_refresh(panel);
     }
-
 }

@@ -21,11 +21,16 @@
 /* Global variables */
 unsigned char I2Cdata; // data to send into I2C
 unsigned char I2Cmessage; // received data fron I2C
-unsigned int I2CAddress = 0xE005C000;
+unsigned int I2CAddress = 0x50; //01010000
 unsigned char BNOMode;
 unsigned char *BNO_AccVector;
 unsigned char *BNO_GyrVector;
 
+unsigned char GlobalI2CAddr;
+unsigned char GlobalI2CReg;
+unsigned char GlobalI2CData;
+unsigned char GlobalI2CRead;
+volatile enum {I2C_REG, I2C_DAT, I2C_ERR, I2C_DONE} GlobalI2CState;
 
 typedef enum
     {
@@ -131,7 +136,7 @@ extern       void init_serial    (void);
 /**************************************************************************/
 void delay(void) {
 	int i;
-	for (i = 0; i < 200000; i++) {
+	for (i = 0; i < 2000008; i++) {
 		// just a hadrcore delay
 	};
 }
@@ -147,10 +152,14 @@ void lcd_print_greeting(void) {
   lcd_print ("Accelerometer");
   set_cursor (0, 1);
   lcd_print ("Beuth Hochschule");
+	set_cursor (0, 0);
+	delay();
+
 }
 
  void lcd_print_message(unsigned char *msg) {
 	lcd_clear();
+	set_cursor (0, 0);
   lcd_print(msg);
 }
 
@@ -161,28 +170,53 @@ void lcd_print_greeting(void) {
 		and  performs  the  necessary  action 
 */
 /**************************************************************************/
-void i2c_isr(void) {
+__irq void i2c_irq(void) {
 
 	switch (I21STAT) // Read result code and switch to next action 
 		{    
-		case ( 0x08): // Start bit       
+		case ( 0x08): // A START condition has been transmitted. Next: 0x18       
 			I21CONCLR = 0x20;    // Clear start bit       
-		  I21DAT = I2CAddress; // Send address and write bit 
-		break;      
-		
-		case (0x18): // Slave address+W, ACK       
-			I21DAT = I2Cdata; // Write data to TX register    
-		break;      
-		
-		case (0x20): // Slave address +W, Not ACK       
-			I21DAT = I2CAddress; // Resend address and write bit    
-		break;      
-		
-		case (0x28): // Data sent, Ack       
-			I21CONSET = 0x10; // Stop condition    
-		break; 
+		  I21DAT = GlobalI2CAddr; // Send address and write bit 
+		break;  
 
-		case (0x40) : // Slave Address +R, ACK    
+		case (0x10): // A repeated START condition has been transmitted. Next: 0x18
+			I21CONCLR = 0x20;    // Clear start bit       
+		  I21DAT = GlobalI2CAddr; // Send address and write bit
+			break;
+		
+		case (0x18): // SLA+W has been transmitted; ACK has been received. Next: 0x28       
+			I21DAT = GlobalI2CReg; // Write data to TX register    
+		break;      
+		
+		case (0x20): // SLA+W has been transmitted; NOT ACK has been received      
+			GlobalI2CState = I2C_ERR;    
+		break;      
+		
+		case (0x28): // Data byte in I2DAT has been transmitted; ACK has been received.
+      switch(GlobalI2CState) {
+				case I2C_REG:
+					I21DAT = GlobalI2CReg;
+				  GlobalI2CState = I2C_DAT;
+					break;
+				case I2C_DAT:
+					I21CONSET = 0x10; // Stop condition
+				  GlobalI2CState = I2C_DONE;
+					break;
+				default:
+					GlobalI2CState = I2C_ERR;
+					break;
+			}				
+		break; 
+		
+		case (0x30): // Data sent, Not Ack 
+			GlobalI2CState = I2C_ERR;          
+		break;
+
+    case (0x38): // Arbitration lost 
+			GlobalI2CState = I2C_ERR;          
+		break;		
+
+		case (0x40) : // SLA+R has been transmitted; ACK has been received. Next: 0x50   
 			I21CONSET = 0x04; // Enable ACK for data byte 
 		break; 
 	
@@ -192,32 +226,59 @@ void i2c_isr(void) {
 	
 		case (0x50) : // Data Received, ACK     
 			I2Cmessage = I21DAT;    
-			I21CONSET = 0x10; // Stop condition    
-			//lock = 0;         // Signal end of I2C activity 
+			I21CONSET = 0x10; // Stop condition
+			switch(GlobalI2CState) {
+				case I2C_DAT:
+					I21CONSET = 0x10; // Stop condition
+				  GlobalI2CState = I2C_DONE;
+				  I2Cmessage = I21DAT; // saving received data to a global variable
+					break;
+				default:
+					GlobalI2CState = I2C_ERR;
+					break;
+			}    
 		break; 
 	
 	case (0x58): // Data Received, Not Ack    
 			I21CONSET = 0x20; // Resend Start condition 
 	break;		
 		
-		default   :      
+		default:      
 			break;      
 		}      
 		
 		I21CONCLR = 0x08;   // Clear I2C interrupt flag    
-		VICVectAddr = 0x00000000; // Clear interrupt in  } 
+		VICVectAddr = 0x00000000; // Clear interrupt in 
 
 }
 
+void I2CWriteReg(unsigned char addr, unsigned char reg, unsigned char data) {
+  GlobalI2CAddr = addr;
+	GlobalI2CReg = reg;
+	GlobalI2CData = data;
+	GlobalI2CRead = 0;
+	GlobalI2CState = I2C_REG;
+	
+	I21DAT = 0x00;
+
+	I21CONCLR = 0x000000FF; // Clear all I2C settings    
+	I21CONSET = 0x00000040; // Enable the I2C interface    
+	I21CONSET = 0x00000020; // Start condition
+	
+
+/*	while((GlobalI2CState != I2C_ERR) && (GlobalI2CState != I2C_DONE)) {
+	;
+	} */
+}
 /**************************************************************************/
 /*!
     @brief  I2C Write Data Transfer
 		Once the I2C peripheral is initialised in master mode we can start a write data transfer
 */
 /**************************************************************************/
-void I2CTransferByteWrite(unsigned char Addr, unsigned char Data) {    
-	I2CAddress = Addr;
-	I21DAT = Data;    
+void I2CTransferByteWrite(unsigned char addr, unsigned char data) {    
+
+	I21DAT = data;    
 	I21CONCLR = 0x000000FF; // Clear all I2C settings    
 	I21CONSET = 0x00000040; // Enable the I2C interface    
 	I21CONSET = 0x00000020; // Start condition }
@@ -229,8 +290,7 @@ void I2CTransferByteWrite(unsigned char Addr, unsigned char Data) {
 		Once the I2C peripheral is initialised in master mode we can start a write data transfer
 */
 /**************************************************************************/
-void I2CTransferByteRead(unsigned char Addr) {    
-	I2CAddress = Addr;
+void I2CTransferByteRead(void) {    
 	I21DAT = I2Cmessage; // global variable    
 	I21CONCLR = 0x000000FF; // Clear all I2C settings    
 	I21CONSET = 0x00000040; // Enable the I2C interface    
@@ -247,12 +307,17 @@ void I2CTransferByteRead(unsigned char Addr) {
 /**************************************************************************/
 void i2c_init(void) {
 	
-	VICVectCntl1 = 0x00000029;       // select a priority slot for a given interrupt
-	VICVectAddr1 = (unsigned)i2c_isr; //pass the address of the IRQ into the VIC slot 
-	VICIntEnable = 0x00000200; // enable interrupt 
-	PINSEL1 = 0x50; //Switch GPIO to I2C pins
-	I21SCLH = 0x08; //Set bit rate to 57.6KHz
-	I21SCLL  = 0x08;
+	VICVectCntl19 = 0x0000001;       // select a priority slot for a given interrupt
+	VICVectAddr19 = (unsigned)i2c_irq; //pass the address of the IRQ into the VIC slot 
+	VICIntEnable = 0x00080000; // enable interrupt 	
+	PINSEL1 |= 0x000003C0; //Switch GPIO to I2C pins
+	I21SCLH = 0xF;  //Set bit rate to 400KHz (max BNO frequency from datasheet)
+									// Fcco = 2 * M * Fin / N = 2 * (MSEL +1 ) * 12 MHz / 1 = 2 * 12 * 12 * 10^6 = 288 * 10^6
+									// Devider CCLKCFG_Val = 0x00000005 ==> 288 /6 = 48 * 10^6
+									// CCLKCFG_Val =  0x00000000 ===> 48 / 4 = 12 * 10^6 == Input Frequency
+									// BNO055 max frequency 400 KHz = 4 * 10^5
+									// SCLH + SCLL = 30
+	I21SCLL  = 0xF;
 }
 
 /**************************************************************************/
@@ -262,8 +327,8 @@ void i2c_init(void) {
 /**************************************************************************/
 void setBNOMode(unsigned char mode)
 {
-  I2CTransferByteWrite(I2CAddress, BNO055_OPR_MODE_ADDR);
-	I2CTransferByteWrite(I2CAddress, mode);
+ 	I2CWriteReg(0x50, 0x07, BNO055_OPR_MODE_ADDR);
+	I2CWriteReg(0x50, 0x07, mode);
   delay();
 }
 
@@ -277,8 +342,9 @@ void setBNOMode(unsigned char mode)
 int accelerometer_init(unsigned char requestedMode) {
 	uint8_t id = 0; 
 	 /* Make sure we have the right device */
-	I2CTransferByteWrite(I2CAddress, BNO055_CHIP_ID_ADDR);
-  I2CTransferByteRead(I2CAddress);
+	I2CWriteReg(0x50, 0x07, 0x00);
+	delay();
+  I2CTransferByteRead();
 	id = I2Cmessage;
 	
   if (id != BNO055_ID)
@@ -286,9 +352,9 @@ int accelerometer_init(unsigned char requestedMode) {
     delay();
 			
 		// repeat 
-    I2CTransferByteRead(I2CAddress);
+    I2CTransferByteRead();
 		id = I2Cmessage;
-    
+   	
 		if(id != BNO055_ID) {
       return 0;  // still not? ok bail
     }
@@ -303,7 +369,7 @@ int accelerometer_init(unsigned char requestedMode) {
 
 	do {
 		
-		I2CTransferByteRead(I2CAddress);
+		I2CTransferByteRead();
 		id = I2Cmessage;
 		delay();
 		
@@ -380,7 +446,7 @@ int readLen(unsigned char Addr, unsigned char reg, unsigned char * buffer, uint8
  
   for (i = 0; i < len; i++)
   {
-    I2CTransferByteRead(I2CAddress);
+    I2CTransferByteRead();
   }
 
   return 1;
@@ -474,6 +540,7 @@ int main (void) {
 
 	// LCD Init
   lcd_init();
+	delay();
 	lcd_print_greeting();
 	delay();
 
@@ -481,26 +548,34 @@ int main (void) {
 	i2c_init();
 	delay();
 	
+	
 	// BNO055 Adafruit Init
 	if(!accelerometer_init(BNO055_OPERATION_MODE_ACCGYRO))
   {
-    printf("Ooops, no BNO055 detected ... Check your wiring or I2C ADDR!");
-    while(1); // user should manually reboot the system after solving the problem
+    lcd_print_message("NO BNO055 found");
+    delay();
   }
 	
 	delay();
 	
-	setExtCrystalUse(1);
-  
+	setExtCrystalUse(1);		
+	
 	while (1) {
-		
-			/* Get a new sensor event */ 
 			sensors_event_t event; 
+		
+			lcd_print_message("ACCGYRO started");
+			/* Get a new sensor event */ 
 			getBNOEvent(&event, VECTOR_ACCELEROMETER, BNO_AccVector);
 			getBNOEvent(&event, VECTOR_GYROSCOPE, BNO_GyrVector);
 
-			sprintf(message, "%i", (int)I2Cmessage);
-      lcd_print_message(message); 
+			sprintf(message, "%8.2f", event.orientation.x);
+			lcd_print_message(message);
+			delay();
+			delay();
+
+		
+		  sprintf(message, "%i", (int)I2Cmessage);
+		  //lcd_print_message(message); 
 			delay();
   }  
 }
