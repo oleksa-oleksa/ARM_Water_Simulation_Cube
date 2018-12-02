@@ -4,7 +4,13 @@
 #include <LPC23xx.H>
 #include <stdint.h>
 
-void delay(void);
+#define SYS_CLK 1000 // [kHz]
+
+/**
+ * @brief delay
+ * @param[in] delay_ms time in milli second
+ */
+void delay(int delay_ms);
 
 /********************************************************************
  * On-board LEDs Normal Mode

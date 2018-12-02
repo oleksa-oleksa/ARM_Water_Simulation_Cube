@@ -7,31 +7,36 @@
 #define LED_PWMMODE      2
 #define LED_DEFAULT      3
 
-#define MODE LED_PWMMODE
+#define MODE LED32X32
 
 int main(void)
 {
     //uint32_t demoGrid[ROW_NUM][COL_NUM]; ///< Include information on particle density per LED pixel
 
     #if MODE == LED32X32_PWMMODE
-        led32x32_pwmInit();
+        led32x32_init();
+        led_setPwm();
 
     #elif MODE == LED32X32
         led32x32_init();
 
     #elif MODE == LED_PWMMODE
-        led_pwmInit();
+        led_init();
+        led_setPwm();
+
         led_setPwmLvl(1000,500,200,100,70,50,10);
         led_setPwmLvl(1000,10,50,70,100,200,500);
         led_setPwmLvl(1000,10,500,10,500,10,500);
+        led_setPwmLvl(1000,1000,1000,1000,200,200,200);
 
     #elif MODE == LED_DEFAULT
         led_init();
-        delay();
+
+        delay(100);
         led_on(0);
-        delay();
+        delay(100);
         led_on(1);
-        delay();
+        delay(100);
         led_allOff();
         led_selectOn(0xF1);
 
@@ -39,7 +44,7 @@ int main(void)
 
     while(1)
     {
-        //lp32x32_refresh_fixed();
+        lp32x32_refresh_fixed();
         //lp32x32_refresh(demoGrid);
     }
 }

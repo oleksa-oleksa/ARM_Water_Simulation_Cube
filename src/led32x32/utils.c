@@ -12,10 +12,12 @@
  *                = (1000000 * 100 ms) - 1
  *                = 99999
  */
-void delay(void)
+void delay(int delay_ms)
 {
+    uint32_t freq = SYS_CLK * delay_ms - 1;
+
     T0TCR = (1 << 1); ///< Reset Timer 0 (TC and PC)
-    T0MR0 = 99999;   ///< Load match register
+    T0MR0 = freq;   ///< Load match register
     T0PR = 10;        ///< Load prescale register
     T0PC = 0;         ///< Reset prescale counter
     T0TC = 0;         ///< Reset timer counter
