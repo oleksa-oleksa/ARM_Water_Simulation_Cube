@@ -21,7 +21,7 @@
 /* Global variables */
 unsigned char I2Cdata; // data to send into I2C
 unsigned char I2Cmessage; // received data fron I2C
-unsigned int I2CAddress = 0x50; //01010000
+unsigned int BNOI2CAddress = 0x50; //01010000 Device (Slave) Address (7 bits) shifted BNO055_I2C_ADDR1 (0x28) 
 unsigned char BNOMode;
 unsigned char *BNO_AccVector;
 unsigned char *BNO_GyrVector;
@@ -87,14 +87,16 @@ __irq void i2c_irq(void) {
 
 		case (0x10): // A repeated START condition has been transmitted. Next: 0x18
 			if(GlobalI2CState == I2C_READ) {
-			  I21DAT = GlobalI2CAddr | 1; // Send address and read bit
+				// Write Slave Address with R/W bit to I2DAT
+			  I21DAT = GlobalI2CAddr | 1; // Send address and read bit R/W = 1
 			} else {
-				I21DAT = GlobalI2CAddr; // Send address and write bit
+				I21DAT = GlobalI2CAddr; // Send address and write bit R/W = 0
 			}
+			I21CONSET = 0x04; // set the AA bit
 			I21CONCLR = 0x28;    // Clear start bit       
 			break;
 		
-		case (0x18): // SLA+W has been transmitted; ACK has been received. Next: 0x28 
+		case (0x18): // SLA+W has been transmitted; ACK has been received. Next: 0x28 or 0x38
 			I21DAT = GlobalI2CReg; // Write data to TX register 
       I21CONCLR = 0x08;		
 		break;      
@@ -105,8 +107,8 @@ __irq void i2c_irq(void) {
 		
 		case (0x28): // Data byte in I2DAT has been transmitted; ACK has been received.
 			if (GlobalI2CRead) {
-			  I21CONSET = 0x20; // Start condition
-				GlobalI2CState = I2C_READ;
+			  GlobalI2CState = I2C_READ;
+				I21CONSET = 0x20; // Start condition				
 			} else {
         switch(GlobalI2CState) {
 				  case I2C_REG:
@@ -143,6 +145,9 @@ __irq void i2c_irq(void) {
 	
 		case (0x50) : // Data Received, ACK     
 			GlobalI2CData = I21DAT;    
+			//new
+			I21CONCLR = 0x0C; //clear the SI flag and the AA bit
+			I21CONSET = 0x04; // Write 0x04 to I2CONSET to set the AA bit
 			I21CONSET = 0x10; // Stop condition
 			GlobalI2CState = I2C_DONE;   
 		 break; 
@@ -219,7 +224,8 @@ void i2c_init(void) {
 	I21SCLH  = 60;
 	
 	I21CONCLR = 0x000000FF; // Clear all I2C settings
-  delay();	
+  delay();
+	// Before the master transmitter mode can be entered, I2CONSET must be initialized with 0100 0000
 	I21CONSET = 0x00000040; // Enable the I2C interface 
 }
 
@@ -229,27 +235,29 @@ void i2c_init(void) {
     Note: I2C should be already enabled
 */
 /**************************************************************************/
-/*int accelerometer_init(unsigned char requestedMode) {
-	uint8_t id = 0; 
-	 // Make sure we have the right device
-	I2CWriteReg(0x50, 0x07, 0x00);
-	delay();
-  I2CTransferByteRead();
-	id = I2Cmessage;
+int accelerometer_init(unsigned char requestedMode) {
+	volatile uint8_t id;
+	
+	// Make sure we have the right device
+	//I2CWriteReg(BNOI2CAddress, 0x3e, 0x00);
+	//I2CWriteReg(BNOI2CAddress, 0x3e, BNO055_CHIP_ID_ADDR);
+	//id = I2CReadReg(BNOI2CAddress, BNO055_CHIP_ID_ADDR);
+	I2CWriteReg(BNOI2CAddress, 0x3e, BNO055_CHIP_ID_ADDR);
+	id = I2CReadReg(BNOI2CAddress, BNO055_CHIP_ID_ADDR);
 	
   if (id != BNO055_ID)
   {
     delay();
-			
 		// repeat 
-    I2CTransferByteRead();
-		id = I2Cmessage;
-   	
+    //I2CTransferByteRead();
+		id = I2CReadReg(0x50, 0x00);
+		
 		if(id != BNO055_ID) {
       return 0;  // still not? ok bail
     }
   }
 	
+	/*
   // Switch to config mode (just in case since this is the default)
   setBNOMode(BNO055_OPERATION_MODE_CONFIG);
 	
@@ -285,10 +293,9 @@ void i2c_init(void) {
   setBNOMode(requestedMode);
 	BNOMode = requestedMode;
   delay();
-	
+	*/
 	return 1;
-}*/
-
+}
 
 /*************************************************************/
 
@@ -296,22 +303,21 @@ int main (void) {
 	volatile uint8_t id;
 	
 	// LCD Init
-  lcd_init();
-	delay();
-	lcd_print_greeting();
-	delay();
+  //lcd_init();
+	//lcd_print_greeting();
+	//delay();
 
 	// I2C Init 
 	i2c_init(); // fixed, works properly
 	delay();
 	
 	// last position
-	//I2CWriteReg(0x50, 0x3e, 0x00);
-	//id = I2CReadReg(0x50, 0x00);
+	I2CWriteReg(0x50, 0x3e, 0x00);
+	id = I2CReadReg(0x50, 0x00);
 	// last position end
 	
 	// BNO055 Adafruit Init
-	if(accelerometer_init(BNO055_OPERATION_MODE_ACCGYRO))
+	/*if(accelerometer_init(BNO055_OPERATION_MODE_ACCGYRO))
   {
     lcd_print_message("BNO055 OK!");
     delay();
@@ -319,12 +325,14 @@ int main (void) {
 	else {
 		lcd_print_message("NO BNO055 found");
 	}
-	
+	*/
 	//delay();
 	
 	//setExtCrystalUse(1);		
 	
 	while (1) {
+			//lcd_print_message(&id);
+			delay();
 			/*sensors_event_t event; 
 		
 			lcd_print_message("ACCGYRO started");
