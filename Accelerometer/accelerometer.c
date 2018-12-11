@@ -30,10 +30,9 @@ unsigned char GlobalI2CAddr;
 unsigned char GlobalI2CReg;
 unsigned char GlobalI2CData;
 unsigned char GlobalI2CRead;
-volatile enum {I2C_REG, I2C_DAT, I2C_ERR, I2C_DONE} GlobalI2CState;
+volatile enum {I2C_REG, I2C_DAT, I2C_READ, I2C_ERR, I2C_DONE} GlobalI2CState;
 
-/* Import external functions from Serial.c file                               */
-extern       void init_serial    (void);
+volatile uint8_t DebugI2CState;
 
 /**************************************************************************/
 /*!
@@ -78,6 +77,7 @@ void lcd_print_greeting(void) {
 /**************************************************************************/
 __irq void i2c_irq(void) {
 
+	DebugI2CState = I21STAT;
 	switch (I21STAT) // Read result code and switch to next action 
 		{    
 		case ( 0x08): // A START condition has been transmitted. Next: 0x18    
@@ -86,7 +86,11 @@ __irq void i2c_irq(void) {
 		break;  
 
 		case (0x10): // A repeated START condition has been transmitted. Next: 0x18
-			I21DAT = GlobalI2CAddr; // Send address and write bit
+			if(GlobalI2CState == I2C_READ) {
+			  I21DAT = GlobalI2CAddr | 1; // Send address and read bit
+			} else {
+				I21DAT = GlobalI2CAddr; // Send address and write bit
+			}
 			I21CONCLR = 0x28;    // Clear start bit       
 			break;
 		
@@ -100,20 +104,25 @@ __irq void i2c_irq(void) {
 		break;      
 		
 		case (0x28): // Data byte in I2DAT has been transmitted; ACK has been received.
-      switch(GlobalI2CState) {
-				case I2C_REG:
-					I21DAT = GlobalI2CReg;
-				  GlobalI2CState = I2C_DAT;
-				  //I21CONSET = 0x04; // AA
-					break;
-				case I2C_DAT:
-					I21CONSET = 0x10; // Stop condition
-				  GlobalI2CState = I2C_DONE;
-					break;
-				default:
-					GlobalI2CState = I2C_ERR;
-					break;
-			}				
+			if (GlobalI2CRead) {
+			  I21CONSET = 0x20; // Start condition
+				GlobalI2CState = I2C_READ;
+			} else {
+        switch(GlobalI2CState) {
+				  case I2C_REG:
+					  I21DAT = GlobalI2CReg;
+				    GlobalI2CState = I2C_DAT;
+				    //I21CONSET = 0x04; // AA
+					  break;
+				  case I2C_DAT:
+					  I21CONSET = 0x10; // Stop condition
+				    GlobalI2CState = I2C_DONE;
+					  break;
+				  default:
+					  GlobalI2CState = I2C_ERR;
+					  break;
+			  }				
+		  }
 		break; 
 		
 		case (0x30): // Data sent, Not Ack 
@@ -133,18 +142,9 @@ __irq void i2c_irq(void) {
 		break; 
 	
 		case (0x50) : // Data Received, ACK     
-			I2Cmessage = I21DAT;    
+			GlobalI2CData = I21DAT;    
 			I21CONSET = 0x10; // Stop condition
-			switch(GlobalI2CState) {
-				case I2C_DAT:
-					I21CONSET = 0x10; // Stop condition
-				  GlobalI2CState = I2C_DONE;
-				  I2Cmessage = I21DAT; // saving received data to a global variable
-					break;
-				default:
-					GlobalI2CState = I2C_ERR;
-					break;
-			}    
+			GlobalI2CState = I2C_DONE;   
 		 break; 
 	
 	   case (0x58): // Data Received, Not Ack    
@@ -176,6 +176,22 @@ void I2CWriteReg(unsigned char addr, unsigned char reg, unsigned char data) {
 	}
 } 
 
+uint8_t I2CReadReg(unsigned char addr, unsigned char reg) {
+  GlobalI2CAddr = addr;
+	GlobalI2CReg = reg;
+	GlobalI2CRead = 1;
+	GlobalI2CState = I2C_REG;
+	
+	I21CONSET = 0x20; // Start condition
+	
+
+	while((GlobalI2CState != I2C_ERR) && (GlobalI2CState != I2C_DONE)) {
+	;
+	}
+	
+	return GlobalI2CData;
+} 
+
 /**************************************************************************/
 /*!
     @brief  I2C init
@@ -192,13 +208,15 @@ void i2c_init(void) {
 	VICVectAddr19 = (unsigned)i2c_irq; //pass the address of the IRQ into the VIC slot 
 	VICIntEnable |= 0x00080000; // enable interrupt 	
 	PINSEL1 |= 0x000003C0; //Switch GPIO to I2C pins
-	I21SCLH = 0xF;  //Set bit rate to 400KHz (max BNO frequency from datasheet)
+	//I21SCLH = 0xF; 
+	//I21SCLL  = 0xF;
+	I21SCLL  = 60; //Set bit rate to 200KHz (two time slower as max BNO frequency from datasheet)
 									// Fcco = 2 * M * Fin / N = 2 * (MSEL +1 ) * 12 MHz / 1 = 2 * 12 * 12 * 10^6 = 288 * 10^6
 									// Devider CCLKCFG_Val = 0x00000005 ==> 288 /6 = 48 * 10^6
 									// CCLKCFG_Val =  0x00000000 ===> 48 / 4 = 12 * 10^6 == Input Frequency
 									// BNO055 max frequency 400 KHz = 4 * 10^5
-									// SCLH + SCLL = 30
-	I21SCLL  = 0xF;
+									// SCLH + SCLL = 60
+	I21SCLH  = 60;
 	
 	I21CONCLR = 0x000000FF; // Clear all I2C settings
   delay();	
@@ -275,31 +293,32 @@ void i2c_init(void) {
 /*************************************************************/
 
 int main (void) {
+	volatile uint8_t id;
 	
-  //unsigned char message[100];
-	
-	// UART Init
-	//init_serial();
-
 	// LCD Init
-  //lcd_init();
-	//delay();
-	//lcd_print_greeting();
-	//delay();
+  lcd_init();
+	delay();
+	lcd_print_greeting();
+	delay();
 
 	// I2C Init 
-	//enable_isr();
-	i2c_init();
+	i2c_init(); // fixed, works properly
 	delay();
 	
+	// last position
+	//I2CWriteReg(0x50, 0x3e, 0x00);
+	//id = I2CReadReg(0x50, 0x00);
+	// last position end
 	
-	I2CWriteReg(0x50, 0x3e, 0x00);
 	// BNO055 Adafruit Init
-	//if(!accelerometer_init(BNO055_OPERATION_MODE_ACCGYRO))
-  //{
-    //lcd_print_message("NO BNO055 found");
-  //  delay();
-  //}
+	if(accelerometer_init(BNO055_OPERATION_MODE_ACCGYRO))
+  {
+    lcd_print_message("BNO055 OK!");
+    delay();
+  }
+	else {
+		lcd_print_message("NO BNO055 found");
+	}
 	
 	//delay();
 	
