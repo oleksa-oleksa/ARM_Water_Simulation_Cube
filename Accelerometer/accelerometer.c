@@ -30,7 +30,7 @@ unsigned char GlobalI2CAddr;
 unsigned char GlobalI2CReg;
 unsigned char GlobalI2CData;
 unsigned char GlobalI2CRead;
-volatile enum {I2C_REG, I2C_DAT, I2C_READ, I2C_ERR, I2C_DONE} GlobalI2CState;
+volatile enum {I2C_ADR, I2C_REG, I2C_DAT, I2C_READ, I2C_ERR, I2C_LOST, I2C_DONE} GlobalI2CState;
 
 volatile uint8_t DebugI2CState;
 
@@ -79,8 +79,16 @@ __irq void i2c_irq(void) {
 	switch (I21STAT) // Read result code and switch to next action 
 		{    
 		case ( 0x08): // A START condition has been transmitted. Next: 0x18    
-      I21DAT = GlobalI2CAddr; // Send address and write bit
-			I21CONCLR = 0x28;    // Clear start bit       
+      if(GlobalI2CState == I2C_READ) {
+				// Write Slave Address with R/W bit to I2DAT
+			  I21DAT = GlobalI2CAddr | 1; // Send address and read bit R/W = 1
+			} else {
+				I21DAT = GlobalI2CAddr; // Send address and write bit R/W = 0.
+				GlobalI2CState = I2C_REG;
+			}
+			I21CONSET = 0x04; // Write 0x04 to I2CONSET to set the AA bit
+			I21CONCLR = 0x08; // Write 0x08 to I2CONCLR to clear the SI flag 
+			
 		break;  
 
 		case (0x10): // A repeated START condition has been transmitted. Next: 0x18
@@ -88,21 +96,31 @@ __irq void i2c_irq(void) {
 				// Write Slave Address with R/W bit to I2DAT
 			  I21DAT = GlobalI2CAddr | 1; // Send address and read bit R/W = 1
 			} else {
-				I21DAT = GlobalI2CAddr; // Send address and write bit R/W = 0
+				I21DAT = GlobalI2CAddr; // Send address and write bit R/W = 0.
+				GlobalI2CState = I2C_REG;
 			}
-			I21CONCLR = 0x28; // Clear start bit and SI flag       
+			I21CONSET = 0x04; // Write 0x04 to I2CONSET to set the AA bit
+			I21CONCLR = 0x08; // Write 0x08 to I2CONCLR to clear the SI flag     
 			break;
 		
-		case (0x18): // SLA+W has been transmitted; ACK has been received. Next: 0x28 or 0x38
+		// Previous state was State 8 or State 10, Slave Address + Write has been transmitted, ACK has been received. 
+		// The first data byte will be transmitted, an ACK bit will be received.
+		case (0x18): // Next: 0x28 or 0x38
 			I21DAT = GlobalI2CReg; // Write data to TX register 
-      I21CONCLR = 0x08;		
+      I21CONSET = 0x04; // Write 0x04 to I2CONSET to set the AA bit
+			I21CONCLR = 0x08; // Write 0x08 to I2CONCLR to clear the SI flag
+			if (!GlobalI2CRead) {
+				GlobalI2CState = I2C_DAT;
+			}
 		break;      
 		
 		case (0x20): // SLA+W has been transmitted; NOT ACK has been received      
+			I21CONSET = 0x14; // set the STO and AA bits
+			I21CONCLR = 0x08; // clear SI flag
 			GlobalI2CState = I2C_ERR;    
 		break;      
 		
-		case (0x28): // Data byte in I2DAT has been transmitted; ACK has been received.
+	/*	case (0x28): // Data byte in I2DAT has been transmitted; ACK has been received.
 			if (GlobalI2CRead) {
 			  //new
 				I21DAT = GlobalI2CReg;
@@ -125,47 +143,70 @@ __irq void i2c_irq(void) {
 					  break;
 			  }				
 		  }
+		break; */ 
+		
+		case (0x28): // Data byte in I2DAT has been transmitted; ACK has been received.
+				if (GlobalI2CRead) {
+					I21CONSET = 0x20; // Repeated start condition for Read Access
+					//I21CONSET = 0x14; // STO and AA bits
+					//I21CONCLR = 0x08; // clear SI flag
+					GlobalI2CState = I2C_READ;
+					}
+				
+				else if (GlobalI2CState == I2C_DAT) {
+					I21DAT = GlobalI2CData;
+					I21CONSET = 0x14; // STO and AA
+					I21CONCLR = 0x08; // clear SI flag
+					GlobalI2CState = I2C_DONE;
+				}
 		break; 
 		
 		case (0x30): // Data sent, Not Ack 
+			I21CONSET = 0x14; // set the STO and AA bits
+			I21CONCLR = 0x08; // clear SI flag
 			GlobalI2CState = I2C_ERR;          
 		break;
 
     case (0x38): // Arbitration lost 
-			GlobalI2CState = I2C_ERR;          
+			I21CONSET = 0x24; // to set the STA and AA bits
+			I21CONCLR = 0x08; // clear SI flag
+			GlobalI2CState = I2C_LOST;          
 		break;		
 
 		case (0x40) : // SLA+R has been transmitted; ACK has been received. Next: 0x50   
-			I21CONSET = 0x04; // Enable ACK for data byte 
+			I21CONSET = 0x04; // Enable ACK for data byte
+			I21CONCLR = 0x08; // clear SI flag
 		break; 
 	
 		case (0x48) : // Slave Address +R, Not Ack    
-			//I21CONSET = 0x20; // Resend Start condition 
+			I21CONSET = 0x14; // set the STO and AA bits
+			I21CONCLR = 0x08; // clear SI flag
+			GlobalI2CState = I2C_ERR;          
 		break; 
 	
-		case (0x50) : // Data Received, ACK     
+		/* Data has been received, ACK has been returned. Data will be read from I2DAT. 
+		Additional data will be received. If this is the last data byte then NOT ACK will be returned, 
+		otherwise ACK will be returned */
+		case (0x50) :      
 			GlobalI2CData = I21DAT;    
-			//new
 			I21CONCLR = 0x0C; //clear the SI flag and the AA bit
-			I21CONSET = 0x04; // Write 0x04 to I2CONSET to set the AA bit
-			I21CONSET = 0x10; // Stop condition
+			I21CONSET = 0x04; // set the AA bit
+			I21CONCLR = 0x08; // clear SI flag
+			I21CONSET = 0x10; //  set STO
 			GlobalI2CState = I2C_DONE;   
 		 break; 
 	
 	   case (0x58): // Data Received, Not Ack    
 			GlobalI2CData = I21DAT;    
-			//new
-			I21CONCLR = 0x0C; //clear the SI flag and the AA bit
-			I21CONSET = 0x04; // Write 0x04 to I2CONSET to set the AA bit
-			I21CONSET = 0x10; // Stop condition
+			I21CONSET = 0x14; // set STO and AA bit
+			I21CONCLR = 0x08; // clear SI flag 
 			GlobalI2CState = I2C_DONE;  
 	   break;		
 		
 		default:      
 			break;      
 		}      
-		
-		I21CONCLR = 0x08;   // Clear I2C interrupt flag    
+
 		VICVectAddr = 0x00000000; // Clear interrupt in 
 }
 
@@ -190,7 +231,7 @@ uint8_t I2CReadReg(unsigned char addr, unsigned char reg) {
   GlobalI2CAddr = addr;
 	GlobalI2CReg = reg;
 	GlobalI2CRead = 1;
-	GlobalI2CState = I2C_REG;
+	GlobalI2CState = I2C_ADR;
 	
 	I21CONSET = 0x20; // Start condition
 	
@@ -221,7 +262,8 @@ void i2c_init(void) {
 	//I21SCLH = 0xF; 
 	//I21SCLL  = 0xF;
 	I21SCLL  = 60; //Set bit rate to 200KHz (two time slower as max BNO frequency from datasheet)
-									// Fcco = 2 * M * Fin / N = 2 * (MSEL +1 ) * 12 MHz / 1 = 2 * 12 * 12 * 10^6 = 288 * 10^6
+			
+	// Fcco = 2 * M * Fin / N = 2 * (MSEL +1 ) * 12 MHz / 1 = 2 * 12 * 12 * 10^6 = 288 * 10^6
 									// Devider CCLKCFG_Val = 0x00000005 ==> 288 /6 = 48 * 10^6
 									// CCLKCFG_Val =  0x00000000 ===> 48 / 4 = 12 * 10^6 == Input Frequency
 									// BNO055 max frequency 400 KHz = 4 * 10^5
