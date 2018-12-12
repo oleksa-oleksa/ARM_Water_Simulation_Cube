@@ -87,7 +87,7 @@ __irq void i2c_irq(void) {
 				GlobalI2CState = I2C_REG;
 			}
 			I21CONSET = 0x04; // Write 0x04 to I2CONSET to set the AA bit
-			I21CONCLR = 0x08; // Write 0x08 to I2CONCLR to clear the SI flag 
+			I21CONCLR = 0x08; // Clear start bit and SI flag			
 			
 		break;  
 
@@ -100,18 +100,22 @@ __irq void i2c_irq(void) {
 				GlobalI2CState = I2C_REG;
 			}
 			I21CONSET = 0x04; // Write 0x04 to I2CONSET to set the AA bit
-			I21CONCLR = 0x08; // Write 0x08 to I2CONCLR to clear the SI flag     
+			I21CONCLR = 0x08; // Clear start bit and SI flag			
 			break;
 		
 		// Previous state was State 8 or State 10, Slave Address + Write has been transmitted, ACK has been received. 
 		// The first data byte will be transmitted, an ACK bit will be received.
-		case (0x18): // Next: 0x28 or 0x38
+		case (0x18): // Next: 0x28
 			I21DAT = GlobalI2CReg; // Write data to TX register 
-      I21CONSET = 0x04; // Write 0x04 to I2CONSET to set the AA bit
-			I21CONCLR = 0x08; // Write 0x08 to I2CONCLR to clear the SI flag
-			if (!GlobalI2CRead) {
+			if (GlobalI2CRead) {
+				GlobalI2CState = I2C_READ;
+			}  
+			else {	
 				GlobalI2CState = I2C_DAT;
-			}
+				 
+			 }
+			I21CONSET = 0x04;
+			I21CONCLR = 0x08; // clear SI flag and STA
 		break;      
 		
 		case (0x20): // SLA+W has been transmitted; NOT ACK has been received      
@@ -147,11 +151,10 @@ __irq void i2c_irq(void) {
 		
 		case (0x28): // Data byte in I2DAT has been transmitted; ACK has been received.
 				if (GlobalI2CRead) {
-					I21CONSET = 0x20; // Repeated start condition for Read Access
-					//I21CONSET = 0x14; // STO and AA bits
-					//I21CONCLR = 0x08; // clear SI flag
+					I21CONSET = 0x24; // Repeated start condition for Read Access
+					I21CONCLR = 0x08; // clear SI flag
 					GlobalI2CState = I2C_READ;
-					}
+				}
 				
 				else if (GlobalI2CState == I2C_DAT) {
 					I21DAT = GlobalI2CData;
@@ -215,13 +218,10 @@ void I2CWriteReg(unsigned char addr, unsigned char reg, unsigned char data) {
 	GlobalI2CReg = reg;
 	GlobalI2CData = data;
 	GlobalI2CRead = 0;
-	GlobalI2CState = I2C_REG;
-	
-	//I21DAT = 0x00;
-   
+	GlobalI2CState = I2C_ADR;
+	   
 	I21CONSET = 0x20; // Start condition
 	
-
 	while((GlobalI2CState != I2C_ERR) && (GlobalI2CState != I2C_DONE)) {
 	;
 	}
@@ -289,7 +289,7 @@ int accelerometer_init(unsigned char requestedMode) {
 	//I2CWriteReg(BNOI2CAddress, 0x3e, 0x00);
 	//I2CWriteReg(BNOI2CAddress, 0x3e, BNO055_CHIP_ID_ADDR);
 	//id = I2CReadReg(BNOI2CAddress, BNO055_CHIP_ID_ADDR);
-	I2CWriteReg(BNOI2CAddress, 0x3e, BNO055_CHIP_ID_ADDR);
+	I2CWriteReg(BNOI2CAddress, 0x3e, 0x00);
 	id = I2CReadReg(BNOI2CAddress, BNO055_CHIP_ID_ADDR);
 	
   if (id != BNO055_ID)
@@ -360,7 +360,7 @@ int main (void) {
 	delay();
 	
 	// last position
-	//I2CWriteReg(0x50, 0x3e, 0x00);
+	I2CWriteReg(0x50, 0x3e, 0x00);
 	//id = I2CReadReg(0x50, 0x00);
 	// last position end
 	
