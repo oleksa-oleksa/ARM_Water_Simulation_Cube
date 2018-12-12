@@ -104,7 +104,10 @@ __irq void i2c_irq(void) {
 		
 		case (0x28): // Data byte in I2DAT has been transmitted; ACK has been received.
 			if (GlobalI2CRead) {
-			  GlobalI2CState = I2C_READ;
+			  //new
+				I21DAT = GlobalI2CReg;
+				// end
+				GlobalI2CState = I2C_READ;
 				I21CONSET = 0x20; // Start condition				
 			} else {
         switch(GlobalI2CState) {
@@ -316,9 +319,7 @@ int main (void) {
 	
 	// last position
 	//I2CWriteReg(0x50, 0x3e, 0x00);
-	id = I2CReadReg(0x50, 0x00);
-	
-	sprintf(i2c_msg, "0x%x", id);
+	//id = I2CReadReg(0x50, 0x00);
 	// last position end
 	
 	// BNO055 Adafruit Init
@@ -338,6 +339,9 @@ int main (void) {
 	
 	
 	while (1) {
+			id = I2CReadReg(0x50, 0x00);
+	
+			sprintf(i2c_msg, "0x%x", id);
 			lcd_print_message(i2c_msg);
 
 			delay();
