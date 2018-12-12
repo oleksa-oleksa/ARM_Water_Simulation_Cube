@@ -58,8 +58,6 @@ void lcd_print_greeting(void) {
   set_cursor (0, 1);
   lcd_print ("Beuth Hochschule");
 	set_cursor (0, 0);
-	delay();
-
 }
 
  void lcd_print_message(unsigned char *msg) {
@@ -92,8 +90,7 @@ __irq void i2c_irq(void) {
 			} else {
 				I21DAT = GlobalI2CAddr; // Send address and write bit R/W = 0
 			}
-			I21CONSET = 0x04; // set the AA bit
-			I21CONCLR = 0x28;    // Clear start bit       
+			I21CONCLR = 0x28; // Clear start bit and SI flag       
 			break;
 		
 		case (0x18): // SLA+W has been transmitted; ACK has been received. Next: 0x28 or 0x38
@@ -140,7 +137,7 @@ __irq void i2c_irq(void) {
 		break; 
 	
 		case (0x48) : // Slave Address +R, Not Ack    
-			I21CONSET = 0x20; // Resend Start condition 
+			//I21CONSET = 0x20; // Resend Start condition 
 		break; 
 	
 		case (0x50) : // Data Received, ACK     
@@ -153,7 +150,12 @@ __irq void i2c_irq(void) {
 		 break; 
 	
 	   case (0x58): // Data Received, Not Ack    
-			 I21CONSET = 0x20; // Resend Start condition 
+			GlobalI2CData = I21DAT;    
+			//new
+			I21CONCLR = 0x0C; //clear the SI flag and the AA bit
+			I21CONSET = 0x04; // Write 0x04 to I2CONSET to set the AA bit
+			I21CONSET = 0x10; // Stop condition
+			GlobalI2CState = I2C_DONE;  
 	   break;		
 		
 		default:      
@@ -301,19 +303,22 @@ int accelerometer_init(unsigned char requestedMode) {
 
 int main (void) {
 	volatile uint8_t id;
-	
+	char i2c_msg[10];
+
 	// LCD Init
-  //lcd_init();
-	//lcd_print_greeting();
-	//delay();
+  lcd_init();
+	lcd_print_greeting();
+	delay();
 
 	// I2C Init 
 	i2c_init(); // fixed, works properly
 	delay();
 	
 	// last position
-	I2CWriteReg(0x50, 0x3e, 0x00);
+	//I2CWriteReg(0x50, 0x3e, 0x00);
 	id = I2CReadReg(0x50, 0x00);
+	
+	sprintf(i2c_msg, "0x%x", id);
 	// last position end
 	
 	// BNO055 Adafruit Init
@@ -330,8 +335,11 @@ int main (void) {
 	
 	//setExtCrystalUse(1);		
 	
+	
+	
 	while (1) {
-			//lcd_print_message(&id);
+			lcd_print_message(i2c_msg);
+
 			delay();
 			/*sensors_event_t event; 
 		
