@@ -87,7 +87,7 @@ __irq void i2c_irq(void) {
 				GlobalI2CState = I2C_REG;
 			}
 			I21CONSET = 0x04; // Write 0x04 to I2CONSET to set the AA bit
-			I21CONCLR = 0x08; // Clear start bit and SI flag			
+			I21CONCLR = 0x28; // Clear start bit and SI flag			
 			
 		break;  
 
@@ -100,7 +100,7 @@ __irq void i2c_irq(void) {
 				GlobalI2CState = I2C_REG;
 			}
 			I21CONSET = 0x04; // Write 0x04 to I2CONSET to set the AA bit
-			I21CONCLR = 0x08; // Clear start bit and SI flag			
+			I21CONCLR = 0x28; // Clear start bit and SI flag			
 			break;
 		
 		// Previous state was State 8 or State 10, Slave Address + Write has been transmitted, ACK has been received. 
@@ -193,15 +193,16 @@ __irq void i2c_irq(void) {
 		case (0x50) :      
 			GlobalI2CData = I21DAT;    
 			I21CONCLR = 0x0C; //clear the SI flag and the AA bit
-			I21CONSET = 0x04; // set the AA bit
+			//I21CONSET = 0x04; // set the AA bit
 			I21CONCLR = 0x08; // clear SI flag
-			I21CONSET = 0x10; //  set STO
+			//I21CONSET = 0x10; //  set STO
 			GlobalI2CState = I2C_DONE;   
 		 break; 
 	
 	   case (0x58): // Data Received, Not Ack    
-			GlobalI2CData = I21DAT;    
-			I21CONSET = 0x14; // set STO and AA bit
+			//GlobalI2CData = I21DAT;    
+			//I21CONSET = 0x14; // set STO and AA bit
+		  I21CONSET = 0x10; // set STO and AA bit
 			I21CONCLR = 0x08; // clear SI flag 
 			GlobalI2CState = I2C_DONE;  
 	   break;		
@@ -289,7 +290,7 @@ int accelerometer_init(unsigned char requestedMode) {
 	//I2CWriteReg(BNOI2CAddress, 0x3e, 0x00);
 	//I2CWriteReg(BNOI2CAddress, 0x3e, BNO055_CHIP_ID_ADDR);
 	//id = I2CReadReg(BNOI2CAddress, BNO055_CHIP_ID_ADDR);
-	I2CWriteReg(BNOI2CAddress, 0x3e, 0x00);
+	//I2CWriteReg(BNOI2CAddress, 0x3e, 0x00);
 	id = I2CReadReg(BNOI2CAddress, BNO055_CHIP_ID_ADDR);
 	
   if (id != BNO055_ID)
@@ -360,7 +361,7 @@ int main (void) {
 	delay();
 	
 	// last position
-	I2CWriteReg(0x50, 0x3e, 0x00);
+	//I2CWriteReg(0x50, 0x3e, 0x00);
 	//id = I2CReadReg(0x50, 0x00);
 	// last position end
 	
@@ -381,12 +382,21 @@ int main (void) {
 	
 	
 	while (1) {
-			id = I2CReadReg(0x50, 0x00);
+			//I2CWriteReg(0x3A, 0x1E, 0xAB);
+		delay();
+			id = I2CReadReg(0x3A, 0x1E);
 	
 			sprintf(i2c_msg, "0x%x", id);
 			lcd_print_message(i2c_msg);
-
 			delay();
+			delay();
+			delay();
+			delay();
+			delay();
+			lcd_print_message("Restart");
+			delay();
+			delay();
+
 			/*sensors_event_t event; 
 		
 			lcd_print_message("ACCGYRO started");
