@@ -210,34 +210,38 @@ void lp32x32_refresh_fixed_scroll(bool panel_temp[ROW_NUM][COL_NUM])
     int _row = 0;
     int _col = 0;
 
-for (step = 0; step < COL_NUM; ++step){
-    for (row = 0; row < (ROW_NUM/2); ++row)
+    for (step = 0; step < COL_NUM; ++step)
     {
-        // TODO find the best match of the number of layers and clock speed
-        for (layer = 0; layer < 1; ++layer)
+        for (row = 0; row < (ROW_NUM/2); ++row)
         {
-            for (col = 0; col < COL_NUM; ++col)
+            // TODO find the best match of the number of layers and clock speed
+            for (layer = 0; layer < 1; ++layer)
             {
-                _row = row;
-                _col = col + step;
+                for (col = 0; col < COL_NUM; ++col)
+                {
+                    _row = row;
+                    _col = col + step;
 
-                if (_col > COL_NUM)
-                    _row = _row-1;
+                    // TODO fix tearing in the second panel in daisy chain
+                    if (_col > COL_NUM)
+                    {
+                        _row = _row-1;
+                    }
 
-                _lp32x32_setTop(panel_temp[_row][_col]);
-                _lp32x32_setBottom(panel_temp[_row + ROW_NUM/2][_col], layer);
-                lp32x32_clock(); ///< Shift RGB information of each column
+                    _lp32x32_setTop(panel_temp[_row][_col]);
+                    _lp32x32_setBottom(panel_temp[_row + ROW_NUM/2][_col], layer);
+                    lp32x32_clock(); ///< Shift RGB information of each column
+                }
+
+                lp32x32_setRow(row);
+                lp32x32_setCtrlPin(LED32X32_PIN_OE);
+                lp32x32_latch();
+                lp32x32_clearCtrlPin(LED32X32_PIN_OE);
             }
-
-            lp32x32_setRow(row);
-            lp32x32_setCtrlPin(LED32X32_PIN_OE);
-            lp32x32_latch();
-            lp32x32_clearCtrlPin(LED32X32_PIN_OE);
         }
-    }
 
-    delay(50);
-}
+        delay(50);
+    }
 
 }
 
