@@ -94,10 +94,10 @@ void lp32x32_setRow(int row)
 {
     _lp32x32_clearAllAddrPins();
 
-    _Bool enableA = row & 0x1;
-    _Bool enableB = row & 0x2;
-    _Bool enableC = row & 0x4;
-    _Bool enableD = row & 0x8;
+    bool enableA = row & 0x1;
+    bool enableB = row & 0x2;
+    bool enableC = row & 0x4;
+    bool enableD = row & 0x8;
 
     if (enableA) lp32x32_setCtrlPin(LED32X32_PIN_A);
     if (enableB) lp32x32_setCtrlPin(LED32X32_PIN_B);
@@ -140,7 +140,7 @@ void _lp32x32_setTop(bool led)
 {
     _lp32x32_clearAllRgb1Pins();
 
-    if (led)
+    if (led) // Use pink
     {
         lp32x32_setRgbPin(LED32X32_PIN_R1);
         lp32x32_setRgbPin(LED32X32_PIN_B1);
@@ -151,36 +151,17 @@ void _lp32x32_setBottom(bool led)
 {
     _lp32x32_clearAllRgb2Pins();
 
-    if (led)
+    if (led) // Use yellow
     {
         lp32x32_setRgbPin(LED32X32_PIN_R2);
         lp32x32_setRgbPin(LED32X32_PIN_G2);
     }
 }
 
-void lp32x32_refresh_fixed(void)
+void lp32x32_refresh_fixed(bool panel_temp[ROW_NUM][COL_NUM])
 {
     int row;
     int col;
-    bool panel_temp[ROW_NUM][COL_NUM] = {false};
-
-    // Top side
-    panel_temp[1][2] = panel_temp[1][3] = panel_temp[1][7] = panel_temp[1][8] = panel_temp[1][11] = panel_temp[1][12] = true;
-    panel_temp[2][2] = panel_temp[2][3] = panel_temp[2][7] = panel_temp[2][8] = panel_temp[2][11] = panel_temp[2][12] = true;
-    panel_temp[5][2] = panel_temp[5][3] = panel_temp[5][7] = panel_temp[5][8] = panel_temp[5][11] = panel_temp[5][12] = true;
-    panel_temp[6][2] = panel_temp[6][3] = panel_temp[6][7] = panel_temp[6][8] = panel_temp[6][11] = panel_temp[6][12] = true;
-
-    panel_temp[3][2] = panel_temp[3][3] = panel_temp[3][4] = panel_temp[3][5] = panel_temp[3][6] = panel_temp[3][7] = panel_temp[3][8] = panel_temp[3][11] = panel_temp[3][12] = true;
-    panel_temp[4][2] = panel_temp[4][3] = panel_temp[4][4] = panel_temp[4][5] = panel_temp[4][6] = panel_temp[4][7] = panel_temp[4][8] = panel_temp[4][11] = panel_temp[4][12] = true;
-
-    // Bottom side
-    panel_temp[17][2] = panel_temp[17][3] = panel_temp[17][7] = panel_temp[17][8] = panel_temp[17][11] = panel_temp[17][12] = true;
-    panel_temp[18][2] = panel_temp[18][3] = panel_temp[18][7] = panel_temp[18][8] = panel_temp[18][11] = panel_temp[18][12] = true;
-    panel_temp[21][2] = panel_temp[21][3] = panel_temp[21][7] = panel_temp[21][8] = panel_temp[21][11] = panel_temp[21][12] = true;
-    panel_temp[22][2] = panel_temp[22][3] = panel_temp[22][7] = panel_temp[22][8] = panel_temp[22][11] = panel_temp[22][12] = true;
-
-    panel_temp[19][2] = panel_temp[19][3] = panel_temp[19][4] = panel_temp[19][5] = panel_temp[19][6] = panel_temp[19][7] = panel_temp[19][8] = panel_temp[19][11] = panel_temp[19][12] = true;
-    panel_temp[20][2] = panel_temp[20][3] = panel_temp[20][4] = panel_temp[20][5] = panel_temp[20][6] = panel_temp[20][7] = panel_temp[20][8] = panel_temp[20][11] = panel_temp[20][12] = true;
 
     for (row = 0; row < (ROW_NUM/2); ++row)
     {

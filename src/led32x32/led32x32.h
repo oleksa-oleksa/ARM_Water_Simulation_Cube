@@ -10,6 +10,7 @@
 
 #include <LPC23xx.H>
 #include <stdint.h>
+#include <stdbool.h>
 
 #include "paint_tool.h"
 
@@ -81,7 +82,7 @@ void lp32x32_setBottomColor(RGB color);
  * @details Each pixel condition has to previously be defined before
  *          calling this function
  */
-void lp32x32_refresh_fixed(void);
+void lp32x32_refresh_fixed(bool panel_temp[ROW_NUM][COL_NUM]);
 void lp32x32_refresh(uint32_t panel[ROW_NUM][COL_NUM]);
 
 #endif // LED32X32_H_
