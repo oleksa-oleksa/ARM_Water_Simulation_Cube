@@ -11,20 +11,36 @@
 
 #define MODE LED32X32
 
-void fill_panel_fixed_info(bool panel_temp[ROW_NUM][COL_NUM]); // Used in mode LED32X32
+/**
+ * @brief        Used in LED32X32 mode. Fill with predetermined LED information.
+ * @param[inout] panel_temp [description]
+ */
+void fill_panel_fixed_info(bool panel_temp[ROW_NUM][COL_NUM]);
 
 int main(void)
 {
-    //uint32_t demoGrid[ROW_NUM][COL_NUM]; ///< Include information on particle density per LED pixel
 
     #if MODE == LED32X32_PWMMODE
+        //uint32_t demoGrid[ROW_NUM][COL_NUM]; ///< Include information on particle density per LED pixel
+
         led32x32_init();
         led_setPwm();
 
+        while(1)
+        {
+            lp32x32_refresh();
+        }
+
     #elif MODE == LED32X32
-        led32x32_init();
         bool panel_temp[ROW_NUM][COL_NUM] = {false};
+
         fill_panel_fixed_info(panel_temp);
+        led32x32_init();
+
+        while(1)
+        {
+            lp32x32_refresh_fixed(panel_temp);
+        }
 
     #elif MODE == LED_PWMMODE
         led_init();
@@ -34,6 +50,10 @@ int main(void)
         led_setPwmLvl(1000,10,50,70,100,200,500);
         led_setPwmLvl(1000,10,500,10,500,10,500);
         led_setPwmLvl(1000,1000,1000,1000,200,200,200);
+
+        while(1)
+        {
+        }
 
     #elif MODE == LED_DEFAULT
         led_init();
@@ -46,13 +66,12 @@ int main(void)
         led_allOff();
         led_selectOn(0xF1);
 
+        while(1)
+        {
+        }
+
     #endif
 
-    while(1)
-    {
-        lp32x32_refresh_fixed(panel_temp);
-        //lp32x32_refresh(demoGrid);
-    }
 }
 
 void fill_panel_fixed_info(bool panel_temp[ROW_NUM][COL_NUM])
