@@ -70,12 +70,12 @@ void lp32x32_setRow(int row);
 /**
  * @brief Set color for upper half of the panel
  */
-void lp32x32_setTopColor(/*RGB color*/);
+void lp32x32_setTopColor(void);
 
 /**
  * @brief Set color for lower half of the panel
  */
-void lp32x32_setBottomColor(/*RGB color*/);
+void lp32x32_setBottomColor(void);
 
 /**
  * @brief Refresh the panel
@@ -83,6 +83,7 @@ void lp32x32_setBottomColor(/*RGB color*/);
  *          calling this function
  */
 void lp32x32_refresh_fixed(bool panel_temp[ROW_NUM][COL_NUM]);
-void lp32x32_refresh(/*uint32_t panel[ROW_NUM][COL_NUM]*/);
+void lp32x32_refresh_fixed_scroll(bool panel_temp[ROW_NUM][COL_NUM]);
+void lp32x32_refresh(void);
 
 #endif // LED32X32_H_

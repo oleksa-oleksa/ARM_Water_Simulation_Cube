@@ -39,7 +39,7 @@ int main(void)
 
         while(1)
         {
-            lp32x32_refresh_fixed(panel_temp);
+            lp32x32_refresh_fixed_scroll(panel_temp);
         }
 
     #elif MODE == LED_PWMMODE

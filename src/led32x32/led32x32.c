@@ -119,7 +119,7 @@ void _lp32x32_clearAllRgb2Pins(void)
     lp32x32_clearRgbPin(LED32X32_PIN_B2);
 }
 
-void lp32x32_setTopColor(/*RGB color*/)
+void lp32x32_setTopColor(void)
 {
     _lp32x32_clearAllRgb1Pins();
 
@@ -131,7 +131,7 @@ void lp32x32_setTopColor(/*RGB color*/)
         lp32x32_setRgbPin(LED32X32_PIN_B1);
 }
 
-void lp32x32_setBottomColor(/*RGB color*/)
+void lp32x32_setBottomColor(void)
 {
     _lp32x32_clearAllRgb2Pins();
 
@@ -173,6 +173,7 @@ void _lp32x32_setBottom(bool led, int layer)
     }
 }
 
+// TODO fix layer setting also for top side
 void lp32x32_refresh_fixed(bool panel_temp[ROW_NUM][COL_NUM])
 {
     int row;
@@ -182,13 +183,12 @@ void lp32x32_refresh_fixed(bool panel_temp[ROW_NUM][COL_NUM])
     for (row = 0; row < (ROW_NUM/2); ++row)
     {
         // TODO find the best match of the number of layers and clock speed
-        for (layer = 0; layer < 4; ++layer)
+        for (layer = 0; layer < 1; ++layer)
         {
             for (col = 0; col < COL_NUM; ++col)
             {
                 _lp32x32_setTop(panel_temp[row][col]);
                 _lp32x32_setBottom(panel_temp[row + ROW_NUM/2][col], layer);
-
                 lp32x32_clock(); ///< Shift RGB information of each column
             }
 
@@ -198,6 +198,47 @@ void lp32x32_refresh_fixed(bool panel_temp[ROW_NUM][COL_NUM])
             lp32x32_clearCtrlPin(LED32X32_PIN_OE);
         }
     }
+
+}
+void lp32x32_refresh_fixed_scroll(bool panel_temp[ROW_NUM][COL_NUM])
+{
+    int row;
+    int col;
+    int layer;
+    int step;
+
+    int _row = 0;
+    int _col = 0;
+
+for (step = 0; step < COL_NUM; ++step){
+    for (row = 0; row < (ROW_NUM/2); ++row)
+    {
+        // TODO find the best match of the number of layers and clock speed
+        for (layer = 0; layer < 1; ++layer)
+        {
+            for (col = 0; col < COL_NUM; ++col)
+            {
+                _row = row;
+                _col = col + step;
+
+                if (_col > COL_NUM)
+                    _row = _row-1;
+
+                _lp32x32_setTop(panel_temp[_row][_col]);
+                _lp32x32_setBottom(panel_temp[_row + ROW_NUM/2][_col], layer);
+                lp32x32_clock(); ///< Shift RGB information of each column
+            }
+
+            lp32x32_setRow(row);
+            lp32x32_setCtrlPin(LED32X32_PIN_OE);
+            lp32x32_latch();
+            lp32x32_clearCtrlPin(LED32X32_PIN_OE);
+        }
+    }
+
+    delay(50);
+}
+
 }
 
 void __led_setPwmLvl_top(uint32_t mr1, uint32_t mr2, uint32_t mr3)
@@ -243,7 +284,7 @@ void __lp32x32_setBottom(bool led)
 }
 
 // TODO use pwm
-void lp32x32_refresh(/*uint32_t _panel[ROW_NUM][COL_NUM]*/)
+void lp32x32_refresh(void)
 {
     int row;
     int col;
