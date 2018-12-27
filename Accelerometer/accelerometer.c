@@ -22,9 +22,9 @@
 unsigned char I2Cdata; // data to send into I2C
 unsigned char I2Cmessage; // received data fron I2C
 unsigned int BNOI2CAddress = 0x50; //01010000 Device (Slave) Address (7 bits) shifted BNO055_I2C_ADDR1 (0x28) 
-unsigned char BNOMode;
-unsigned char *BNO_AccVector;
-unsigned char *BNO_GyrVector;
+unsigned int ADXLI2CAdresss = 0x3A; // With the ALT ADDRESS pin high, the 7-bit I2C address for the device is 0x1D, followed by the R/W bit. 
+																		// This translates to 0x3A for a write and 0x3B for a read.
+																		// But 0x3A is used for read and write, the i2c_irq will add read bit during read transfer 
 
 unsigned char GlobalI2CAddr;
 unsigned char GlobalI2CReg;
@@ -41,7 +41,7 @@ volatile uint8_t DebugI2CState;
 /**************************************************************************/
 void delay(void) {
 	int i;
-	for (i = 0; i < 2000008; i++) {
+	for (i = 0; i < 2000000; i++) {
 		// just a hadrcore delay
 	};
 }
@@ -123,32 +123,7 @@ __irq void i2c_irq(void) {
 			I21CONCLR = 0x08; // clear SI flag
 			GlobalI2CState = I2C_ERR;    
 		break;      
-		
-	/*	case (0x28): // Data byte in I2DAT has been transmitted; ACK has been received.
-			if (GlobalI2CRead) {
-			  //new
-				I21DAT = GlobalI2CReg;
-				// end
-				GlobalI2CState = I2C_READ;
-				I21CONSET = 0x20; // Start condition				
-			} else {
-        switch(GlobalI2CState) {
-				  case I2C_REG:
-					  I21DAT = GlobalI2CReg;
-				    GlobalI2CState = I2C_DAT;
-				    //I21CONSET = 0x04; // AA
-					  break;
-				  case I2C_DAT:
-					  I21CONSET = 0x10; // Stop condition
-				    GlobalI2CState = I2C_DONE;
-					  break;
-				  default:
-					  GlobalI2CState = I2C_ERR;
-					  break;
-			  }				
-		  }
-		break; */ 
-		
+				
 		case (0x28): // Data byte in I2DAT has been transmitted; ACK has been received.
 				if (GlobalI2CRead) {
 					I21CONSET = 0x24; // Repeated start condition for Read Access
@@ -236,7 +211,6 @@ uint8_t I2CReadReg(unsigned char addr, unsigned char reg) {
 	
 	I21CONSET = 0x20; // Start condition
 	
-
 	while((GlobalI2CState != I2C_ERR) && (GlobalI2CState != I2C_DONE)) {
 	;
 	}
@@ -262,7 +236,7 @@ void i2c_init(void) {
 	PINSEL1 |= 0x000003C0; //Switch GPIO to I2C pins
 	//I21SCLH = 0xF; 
 	//I21SCLL  = 0xF;
-	I21SCLL  = 60; //Set bit rate to 200KHz (two time slower as max BNO frequency from datasheet)
+	I21SCLL  = 60; //Set bit rate to 200KHz (two time slower as max frequency from datasheet)
 			
 	// Fcco = 2 * M * Fin / N = 2 * (MSEL +1 ) * 12 MHz / 1 = 2 * 12 * 12 * 10^6 = 288 * 10^6
 									// Devider CCLKCFG_Val = 0x00000005 ==> 288 /6 = 48 * 10^6
@@ -279,69 +253,13 @@ void i2c_init(void) {
 
 /**************************************************************************/
 /*!
-    @brief  Adafruit BNO055 Init
+    @brief  ADXL345 Init
     Note: I2C should be already enabled
 */
 /**************************************************************************/
 int accelerometer_init(unsigned char requestedMode) {
 	volatile uint8_t id;
-	
-	// Make sure we have the right device
-	//I2CWriteReg(BNOI2CAddress, 0x3e, 0x00);
-	//I2CWriteReg(BNOI2CAddress, 0x3e, BNO055_CHIP_ID_ADDR);
-	//id = I2CReadReg(BNOI2CAddress, BNO055_CHIP_ID_ADDR);
-	//I2CWriteReg(BNOI2CAddress, 0x3e, 0x00);
-	id = I2CReadReg(BNOI2CAddress, BNO055_CHIP_ID_ADDR);
-	
-  if (id != BNO055_ID)
-  {
-    delay();
-		// repeat 
-    //I2CTransferByteRead();
-		id = I2CReadReg(0x50, 0x00);
-		
-		if(id != BNO055_ID) {
-      return 0;  // still not? ok bail
-    }
-  }
-	
-	/*
-  // Switch to config mode (just in case since this is the default)
-  setBNOMode(BNO055_OPERATION_MODE_CONFIG);
-	
-	// Reset
-  I2CTransferByteWrite(I2CAddress, BNO055_SYS_TRIGGER_ADDR);
-	I2CTransferByteWrite(I2CAddress, 0x20);
 
-	do {
-		
-		I2CTransferByteRead();
-		id = I2Cmessage;
-		delay();
-		
-	} while (id != BNO055_ID);
-  
-	delay();
-		
-  // Set to normal power mode
-	I2CTransferByteWrite(I2CAddress, BNO055_PWR_MODE_ADDR);
-  I2CTransferByteWrite(I2CAddress, BNO055_POWER_MODE_NORMAL);
- 
-	delay();
-	
-	I2CTransferByteWrite(I2CAddress, BNO055_PAGE_ID_ADDR);
-  I2CTransferByteWrite(I2CAddress, 0);
-	
-	I2CTransferByteWrite(I2CAddress, BNO055_SYS_TRIGGER_ADDR);
-  I2CTransferByteWrite(I2CAddress, 0x0);
-	
-  delay();
- 
-	 // Set the requested operating mode
-  setBNOMode(requestedMode);
-	BNOMode = requestedMode;
-  delay();
-	*/
 	return 1;
 }
 
@@ -358,29 +276,9 @@ int main (void) {
 
 	// I2C Init 
 	i2c_init(); // fixed, works properly
+	lcd_print_message("I2C Init done...");
 	delay();
-	
-	// last position
-	//I2CWriteReg(0x50, 0x3e, 0x00);
-	//id = I2CReadReg(0x50, 0x00);
-	// last position end
-	
-	// BNO055 Adafruit Init
-	/*if(accelerometer_init(BNO055_OPERATION_MODE_ACCGYRO))
-  {
-    lcd_print_message("BNO055 OK!");
-    delay();
-  }
-	else {
-		lcd_print_message("NO BNO055 found");
-	}
-	*/
-	//delay();
-	
-	//setExtCrystalUse(1);		
-	
-	
-	
+		
 	while (1) {
 			//I2CWriteReg(0x3A, 0x1E, 0xAB);
 		delay();
