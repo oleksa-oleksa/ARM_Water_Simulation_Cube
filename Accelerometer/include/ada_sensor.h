@@ -16,6 +16,7 @@
 /*=========================================================================
  REGISTERS
     -----------------------------------------------------------------------*/
+#define ADXL345_ID 											(0xE5)    // 0x00 Content
 #define ADXL345_REG_DEVID               (0x00)    // Device ID
 #define ADXL345_REG_THRESH_TAP          (0x1D)    // Tap threshold
 #define ADXL345_REG_OFSX                (0x1E)    // X-axis offset

@@ -7,8 +7,6 @@
 /******************************************************************************/
 #pragma anon_unions
 
-#define BNO055_ID (0xA0)
-
 #include <stdio.h>
 #include <LPC23xx.H>                    /* LPC23xx definitions                */
 #include "LCD.h"                        /* Graphic LCD function prototypes    */
@@ -30,7 +28,8 @@ unsigned char GlobalI2CReg;
 unsigned char GlobalI2CData;
 unsigned char GlobalI2CRead;
 volatile enum {I2C_ADR, I2C_REG, I2C_DAT, I2C_READ, I2C_ERR, I2C_LOST, I2C_DONE} GlobalI2CState;
-
+unsigned char GlobalI2CRegAxesBuffer[] = {ADXL345_REG_DATAX0, ADXL345_REG_DATAX1, ADXL345_REG_DATAY0, ADXL345_REG_DATAY1, ADXL345_REG_DATAZ0, ADXL345_REG_DATAZ1};
+volatile int GlobalI2CReadLenght;
 volatile uint8_t DebugI2CState;
 
 
@@ -41,7 +40,7 @@ volatile uint8_t DebugI2CState;
 /**************************************************************************/
 void delay(void) {
 	int i;
-	for (i = 0; i < 2000000; i++) {
+	for (i = 0; i < 5000000; i++) {
 		// just a hadrcore delay
 	};
 }
@@ -257,8 +256,15 @@ void i2c_init(void) {
     Note: I2C should be already enabled
 */
 /**************************************************************************/
-int accelerometer_init(unsigned char requestedMode) {
+int accelerometer_init() {
 	volatile uint8_t id;
+	
+	id = I2CReadReg(ADXLI2CAdresss, ADXL345_REG_DEVID);
+	
+	if (id != ADXL345_ID) {
+		return 0;
+	}
+	
 
 	return 1;
 }
@@ -278,38 +284,30 @@ int main (void) {
 	i2c_init(); // fixed, works properly
 	lcd_print_message("I2C Init done...");
 	delay();
+	
+	if (accelerometer_init()) {
+			lcd_print_message("ADXL345 found");
+			delay();
+	} else {
+			lcd_print_message("ADXL345 error");
+		  delay();
+	}
 		
 	while (1) {
 			//I2CWriteReg(0x3A, 0x1E, 0xAB);
 		delay();
-			id = I2CReadReg(0x3A, 0x1E);
+			I2Cmessage = I2CReadReg(ADXLI2CAdresss, 0x2C);
 	
-			sprintf(i2c_msg, "0x%x", id);
+			sprintf(i2c_msg, "0x%x", I2Cmessage);
 			lcd_print_message(i2c_msg);
 			delay();
 			delay();
 			delay();
-			delay();
-			delay();
-			lcd_print_message("Restart");
-			delay();
-			delay();
+			lcd_print_message("Loop again");
 
 			/*sensors_event_t event; 
 		
 			lcd_print_message("ACCGYRO started");
-			// Get a new sensor event
-			getBNOEvent(&event, VECTOR_ACCELEROMETER, BNO_AccVector);
-			getBNOEvent(&event, VECTOR_GYROSCOPE, BNO_GyrVector);
-
-			sprintf(message, "%8.2f", event.orientation.x);
-			lcd_print_message(message);
-			delay();
-			delay();
-
-		
-		  sprintf(message, "%i", (int)I2Cmessage);
-		  //lcd_print_message(message); 
-			delay();*/
+		*/
   }  
 }
