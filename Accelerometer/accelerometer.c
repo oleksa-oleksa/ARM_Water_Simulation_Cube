@@ -15,8 +15,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <time.h>
-#include "include/bno055.h"
-//#include "include/Adafruit_Sensor.h"
+#include "include/ada_sensor.h"
 
 /* Global variables */
 unsigned char I2Cdata; // data to send into I2C
@@ -33,6 +32,7 @@ unsigned char GlobalI2CRead;
 volatile enum {I2C_ADR, I2C_REG, I2C_DAT, I2C_READ, I2C_ERR, I2C_LOST, I2C_DONE} GlobalI2CState;
 
 volatile uint8_t DebugI2CState;
+
 
 /**************************************************************************/
 /*!
