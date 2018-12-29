@@ -19,7 +19,7 @@
 unsigned char I2Cdata; // data to send into I2C
 unsigned char I2Cmessage; // received data fron I2C
 unsigned int BNOI2CAddress = 0x50; //01010000 Device (Slave) Address (7 bits) shifted BNO055_I2C_ADDR1 (0x28) 
-unsigned int ADXLI2CAdresss = 0x1D; // With the ALT ADDRESS pin high, the 7-bit I2C address for the device is 0x1D, followed by the R/W bit. 
+unsigned int ADXLI2CAdresss = 0x3A; // With the ALT ADDRESS pin high, the 7-bit I2C address for the device is 0x1D, followed by the R/W bit. 
 																		// This translates to 0x3A for a write and 0x3B for a read.
 																		// But 0x3A is used for read and write, the i2c_irq will add read bit during read transfer 
 
@@ -266,9 +266,11 @@ int accelerometer_init() {
 	id = I2CReadReg(ADXLI2CAdresss, ADXL345_REG_DEVID);
 	
 	if (id != ADXL345_ID) {
-		return 0;
+		//return 0;
 	}
 	
+	//Enable Measurements	
+	I2CWriteReg(ADXLI2CAdresss, ADXL345_REG_POWER_CTL, 0x08);
 	// set the interrupts to active low.
 	I2CWriteReg(ADXLI2CAdresss, ADXL345_REG_DATA_FORMAT, INT_INVERT);
 	//The DATA_READY bit is set when new data is available and is cleared when no new data is available.
@@ -277,8 +279,6 @@ int accelerometer_init() {
 	I2CWriteReg(ADXLI2CAdresss, ADXL345_REG_INT_MAP, 0<<7);	
 	//Set Output Rate to 400 Hz	
 	I2CWriteReg(ADXLI2CAdresss, ADXL345_REG_BW_RATE, ADXL345_DATARATE_400_HZ);	
-	//Put the Accelerometer into measurement mode	
-	I2CWriteReg(ADXLI2CAdresss, ADXL345_REG_POWER_CTL, MEASURE);		
 
 	return 1;
 }
@@ -305,13 +305,13 @@ int main (void) {
 	} else {
 			lcd_print_message("ADXL345 error");
 		  delay();
-	}*/
+	}
+	*/
+  
+	//Enable Measurements	
+	I2CWriteReg(ADXLI2CAdresss, 0x30, 0xff);
 	
-  //Enable Measurements	
-	I2CWriteReg(ADXLI2CAdresss, ADXL345_REG_POWER_CTL, 0x08);
-	delay();	
-	
-	I2Cmessage = I2CReadReg(ADXLI2CAdresss, ADXL345_REG_POWER_CTL);
+	//I2Cmessage = I2CReadReg(ADXLI2CAdresss, 0x30);
 
 	while (1) {
 		
