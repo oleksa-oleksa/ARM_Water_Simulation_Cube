@@ -320,18 +320,13 @@ int main (void) {
 	delay();
 	I2Cmessage = I2CReadReg(ADXLI2CAdresss, 0x30);
 
-	while (1) {
-		
-		//I2Cmessage = I2CReadReg(ADXLI2CAdresss, ADXL345_REG_BW_RATE);
-	
+	while (1) {	
 		sprintf(i2c_msg, "0x%x", I2Cmessage);
-		//lcd_print_message(&I2Cmessage);
 		lcd_print_message(i2c_msg);
 		delay();
-		delay();
-		delay();
 		lcd_print_message("Loop again");
-
+		delay();
+		
 		/*sensors_event_t event; 
 	
 		lcd_print_message("ACCGYRO started");
