@@ -124,6 +124,7 @@ __irq void i2c_irq(void) {
 		break;      
 				
 		case (0x28): // Data byte in I2DAT has been transmitted; ACK has been received.
+				// Repeated Start for Read
 				if (GlobalI2CRead) {
 					I21CONSET = 0x24; // Repeated start condition for Read Access
 					I21CONCLR = 0x08; // clear SI flag
@@ -132,9 +133,13 @@ __irq void i2c_irq(void) {
 				
 				else if (GlobalI2CState == I2C_DAT) {
 					I21DAT = GlobalI2CData;
-					I21CONSET = 0x14; // STO and AA
 					I21CONCLR = 0x08; // clear SI flag
 					GlobalI2CState = I2C_DONE;
+					//I21CONSET = 0x14; // STO and AA
+				}
+				else if (GlobalI2CState == I2C_DONE) {
+					I21CONCLR = 0x08; // clear SI flag
+					I21CONSET = 0x14; // STO and AA
 				}
 		break; 
 		
@@ -200,6 +205,8 @@ void I2CWriteReg(unsigned char addr, unsigned char reg, unsigned char data) {
 	while((GlobalI2CState != I2C_ERR) && (GlobalI2CState != I2C_DONE)) {
 	;
 	}
+	
+	lcd_print_message("Write exit");
 } 
 
 uint8_t I2CReadReg(unsigned char addr, unsigned char reg) {
@@ -310,8 +317,8 @@ int main (void) {
   
 	//Enable Measurements	
 	I2CWriteReg(ADXLI2CAdresss, 0x30, 0xff);
-	
-	//I2Cmessage = I2CReadReg(ADXLI2CAdresss, 0x30);
+	delay();
+	I2Cmessage = I2CReadReg(ADXLI2CAdresss, 0x30);
 
 	while (1) {
 		
