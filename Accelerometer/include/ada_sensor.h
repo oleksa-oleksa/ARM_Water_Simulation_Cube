@@ -49,6 +49,33 @@
 #define ADXL345_REG_FIFO_STATUS         (0x39)    // FIFO status
 /*=========================================================================*/
 
+//Power Control Register Bits
+#define WU_0		(1<<0)	//Wake Up Mode - Bit 0
+#define	WU_1		(1<<1)	//Wake Up mode - Bit 1
+#define SLEEP		(1<<2)	//Sleep Mode
+#define	MEASURE		(1<<3)	//Measurement Mode
+#define AUTO_SLP	(1<<4)	//Auto Sleep Mode bit
+#define LINK		(1<<5)	//Link bit
+
+//Interrupt Enable/Interrupt Map/Interrupt Source Register Bits
+#define	OVERRUN		(1<<0)
+#define	WATERMARK	(1<<1)
+#define FREE_FALL	(1<<2)
+#define	INACTIVITY	(1<<3)
+#define	ACTIVITY	(1<<4)
+#define DOUBLE_TAP	(1<<5)
+#define	SINGLE_TAP	(1<<6)
+#define	DATA_READY	(1<<7)
+
+//Data Format Bits
+#define RANGE_0		(1<<0)
+#define	RANGE_1		(1<<1)
+#define JUSTIFY		(1<<2)
+#define	FULL_RES	(1<<3)
+
+#define	INT_INVERT	(1<<5)
+#define	SPI			(1<<6)
+#define	SELF_TEST	(1<<7)
 /*=========================================================================
     REGISTERS
     -----------------------------------------------------------------------*/
@@ -58,22 +85,22 @@
 /* Used with register 0x2C (ADXL345_REG_BW_RATE) to set bandwidth */
 typedef enum
 {
-  ADXL345_DATARATE_3200_HZ    = 0xF, // 1600Hz Bandwidth   140µA IDD
-  ADXL345_DATARATE_1600_HZ    = 0xE, //  800Hz Bandwidth    90µA IDD
-  ADXL345_DATARATE_800_HZ     = 0xD, //  400Hz Bandwidth   140µA IDD
-  ADXL345_DATARATE_400_HZ     = 0xC, //  200Hz Bandwidth   140µA IDD
-  ADXL345_DATARATE_200_HZ     = 0xB, //  100Hz Bandwidth   140µA IDD
-  ADXL345_DATARATE_100_HZ     = 0xA, //   50Hz Bandwidth   140µA IDD
-  ADXL345_DATARATE_50_HZ      = 0x9, //   25Hz Bandwidth    90µA IDD
-  ADXL345_DATARATE_25_HZ      = 0x8, // 12.5Hz Bandwidth    60µA IDD
-  ADXL345_DATARATE_12_5_HZ    = 0x7, // 6.25Hz Bandwidth    50µA IDD
-  ADXL345_DATARATE_6_25HZ     = 0x6, // 3.13Hz Bandwidth    45µA IDD
-  ADXL345_DATARATE_3_13_HZ    = 0x5, // 1.56Hz Bandwidth    40µA IDD
-  ADXL345_DATARATE_1_56_HZ    = 0x4, // 0.78Hz Bandwidth    34µA IDD
-  ADXL345_DATARATE_0_78_HZ    = 0x3, // 0.39Hz Bandwidth    23µA IDD
-  ADXL345_DATARATE_0_39_HZ    = 0x2, // 0.20Hz Bandwidth    23µA IDD
-  ADXL345_DATARATE_0_20_HZ    = 0x1, // 0.10Hz Bandwidth    23µA IDD
-  ADXL345_DATARATE_0_10_HZ    = 0x0  // 0.05Hz Bandwidth    23µA IDD (default value)
+  ADXL345_DATARATE_3200_HZ    = 0x0F, // 1600Hz Bandwidth   140µA IDD
+  ADXL345_DATARATE_1600_HZ    = 0x0E, //  800Hz Bandwidth    90µA IDD
+  ADXL345_DATARATE_800_HZ     = 0x0D, //  400Hz Bandwidth   140µA IDD
+  ADXL345_DATARATE_400_HZ     = 0x0C, //  200Hz Bandwidth   140µA IDD
+  ADXL345_DATARATE_200_HZ     = 0x0B, //  100Hz Bandwidth   140µA IDD
+  ADXL345_DATARATE_100_HZ     = 0x0A, //   50Hz Bandwidth   140µA IDD
+  ADXL345_DATARATE_50_HZ      = 0x09, //   25Hz Bandwidth    90µA IDD
+  ADXL345_DATARATE_25_HZ      = 0x08, // 12.5Hz Bandwidth    60µA IDD
+  ADXL345_DATARATE_12_5_HZ    = 0x07, // 6.25Hz Bandwidth    50µA IDD
+  ADXL345_DATARATE_6_25HZ     = 0x06, // 3.13Hz Bandwidth    45µA IDD
+  ADXL345_DATARATE_3_13_HZ    = 0x05, // 1.56Hz Bandwidth    40µA IDD
+  ADXL345_DATARATE_1_56_HZ    = 0x04, // 0.78Hz Bandwidth    34µA IDD
+  ADXL345_DATARATE_0_78_HZ    = 0x03, // 0.39Hz Bandwidth    23µA IDD
+  ADXL345_DATARATE_0_39_HZ    = 0x02, // 0.20Hz Bandwidth    23µA IDD
+  ADXL345_DATARATE_0_20_HZ    = 0x01, // 0.10Hz Bandwidth    23µA IDD
+  ADXL345_DATARATE_0_10_HZ    = 0x00  // 0.05Hz Bandwidth    23µA IDD (default value)
 } dataRate_t;
 
 /* Used with register 0x31 (ADXL345_REG_DATA_FORMAT) to set g range */

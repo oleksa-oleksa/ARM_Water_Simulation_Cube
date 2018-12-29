@@ -19,7 +19,7 @@
 unsigned char I2Cdata; // data to send into I2C
 unsigned char I2Cmessage; // received data fron I2C
 unsigned int BNOI2CAddress = 0x50; //01010000 Device (Slave) Address (7 bits) shifted BNO055_I2C_ADDR1 (0x28) 
-unsigned int ADXLI2CAdresss = 0x3A; // With the ALT ADDRESS pin high, the 7-bit I2C address for the device is 0x1D, followed by the R/W bit. 
+unsigned int ADXLI2CAdresss = 0x1D; // With the ALT ADDRESS pin high, the 7-bit I2C address for the device is 0x1D, followed by the R/W bit. 
 																		// This translates to 0x3A for a write and 0x3B for a read.
 																		// But 0x3A is used for read and write, the i2c_irq will add read bit during read transfer 
 
@@ -233,22 +233,26 @@ void i2c_init(void) {
 	VICVectAddr19 = (unsigned)i2c_irq; //pass the address of the IRQ into the VIC slot 
 	VICIntEnable |= 0x00080000; // enable interrupt 	
 	PINSEL1 |= 0x000003C0; //Switch GPIO to I2C pins
-	//I21SCLH = 0xF; 
-	//I21SCLL  = 0xF;
-	I21SCLL  = 60; //Set bit rate to 200KHz (two time slower as max frequency from datasheet)
-			
-	// Fcco = 2 * M * Fin / N = 2 * (MSEL +1 ) * 12 MHz / 1 = 2 * 12 * 12 * 10^6 = 288 * 10^6
-									// Devider CCLKCFG_Val = 0x00000005 ==> 288 /6 = 48 * 10^6
-									// CCLKCFG_Val =  0x00000000 ===> 48 / 4 = 12 * 10^6 == Input Frequency
-									// BNO055 max frequency 400 KHz = 4 * 10^5
-									// SCLH + SCLL = 60
-	I21SCLH  = 60;
+	/* Set bit rate 
+	Fcco = 2 * M * Fin / N = 2 * (MSEL +1 ) * 12 MHz / 1 = 2 * 12 * 12 * 10^6 = 288 * 10^6
+	Devider CCLKCFG_Val = 0x00000005 ==> 288 /6 = 48 * 10^6
+	CCLKCFG_Val =  0x00000000 ===> 48 / 4 = 12 * 10^6 == Input Frequency
+	BNO055 max frequency 400 KHz = 4 * 10^5
+	SCLH + SCLL = 60 */
+	// 400 KHz
+	I21SCLH = 0xF; 
+	I21SCLL  = 0xF;
+	// 200 KHz
+	//I21SCLL  = 30; 
+	//I21SCLH  = 30;
 	
 	I21CONCLR = 0x000000FF; // Clear all I2C settings
   delay();
 	// Before the master transmitter mode can be entered, I2CONSET must be initialized with 0100 0000
 	I21CONSET = 0x00000040; // Enable the I2C interface 
 }
+
+
 
 /**************************************************************************/
 /*!
@@ -265,6 +269,16 @@ int accelerometer_init() {
 		return 0;
 	}
 	
+	// set the interrupts to active low.
+	I2CWriteReg(ADXLI2CAdresss, ADXL345_REG_DATA_FORMAT, INT_INVERT);
+	//The DATA_READY bit is set when new data is available and is cleared when no new data is available.
+	I2CWriteReg(ADXLI2CAdresss, ADXL345_REG_INT_ENABLE, DATA_READY);
+	//Sent the Data Ready Interrupt to the INT1 pin
+	I2CWriteReg(ADXLI2CAdresss, ADXL345_REG_INT_MAP, 0<<7);	
+	//Set Output Rate to 400 Hz	
+	I2CWriteReg(ADXLI2CAdresss, ADXL345_REG_BW_RATE, ADXL345_DATARATE_400_HZ);	
+	//Put the Accelerometer into measurement mode	
+	I2CWriteReg(ADXLI2CAdresss, ADXL345_REG_POWER_CTL, MEASURE);		
 
 	return 1;
 }
@@ -285,29 +299,35 @@ int main (void) {
 	lcd_print_message("I2C Init done...");
 	delay();
 	
-	if (accelerometer_init()) {
+	/*if (accelerometer_init()) {
 			lcd_print_message("ADXL345 found");
 			delay();
 	} else {
 			lcd_print_message("ADXL345 error");
 		  delay();
-	}
-		
-	while (1) {
-			//I2CWriteReg(0x3A, 0x1E, 0xAB);
-		delay();
-			I2Cmessage = I2CReadReg(ADXLI2CAdresss, 0x2C);
+	}*/
 	
-			sprintf(i2c_msg, "0x%x", I2Cmessage);
-			lcd_print_message(i2c_msg);
-			delay();
-			delay();
-			delay();
-			lcd_print_message("Loop again");
+  //Enable Measurements	
+	I2CWriteReg(ADXLI2CAdresss, ADXL345_REG_POWER_CTL, 0x08);
+	delay();	
+	
+	I2Cmessage = I2CReadReg(ADXLI2CAdresss, ADXL345_REG_POWER_CTL);
 
-			/*sensors_event_t event; 
+	while (1) {
 		
-			lcd_print_message("ACCGYRO started");
-		*/
+		//I2Cmessage = I2CReadReg(ADXLI2CAdresss, ADXL345_REG_BW_RATE);
+	
+		sprintf(i2c_msg, "0x%x", I2Cmessage);
+		//lcd_print_message(&I2Cmessage);
+		lcd_print_message(i2c_msg);
+		delay();
+		delay();
+		delay();
+		lcd_print_message("Loop again");
+
+		/*sensors_event_t event; 
+	
+		lcd_print_message("ACCGYRO started");
+	*/
   }  
 }
