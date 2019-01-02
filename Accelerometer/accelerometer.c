@@ -108,9 +108,7 @@ __irq void i2c_irq(void) {
 			// Case STARTED -> REG
 			I21DAT = GlobalI2CReg; // Write data to TX register 
 			if (GlobalI2CState == I2C_STARTED) {
-				//GlobalI2CState = I2C_REG; // with re-start for write
-				GlobalI2CState = I2C_DAT;   // without re-start for write
-
+				GlobalI2CState = I2C_REG; // with re-start for write
 			}
 			// CASE WRITE -> DAT
 			else if (GlobalI2CState == I2C_WRITE) {
@@ -142,16 +140,17 @@ __irq void i2c_irq(void) {
 				// Repeated Start for Write Operation
 				// Case RESTART -> WRITE
 				else if (GlobalI2CState == I2C_REG && !GlobalI2CRead) {
+					// with re-start for write
 					I21CONSET = 0x24; // Repeated start condition for Write Access
 					I21CONCLR = 0x08; // clear SI flag
 					GlobalI2CState = I2C_WRITE;
+					
+					// Without re-start for write
+					//I21DAT = GlobalI2CData;
+					//I21CONCLR = 0x08; // clear SI flag										
+					//GlobalI2CState = I2C_DAT;
 				}
 				else if (GlobalI2CState == I2C_DAT) {
-					I21DAT = GlobalI2CData;
-					I21CONCLR = 0x08; // clear SI flag										
-					GlobalI2CState = I2C_DAT_ACK;
-				}
-				else if (GlobalI2CState == I2C_DAT_ACK) {
 					I21CONSET = 0x10; // STO 
 					I21CONCLR = 0x08; // clear SI flag					
 					GlobalI2CState = I2C_DONE;
@@ -351,7 +350,7 @@ int main (void) {
 	
 	
 	while (1) {
-		I2CWriteReg(ADXLI2CAdresss, 0x30, 0x02);
+		I2CWriteReg(ADXLI2CAdresss, 0x30, 0xff);
 	n++;
 	delay();
 		I2Cmessage = I2CReadReg(ADXLI2CAdresss, 0x30);
