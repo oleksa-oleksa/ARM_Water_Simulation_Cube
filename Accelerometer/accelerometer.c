@@ -27,10 +27,11 @@ unsigned char GlobalI2CAddr;
 unsigned char GlobalI2CReg;
 unsigned char GlobalI2CData;
 unsigned char GlobalI2CRead;
-volatile enum {I2C_IDLE, I2C_ADR, I2C_REG, I2C_DAT, I2C_DAT_ACK, I2C_RESTART, I2C_DAT_NACK, I2C_WRITE, I2C_READ, I2C_ERR, I2C_LOST, I2C_DONE} GlobalI2CState;
+volatile enum {I2C_IDLE, I2C_ADR, I2C_STARTED, I2C_RESTARTED, I2C_REG, I2C_DAT, I2C_DAT_ACK, I2C_RESTART, I2C_DAT_NACK, I2C_WRITE, I2C_READ, I2C_ERR, I2C_LOST, I2C_DONE} GlobalI2CState;
 unsigned char GlobalI2CRegAxesBuffer[] = {ADXL345_REG_DATAX0, ADXL345_REG_DATAX1, ADXL345_REG_DATAY0, ADXL345_REG_DATAY1, ADXL345_REG_DATAZ0, ADXL345_REG_DATAZ1};
-volatile int ReadLenght;
+volatile int ReadLenght = 1;
 unsigned int ReadIndex = 0;
+unsigned char I2CReadBuffer[2];
 volatile uint8_t DebugI2CState;
 
 /**************************************************************************/
@@ -78,12 +79,11 @@ __irq void i2c_irq(void) {
 	switch (I21STAT) // Read result code and switch to next action 
 		{    
 		case ( 0x08): // A START condition has been transmitted. Next: 0x18    
-      // Case ADR -> REG
+      // Case ADR -> STARTED
 			I21DAT = GlobalI2CAddr; // Send address and write bit R/W = 0.
-			GlobalI2CState = I2C_REG;
-			I21CONSET = 0x04; // Write 0x04 to I2CONSET to set the AA bit
+			//I21CONSET = 0x04; // Write 0x04 to I2CONSET to set the AA bit
 			I21CONCLR = 0x28; // Clear start bit and SI flag			
-			
+			GlobalI2CState = I2C_STARTED;
 		break;  
 
 		case (0x10): // A repeated START condition has been transmitted. Next: 0x18
@@ -91,18 +91,21 @@ __irq void i2c_irq(void) {
 				// Write Slave Address with R/W bit to I2DAT
 			  I21DAT = GlobalI2CAddr | 1; // Send address and read bit R/W = 1
 				
-			} else if (GlobalI2CState == I2C_WRITE) {
-				I21DAT = GlobalI2CAddr; // Send address and write bit R/W = 0.
-			}
-			I21CONSET = 0x04; // Write 0x04 to I2CONSET to set the AA bit
+			} 
+			//I21CONSET = 0x04; // Write 0x04 to I2CONSET to set the AA bit
 			I21CONCLR = 0x28; // Clear start bit and SI flag			
+			// Case -> RESTARTED
+			GlobalI2CState = I2C_RESTARTED;
 			break;
 		
 		// Previous state was State 8 or State 10, Slave Address + Write has been transmitted, ACK has been received. 
 		// The first data byte will be transmitted, an ACK bit will be received.
 		case (0x18): // Next: 0x28
-			I21DAT = GlobalI2CReg; // Write data to TX register 
-		// Case REG -> RESTART		
+			if (GlobalI2CState == I2C_STARTED) {
+				I21DAT = GlobalI2CReg; // Write data to TX register 
+				GlobalI2CState = I2C_REG;
+			}
+			// Case REG -> RESTART		
 			if (GlobalI2CState == I2C_REG) {
 				GlobalI2CState = I2C_RESTART;
 			}
@@ -168,23 +171,29 @@ __irq void i2c_irq(void) {
 		/* Data has been received, ACK has been returned. Data will be read from I2DAT. 
 		Additional data will be received. If this is the last data byte then NOT ACK will be returned, 
 		otherwise ACK will be returned */
-		case (0x50) :      
-			GlobalI2CData = I21DAT;    
-			I21CONCLR = 0x0C; //clear the SI flag and the AA bit
-			//I21CONSET = 0x04; // set the AA bit
+		case (0x50):
+		case (0x58): // Data Received, Not Ack    		
+			if (ReadIndex != ReadLenght) {
+				GlobalI2CData = I21DAT;  
+				I2CReadBuffer[ReadIndex] = I21DAT;
+				ReadIndex++;
+				I21CONCLR = 0x0C; //clear the SI flag and the AA bit
+				GlobalI2CState = I2C_DAT_ACK;				
+			}
+			else {
+				ReadIndex = 0;
+				I21CONSET = 0x10; // set STO 
+				GlobalI2CState = I2C_DONE;
+			}
 			I21CONCLR = 0x08; // clear SI flag
-			//I21CONSET = 0x10; //  set STO
-			GlobalI2CState = I2C_DONE;   
 		 break; 
 	
-	   case (0x58): // Data Received, Not Ack    
-			//GlobalI2CData = I21DAT;    
-			//I21CONSET = 0x14; // set STO and AA bit
-		  I21CONSET = 0x10; // set STO 
+	/*   case (0x58): // Data Received, Not Ack    
+			I21CONSET = 0x10; // set STO 
 			I21CONCLR = 0x08; // clear SI flag 
 			GlobalI2CState = I2C_DONE;  
 	   break;		
-		
+		*/
 		default:      
 			break;      
 		}      
