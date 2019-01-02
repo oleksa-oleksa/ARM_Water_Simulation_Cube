@@ -30,9 +30,7 @@ unsigned char GlobalI2CRead;
 volatile enum {I2C_IDLE, I2C_ADR, I2C_REG, I2C_DAT, I2C_DAT_ACK, I2C_DAT_NACK, I2C_READ, I2C_ERR, I2C_LOST, I2C_DONE} GlobalI2CState;
 unsigned char GlobalI2CRegAxesBuffer[] = {ADXL345_REG_DATAX0, ADXL345_REG_DATAX1, ADXL345_REG_DATAY0, ADXL345_REG_DATAY1, ADXL345_REG_DATAZ0, ADXL345_REG_DATAZ1};
 volatile int ReadLenght;
-volatile int WriteLenght;
 unsigned int ReadIndex = 0;
-unsigned int WriteIndex = 0;
 volatile uint8_t DebugI2CState;
 
 /**************************************************************************/
@@ -194,10 +192,7 @@ void I2CWriteReg(unsigned char addr, unsigned char reg, unsigned char data) {
 	GlobalI2CData = data;
 	GlobalI2CRead = 0;
 	GlobalI2CState = I2C_ADR;
-	
-	WriteIndex = 0;
-	WriteLenght = 8;
-	   
+		   
 	I21CONSET = 0x20; // Start condition
 	
 	while((GlobalI2CState != I2C_ERR) && (GlobalI2CState != I2C_DONE)) {
@@ -319,7 +314,7 @@ int main (void) {
 	//Enable Measurements	
 	I2CWriteReg(ADXLI2CAdresss, 0x30, 0xFF);
 	delay();
-	I2Cmessage = I2CReadReg(ADXLI2CAdresss, 0x00);
+	I2Cmessage = I2CReadReg(ADXLI2CAdresss, 0x30);
 
 	while (1) {	
 		sprintf(i2c_msg, "0x%x", I2Cmessage);
