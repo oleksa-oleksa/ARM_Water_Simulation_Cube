@@ -6,6 +6,8 @@
 /* Wintersemester 2018/2019                                 */
 /******************************************************************************/
 #pragma anon_unions
+#define ldelay 5000000
+#define sdelay 500000
 
 #include <stdio.h>
 #include <LPC23xx.H>                    /* LPC23xx definitions                */
@@ -42,9 +44,9 @@ volatile uint8_t DebugI2CState;
     @brief  delay
 */
 /**************************************************************************/
-void delay(void) {
+void delay(int delay) {
 	int i;
-	for (i = 0; i < 500000; i++) {
+	for (i = 0; i < delay; i++) {
 		// just a hadrcore delay
 	};
 }
@@ -190,7 +192,11 @@ __irq void i2c_irq(void) {
 		}      
 		VICVectAddr = 0x00000000; // Clear interrupt in 
 }
-
+/**************************************************************************/
+/*!
+    @brief  Writes 8-bits to the specified destination register
+*/
+/**************************************************************************/
 void I2CWriteReg(unsigned char addr, unsigned char reg, unsigned char data) {
   GlobalI2CAddr = addr;
 	GlobalI2CReg = reg;
@@ -208,7 +214,11 @@ void I2CWriteReg(unsigned char addr, unsigned char reg, unsigned char data) {
 	//lcd_print_message("Write exit");
 	GlobalI2CState = I2C_IDLE;
 } 
-
+/**************************************************************************/
+/*!
+    @brief  Reads 8-bits from the specified register
+*/
+/**************************************************************************/
 uint8_t I2CReadReg(unsigned char addr, unsigned char reg) {
   GlobalI2CAddr = addr;
 	GlobalI2CReg = reg;
@@ -227,6 +237,30 @@ uint8_t I2CReadReg(unsigned char addr, unsigned char reg) {
 
 /**************************************************************************/
 /*!
+    @brief  Reads 16-bits from the specified register
+*/
+/**************************************************************************/
+uint16_t I2CRead16Bits(unsigned char addr, unsigned char regs[]) {
+  ReadLenght = 2;
+	GlobalI2CAddr = addr;
+	//GlobalI2CReg = reg;
+	GlobalI2CRead = 1;
+	GlobalI2CState = I2C_ADR;
+	
+	I21CONSET = 0x20; // Start condition
+	
+	while((GlobalI2CState != I2C_ERR) && (GlobalI2CState != I2C_DONE)) {
+	;
+	}
+	
+	GlobalI2CState = I2C_IDLE;
+	ReadLenght = 1;
+	return GlobalI2CData;
+} 
+
+
+/**************************************************************************/
+/*!
     @brief  I2C init
     1. configure the VIC to respond to a I2C interrupt
 		2. configure pinselect block to connect the I2C data and clock lines to the external pins
@@ -235,7 +269,7 @@ uint8_t I2CReadReg(unsigned char addr, unsigned char reg) {
 /**************************************************************************/
 void i2c_init(void) {
 	PCONP |= 0x00080000;
-	delay();
+	delay(sdelay);
 	
 	VICVectCntl19 = 0x0000001;       // select a priority slot for a given interrupt
 	VICVectAddr19 = (unsigned)i2c_irq; //pass the address of the IRQ into the VIC slot 
@@ -255,7 +289,7 @@ void i2c_init(void) {
 	//I21SCLH  = 30;
 	
 	I21CONCLR = 0x000000FF; // Clear all I2C settings
-  delay();
+  delay(sdelay);
 	// Before the master transmitter mode can be entered, I2CONSET must be initialized with 0100 0000
 	I21CONSET = 0x00000040; // Enable the I2C interface 
 }
@@ -278,9 +312,11 @@ int accelerometer_init() {
 	}
 	
 	//Enable Measurements	
-	I2CWriteReg(ADXLI2CAdresss, ADXL345_REG_POWER_CTL, 0x08);
+	I2CWriteReg(ADXLI2CAdresss, ADXL345_REG_POWER_CTL, MEASURE);
 	// set the interrupts to active low.
 	I2CWriteReg(ADXLI2CAdresss, ADXL345_REG_DATA_FORMAT, INT_INVERT);
+	// set the interrupts to active low.
+	I2CWriteReg(ADXLI2CAdresss, ADXL345_REG_DATA_FORMAT, ADXL345_RANGE_4_G);
 	//The DATA_READY bit is set when new data is available and is cleared when no new data is available.
 	I2CWriteReg(ADXLI2CAdresss, ADXL345_REG_INT_ENABLE, DATA_READY);
 	//Sent the Data Ready Interrupt to the INT1 pin
@@ -294,7 +330,6 @@ int accelerometer_init() {
 /*************************************************************/
 
 int main (void) {
-	int n = 0;
 	volatile uint8_t id;
 	char i2c_msg[10];
 	GlobalI2CState = I2C_IDLE;
@@ -302,39 +337,37 @@ int main (void) {
 	// LCD Init
   lcd_init();
 	lcd_print_greeting();
-	delay();
+	delay(ldelay);
 
 	// I2C Init 
 	i2c_init(); // fixed, works properly
 	lcd_print_message("I2C Init done...");
-	delay();
+	delay(ldelay);
 	
 	if (accelerometer_init()) {
 			lcd_print_message("ADXL345 found");
-			delay();
+			delay(ldelay);
 	} else {
 			lcd_print_message("ADXL345 error");
-		  delay();
+		  delay(ldelay);
 	}
 	
 	//I2CWriteReg(ADXLI2CAdresss, ADXL345_REG_POWER_CTL, 0x08);
   
 	//Enable Measurements	
 	
+	lcd_print_message("ADXL345 started!");
+	delay(ldelay);
 	
 	while (1) {
-	n++;
-	delay();
-		I2Cmessage = I2CReadReg(ADXLI2CAdresss, ADXL345_REG_DATAZ1);
+		I2Cmessage = I2CReadReg(ADXLI2CAdresss, ADXL345_REG_DATAZ0);
 		sprintf(i2c_msg, "0x%x", I2Cmessage);
 		lcd_print_message(i2c_msg);
-		delay();
-		//lcd_print_message("Loop again");
-		//delay();
-		
-		/*sensors_event_t event; 
+		delay(sdelay);
+
+		//sensors_event_t event; 
 	
-		lcd_print_message("ACCGYRO started");
-	*/
+
+
   }  
 }
