@@ -1,0 +1,20 @@
+The Memory project is a demo program for the Keil MCB2300
+Board using the Philips LPC2368 Microcontroller.
+
+It demonstrates an USB Memory based on USB Mass Storage Class.
+
+LEDs are used to display the following:
+  - P2.0: LED_RD   is on when USB Device is performing Read access
+  - P2.1: LED_WR   is on when USB Device is performing Write access
+  - P2.4: LED_CFG  is on when USB Device is configured
+  - P2.5: LED_SUSP is on when USB Device is suspended
+
+The USB Memory is automatically recognized by the host PC
+running Windows which will load a generic Mass Storage driver.
+
+The Memory program is available for the following targets:
+  MCB2300 Board: configured for on-chip Flash ROM
+                 (used for production or target debugging)
+
+Note: set jumper J5 to 1[2 3] (jumper towards JTAG connector)
+      for USB soft connect

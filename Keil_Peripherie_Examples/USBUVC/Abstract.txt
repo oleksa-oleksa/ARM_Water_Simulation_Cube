@@ -1,0 +1,15 @@
+First tests for UVC
+-------------------
+Configuration is based on 'USB Device Class Definition for Video Devices: Video Device Examples'
+
+- XP supports only UVC1.0 (USBVerify.exe, UVCView.x86.exe)
+- USB CommandVerifier (UVC1.3) is based on UVC1.1
+- UCV1.3 runs only if UVC1.0 settings are used
+
+ 
+
+- UVC1.3: error VS_FRAME_MJPEG:bmCapabilities = 0x03  (UVC1.1 feature)
+- UVC1.3: error INPUT_TERMINAL:wTerminalType = 0x0401 (COMPOSITE_CONNECTOR)
+
+- removed Input terminal 'composite video'
+  caused errors during compliance test even it is defined in USB_Video_Class_1.1.pdf

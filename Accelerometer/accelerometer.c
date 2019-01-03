@@ -44,7 +44,7 @@ volatile uint8_t DebugI2CState;
 /**************************************************************************/
 void delay(void) {
 	int i;
-	for (i = 0; i < 5000000; i++) {
+	for (i = 0; i < 500000; i++) {
 		// just a hadrcore delay
 	};
 }
@@ -109,26 +109,13 @@ __irq void i2c_irq(void) {
 			// Case STARTED -> REG
 			I21DAT = GlobalI2CReg; // Write data to TX register
 			I21CONCLR = 0x08; // Clear SI bit
-			
-		//if (GlobalI2CState == I2C_STARTED) {
-				GlobalI2CState = I2C_REG; // with re-start for write
-			//}
-			// CASE WRITE -> DAT
-			//else if (GlobalI2CState == I2C_WRITE) {
-			//	GlobalI2CState = I2C_DAT;
-			//}
-		  //I21CONSET = 0x04;
-			//I21CONCLR = 0x28; // clear SI flag and STA
+			GlobalI2CState = I2C_REG; // with re-start for write
 		break;      
 		
 		case (0x20): // SLA+W has been transmitted; NOT ACK has been received      
 				I21DAT = GlobalI2CData;
 				I21CONCLR = 0x08; // clear SI flag					
-				GlobalI2CState = I2C_DAT;
-
-			//I21CONSET = 0x14; // set the STO and AA bits
-			//I21CONCLR = 0x08; // clear SI flag
-			//GlobalI2CState = I2C_ERR;    
+				GlobalI2CState = I2C_DAT;    
 		break;      
 				
 		case (0x28): // Data byte in I2DAT has been transmitted; ACK has been received.
@@ -140,51 +127,27 @@ __irq void i2c_irq(void) {
 					I21CONCLR = 0x08; // clear SI flag
 					GlobalI2CState = I2C_READ;
 				}
-				// Repeated Start for Write Operation
 				// Case RESTART -> WRITE
 				else if (GlobalI2CState == I2C_REG && !GlobalI2CRead) {
 					// with re-start for write
 					//I21CONSET = 0x24; // Repeated start condition for Write Access
 					//I21CONCLR = 0x08; // clear SI flag
 					GlobalI2CState = I2C_WRITE;
-					
-					// Without re-start for write
-					//I21DAT = GlobalI2CData;
-					//I21CONSET = 0x10; // STO 
-					//I21CONCLR = 0x28; // clear SI flag					
-					//GlobalI2CState = I2C_DONE;
-					
-					//I21CONCLR = 0x08; // clear SI flag										
-					//GlobalI2CState = I2C_DAT;
 				}
 				
 				if (GlobalI2CState == I2C_WRITE) {
 					I21DAT = GlobalI2CData;
 					GlobalI2CState = I2C_DAT;
 					I21CONCLR = 0x08; // clear SI flag
-					//I21CONSET = 0x10; // STO 
 				}
 				
 				else if (GlobalI2CState == I2C_DAT) {
 					GlobalI2CState = I2C_DONE;
 					I21CONSET = 0x10; // STO 
-					I21CONCLR = 0x08; // clear SI flag
-					
-				}
-
-/*				else if (GlobalI2CState == I2C_DAT) {
-					I21DAT = GlobalI2CData;
-					I21CONSET = 0x10; // STO 
 					I21CONCLR = 0x08; // clear SI flag					
-					GlobalI2CState = I2C_DONE;
-				} */
+				}
 		break; 
-				
-/*		case (0x30): // Data sent, Not Ack 
-			I21CONSET = 0x14; // set the STO and AA bits
-			I21CONCLR = 0x08; // clear SI flag
-			GlobalI2CState = I2C_ERR; */
-				
+								
     case (0x38): // Arbitration lost 
 			I21CONSET = 0x24; // to set the STA and AA bits
 			I21CONCLR = 0x08; // clear SI flag
@@ -222,16 +185,9 @@ __irq void i2c_irq(void) {
 			I21CONCLR = 0x08; // clear SI flag
 		 break; 
 	
-	/*   case (0x58): // Data Received, Not Ack    
-			I21CONSET = 0x10; // set STO 
-			I21CONCLR = 0x08; // clear SI flag 
-			GlobalI2CState = I2C_DONE;  
-	   break;		
-		*/
 		default:      
 			break;      
 		}      
-
 		VICVectAddr = 0x00000000; // Clear interrupt in 
 }
 
@@ -248,8 +204,8 @@ void I2CWriteReg(unsigned char addr, unsigned char reg, unsigned char data) {
 	while((GlobalI2CState != I2C_ERR) && (GlobalI2CState != I2C_DONE)) {
 	;
 	}
-	
-	lcd_print_message("Write exit");
+	// Debug print
+	//lcd_print_message("Write exit");
 	GlobalI2CState = I2C_IDLE;
 } 
 
@@ -369,12 +325,12 @@ int main (void) {
 	while (1) {
 	n++;
 	delay();
-		I2Cmessage = I2CReadReg(ADXLI2CAdresss, ADXL345_REG_DATAX0);
+		I2Cmessage = I2CReadReg(ADXLI2CAdresss, ADXL345_REG_DATAZ1);
 		sprintf(i2c_msg, "0x%x", I2Cmessage);
 		lcd_print_message(i2c_msg);
 		delay();
-		lcd_print_message("Loop again");
-		delay();
+		//lcd_print_message("Loop again");
+		//delay();
 		
 		/*sensors_event_t event; 
 	
