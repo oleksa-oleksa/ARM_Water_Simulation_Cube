@@ -36,7 +36,7 @@ unsigned int ReadIndex = 0;
 volatile int WriteLenght = 1;
 unsigned int WriteIndex = 0;
 unsigned char I2CReadBuffer[2];
-unsigned char I2CWriteBuffer[1];
+unsigned char I2CMasterBuffer[2]; // for multibyte read: keeps 2 registers
 volatile uint8_t DebugI2CState;
 
 /**************************************************************************/
@@ -109,7 +109,9 @@ __irq void i2c_irq(void) {
 		// The first data byte will be transmitted, an ACK bit will be received.
 		case (0x18): // Next: 0x28
 			// Case STARTED -> REG
-			I21DAT = GlobalI2CReg; // Write data to TX register
+			//I21DAT = GlobalI2CReg; // Write data to TX register
+			I21DAT = I2CMasterBuffer[0]; // Write data to TX register
+			ReadIndex++;
 			I21CONCLR = 0x08; // Clear SI bit
 			GlobalI2CState = I2C_REG; // with re-start for write
 		break;      
@@ -124,7 +126,12 @@ __irq void i2c_irq(void) {
     case (0x30) : // transmitted, NOT ACK has been received			
 				// Repeated Start for Read Operation
 				// Case RESTART -> READ
-				if (GlobalI2CState == I2C_REG && GlobalI2CRead) {
+				if (GlobalI2CState == I2C_REG && GlobalI2CRead && ReadIndex <= ReadLenght) {
+					I21CONSET = 0x24; // Repeated start condition for Read Access
+					I21CONCLR = 0x08; // clear SI flag
+					GlobalI2CState = I2C_READ;
+				}
+				else if (GlobalI2CState == I2C_READ && ReadIndex <= ReadLenght) {
 					I21CONSET = 0x24; // Repeated start condition for Read Access
 					I21CONCLR = 0x08; // clear SI flag
 					GlobalI2CState = I2C_READ;
@@ -172,13 +179,14 @@ __irq void i2c_irq(void) {
 		otherwise ACK will be returned */
 		case (0x50):
 		case (0x58): // Data Received, Not Ack    		
-			if (ReadIndex != ReadLenght) {
-				GlobalI2CData = I21DAT;  
-				I2CReadBuffer[ReadIndex] = I21DAT;
-				ReadIndex++;
-				I21CONCLR = 0x0C; //clear the SI flag and the AA bit
-				GlobalI2CState = I2C_DAT_ACK;				
-			}
+			GlobalI2CData = I21DAT;  
+			I2CReadBuffer[ReadIndex] = I21DAT;
+			//ReadIndex++;
+			I21CONCLR = 0x0C; //clear the SI flag and the AA bit
+			
+		if (ReadIndex != ReadLenght) {
+					GlobalI2CState = I2C_DAT_ACK;				
+		}
 			else {
 				ReadIndex = 0;
 				I21CONSET = 0x10; // set STO 
@@ -198,10 +206,12 @@ __irq void i2c_irq(void) {
 */
 /**************************************************************************/
 void I2CWriteReg(unsigned char addr, unsigned char reg, unsigned char data) {
+	ReadLenght = 1;
+	ReadIndex = 0;
   GlobalI2CAddr = addr;
 	GlobalI2CReg = reg;
+	I2CMasterBuffer[0] = reg;
 	GlobalI2CData = data;
-	I2CWriteBuffer[0] = data;
 	GlobalI2CRead = 0;
 	GlobalI2CState = I2C_ADR;
 		   
@@ -212,6 +222,7 @@ void I2CWriteReg(unsigned char addr, unsigned char reg, unsigned char data) {
 	}
 	// Debug print
 	//lcd_print_message("Write exit");
+	ReadLenght = 1;
 	GlobalI2CState = I2C_IDLE;
 } 
 /**************************************************************************/
@@ -220,30 +231,11 @@ void I2CWriteReg(unsigned char addr, unsigned char reg, unsigned char data) {
 */
 /**************************************************************************/
 uint8_t I2CReadReg(unsigned char addr, unsigned char reg) {
-  GlobalI2CAddr = addr;
-	GlobalI2CReg = reg;
-	GlobalI2CRead = 1;
-	GlobalI2CState = I2C_ADR;
-	
-	I21CONSET = 0x20; // Start condition
-	
-	while((GlobalI2CState != I2C_ERR) && (GlobalI2CState != I2C_DONE)) {
-	;
-	}
-	
-	GlobalI2CState = I2C_IDLE;
-	return GlobalI2CData;
-} 
-
-/**************************************************************************/
-/*!
-    @brief  Reads 16-bits from the specified register
-*/
-/**************************************************************************/
-uint16_t I2CRead16Bits(unsigned char addr, unsigned char regs[]) {
-  ReadLenght = 2;
+  ReadLenght = 1;
+	ReadIndex = 0;
 	GlobalI2CAddr = addr;
 	//GlobalI2CReg = reg;
+	I2CMasterBuffer[0] = reg;
 	GlobalI2CRead = 1;
 	GlobalI2CState = I2C_ADR;
 	
@@ -255,6 +247,31 @@ uint16_t I2CRead16Bits(unsigned char addr, unsigned char regs[]) {
 	
 	GlobalI2CState = I2C_IDLE;
 	ReadLenght = 1;
+	return GlobalI2CData;
+} 
+
+/**************************************************************************/
+/*!
+    @brief  Reads 16-bits from the specified register
+*/
+/**************************************************************************/
+uint16_t I2CRead16Bits(unsigned char addr, unsigned char regs[]) {
+  ReadLenght = 2;
+	GlobalI2CAddr = addr;
+	I2CMasterBuffer[0] = regs[0];
+	I2CMasterBuffer[1] = regs[1];
+	GlobalI2CRead = 1;
+	GlobalI2CState = I2C_ADR;
+	
+	I21CONSET = 0x20; // Start condition
+	
+	while((GlobalI2CState != I2C_ERR) && (GlobalI2CState != I2C_DONE)) {
+	;
+	}
+	
+	GlobalI2CState = I2C_IDLE;
+	ReadLenght = 1;
+	// merge the data from two registers
 	return GlobalI2CData;
 } 
 
@@ -308,8 +325,8 @@ int accelerometer_init() {
 	id = I2CReadReg(ADXLI2CAdresss, ADXL345_REG_DEVID);
 	
 	if (id != ADXL345_ID) {
-		//return 0;
-	}
+		 return 0;
+	}	
 	
 	//Enable Measurements	
 	I2CWriteReg(ADXLI2CAdresss, ADXL345_REG_POWER_CTL, MEASURE);
@@ -343,7 +360,7 @@ int main (void) {
 	i2c_init(); // fixed, works properly
 	lcd_print_message("I2C Init done...");
 	delay(ldelay);
-	
+	/*
 	if (accelerometer_init()) {
 			lcd_print_message("ADXL345 found");
 			delay(ldelay);
@@ -351,16 +368,18 @@ int main (void) {
 			lcd_print_message("ADXL345 error");
 		  delay(ldelay);
 	}
-	
-	//I2CWriteReg(ADXLI2CAdresss, ADXL345_REG_POWER_CTL, 0x08);
+	*/
+	// Debug
+	//I2Cmessage = I2CReadReg(ADXLI2CAdresss, ADXL345_REG_DEVID);
+	I2CWriteReg(ADXLI2CAdresss, ADXL345_REG_POWER_CTL, 0x08);
   
-	//Enable Measurements	
-	
 	lcd_print_message("ADXL345 started!");
 	delay(ldelay);
 	
 	while (1) {
-		I2Cmessage = I2CReadReg(ADXLI2CAdresss, ADXL345_REG_DATAZ0);
+		I2Cmessage = I2CReadReg(ADXLI2CAdresss, ADXL345_REG_POWER_CTL);
+		//I2Cmessage = I2CReadReg(ADXLI2CAdresss, 0x30);
+
 		sprintf(i2c_msg, "0x%x", I2Cmessage);
 		lcd_print_message(i2c_msg);
 		delay(sdelay);
