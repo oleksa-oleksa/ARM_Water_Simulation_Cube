@@ -451,11 +451,6 @@
               <FilePath>.\LCD_4bit.c</FilePath>
             </File>
             <File>
-              <FileName>IRQ.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\IRQ.c</FilePath>
-            </File>
-            <File>
               <FileName>accelerometer.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\accelerometer.c</FilePath>
@@ -916,11 +911,6 @@
               <FileName>LCD_4bit.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\LCD_4bit.c</FilePath>
-            </File>
-            <File>
-              <FileName>IRQ.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\IRQ.c</FilePath>
             </File>
             <File>
               <FileName>accelerometer.c</FileName>

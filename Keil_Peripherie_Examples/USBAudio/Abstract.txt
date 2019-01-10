@@ -1,0 +1,14 @@
+The Audio project is a demo program for the Keil MCB2300
+Board using the NXP LPC23xx Microcontroller.
+
+It demonstrates an USB Audio Device - Speaker.
+
+The USB Audio Device is recognized by the host PC running
+Windows which will load a generic Audio driver and add a
+speaker which can be used for sound playback on the PC.
+Potenciometer on the board is used for setting the Volume
+and the LEDs are used to display a simplified VU Meter.
+
+The Audio program is available for the following targets:
+  MCB2300 Board: configured for on-chip Flash ROM
+                 (used for production or target debugging)

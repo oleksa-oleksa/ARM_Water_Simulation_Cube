@@ -1,0 +1,101 @@
+### uVision2 Project, (C) Keil Software
+### Do not modify !
+
+ cExt (*.c)
+ aExt (*.s*; *.src; *.a*)
+ oExt (*.obj)
+ lExt (*.lib)
+ tExt (*.txt; *.h; *.inc)
+ pExt (*.plm)
+ CppX (*.cpp)
+ DaveTm { 0,0,0,0,0,0,0,0 }
+
+Target (MCB2300 Flash), 0x0004 // Tools: 'ARM-ADS'
+Target (MCB2300 RAM), 0x0004 // Tools: 'ARM-ADS'
+GRPOPT 1,(Source),1,0,0
+GRPOPT 2,(Common),1,0,0
+
+OPTFFF 1,1,1,0,0,124,131,0,<.\mcitest.c><mcitest.c> { 44,0,0,0,0,0,0,0,1,0,0,0,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,250,0,0,0,21,0,0,0,189,3,0,0,179,1,0,0 }
+OPTFFF 1,2,1,0,0,3,3,0,<.\dma.c><dma.c> { 44,0,0,0,0,0,0,0,1,0,0,0,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,69,0,0,0,59,0,0,0,236,2,0,0,119,1,0,0 }
+OPTFFF 1,3,1,1,0,368,368,0,<.\mci.c><mci.c> { 44,0,0,0,0,0,0,0,1,0,0,0,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,40,0,0,0,10,0,0,0,232,2,0,0,70,1,0,0 }
+OPTFFF 1,4,2,469762048,0,0,0,0,<..\Common\src\swi_handler.s><swi_handler.s> 
+OPTFFF 1,5,2,0,0,81,85,0,<..\Common\src\Startup.s><Startup.s> { 44,0,0,0,0,0,0,0,1,0,0,0,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,88,0,0,0,116,0,0,0,244,3,0,0,146,1,0,0 }
+OPTFFF 1,6,2,855638016,0,0,0,0,<.\readfifo.s><readfifo.s> 
+OPTFFF 2,7,1,0,0,0,0,0,<..\Common\src\irq.c><irq.c> 
+OPTFFF 2,8,1,201326592,0,0,0,0,<..\Common\src\target.c><target.c> 
+
+ExtF <J:\mco\Shared\dtang\FCC1\LPC23xx_24xxSampleSoftware.r5\Keil\MCI\mci.h> 49,56,0,{ 44,0,0,0,0,0,0,0,1,0,0,0,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,22,0,0,0,29,0,0,0,207,2,0,0,87,1,0,0 }
+
+TARGOPT 1, (MCB2300 Flash)
+ ADSCLK=12000000
+  OPTTT 1,1,1,0
+  OPTHX 1,65535,0,0,0
+  OPTLX 79,66,8,<.\Lst\>
+  OPTOX 16
+  OPTLT 1,1,1,0,1,1,0,1,0,0,0,0
+  OPTXL 1,1,1,1,1,1,1,0,0
+  OPTFL 1,0,0
+  OPTAX 255
+  OPTBL 0,(Data Sheet)<DATASHTS\PHILIPS\LPC23xx_DS.PDF>
+  OPTBL 1,(User Manual)<DATASHTS\PHILIPS\LPC23xx24xx_UM.pdf>
+  OPTDL (SARM.DLL)(-cLPC2100)(DARMP.DLL)(-pLPC2378)(SARM.DLL)()(TARMP.DLL)(-pLPC2378)
+  OPTDBG 49150,0,()()()()()()()()()() (BIN\UL2ARM.DLL)()()()
+  OPTKEY 0,(DLGTARM)((134=-1,-1,-1,-1,0)(135=-1,-1,-1,-1,0)(107=-1,-1,-1,-1,0)(108=-1,-1,-1,-1,0)(106=-1,-1,-1,-1,0)(105=-1,-1,-1,-1,0)(80=-1,-1,-1,-1,0)(104=-1,-1,-1,-1,0)(100=-1,-1,-1,-1,0)(113=-1,-1,-1,-1,0)(112=-1,-1,-1,-1,0)(136=-1,-1,-1,-1,0)(117=-1,-1,-1,-1,0)(110=-1,-1,-1,-1,0)(111=-1,-1,-1,-1,0)(114=-1,-1,-1,-1,0)(115=-1,-1,-1,-1,0)(116=-1,-1,-1,-1,0))
+  OPTKEY 0,(ARMDBGFLAGS)()
+  OPTKEY 0,(UL2ARM)(-UU1623C7E -O1 -S2 -C0 -N00("ARM7TDMI-S Core") -D00(4F1F0F0F) -L00(4) -FO7 -FD40000000 -FC800 -FN1 -FF0LPC_IAP2_512 -FS00 -FL07D000)
+  OPTBB 0,0,131,1,816,0,0,0,0,1,<mcitest.c>()()
+  OPTBB 1,0,92,1,588,0,0,0,0,1,<mcitest.c>()()
+  OPTWA 0,1,(DataTxFIFOCount)
+  OPTWA 1,1,(DataRxFIFOCount)
+  OPTWA 2,1,(DataFIFOCount)
+  OPTWA 3,1,(DataEndCount)
+  OPTWA 4,1,(DataBlockEndCount)
+  OPTMM 1,2,(0x7fd00000)
+  OPTMM 2,2,(0x7fd01000)
+  OPTMM 3,2,(0xE01FC000)
+  OPTMM 4,0,(0xE01F C000)
+  OPTDF 0x82
+  OPTLE <>
+  OPTLC <>
+EndOpt
+
+TARGOPT 2, (MCB2300 RAM)
+ ADSCLK=12000000
+  OPTTT 1,1,1,0
+  OPTHX 1,65535,0,0,0
+  OPTLX 79,66,8,<.\Lst\>
+  OPTOX 16
+  OPTLT 1,1,1,0,1,1,0,1,0,0,0,0
+  OPTXL 1,1,1,1,1,1,1,0,0
+  OPTFL 1,0,1
+  OPTAX 255
+  OPTBL 0,(Data Sheet)<DATASHTS\PHILIPS\LPC23xx_DS.PDF>
+  OPTBL 1,(User Manual)<DATASHTS\PHILIPS\LPC23xx24xx_UM.pdf>
+  OPTDL (SARM.DLL)(-cLPC2100)(DARMP.DLL)(-pLPC2378)(SARM.DLL)()(TARMP.DLL)(-pLPC2378)
+  OPTDBG 49150,0,()()()()()()()()()(.\RAM.ini) (BIN\UL2ARM.DLL)()()()
+  OPTKEY 0,(DLGTARM)((134=-1,-1,-1,-1,0)(135=-1,-1,-1,-1,0)(107=-1,-1,-1,-1,0)(108=-1,-1,-1,-1,0)(106=-1,-1,-1,-1,0)(105=-1,-1,-1,-1,0)(80=-1,-1,-1,-1,0)(104=-1,-1,-1,-1,0)(100=-1,-1,-1,-1,0)(113=-1,-1,-1,-1,0)(112=-1,-1,-1,-1,0)(136=-1,-1,-1,-1,0)(117=-1,-1,-1,-1,0)(110=-1,-1,-1,-1,0)(111=-1,-1,-1,-1,0)(114=-1,-1,-1,-1,0)(115=-1,-1,-1,-1,0)(116=-1,-1,-1,-1,0))
+  OPTKEY 0,(ARMDBGFLAGS)()
+  OPTKEY 0,(UL2ARM)(-UU1623C7E -O1 -S2 -C0 -N00("ARM7TDMI-S Core") -D00(4F1F0F0F) -L00(4) -FO15 -FD40000000 -FC800 -FN1 -FF0LPC_IAP2_512 -FS00 -FL07D000)
+  OPTBB 0,0,100,1,1073742436,0,0,0,0,1,<mcitest.c>()(\mcitest\100)
+  OPTBB 1,0,58,1,1073742260,0,0,0,0,1,<mcitest.c>()(\mcitest\58)
+  OPTBB 2,0,51,1,1073742228,0,0,0,0,1,<mcitest.c>()(\mcitest\51)
+  OPTBB 3,0,131,1,1073742640,0,0,0,0,1,<mcitest.c>()(\mcitest\131)
+  OPTBB 4,0,485,1,1073745412,0,0,0,0,1,<mci.c>()(\mci\485)
+  OPTWA 0,1,(DataEndCount)
+  OPTWA 1,1,(DataBlockEndCount)
+  OPTWA 2,1,(DataTxActiveCount)
+  OPTWA 3,1,(DataRxActiveCount)
+  OPTWA 4,1,(DataFIFOCount)
+  OPTWA 5,1,(DataTxFIFOCount)
+  OPTWA 6,1,(DataRxFIFOCount)
+  OPTWA 0,2,(ReadBlock)
+  OPTWA 1,2,(WriteBlock)
+  OPTMM 1,2,(0x7FD00000)
+  OPTMM 2,2,(0x7FD01000)
+  OPTMM 3,2,(0xE01FC1a0)
+  OPTMM 4,0,(0xE01F C000)
+  OPTDF 0x82
+  OPTLE <>
+  OPTLC <>
+EndOpt
+
