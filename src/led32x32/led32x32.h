@@ -9,6 +9,8 @@
 #define LED32X32_H_
 
 #include <LPC23xx.H>
+#include <stdint.h>
+#include <stdbool.h>
 
 #include "paint_tool.h"
 
@@ -38,8 +40,10 @@
 #define LED32X32_PIN_C   5
 #define LED32X32_PIN_D   6
 
+/**
+ * @brief Initialize LED functionality and enable output on port 3
+ */
 void led32x32_init(void);
-void led32x32_pwmInit(void);
 
 /*****************************************************************************
  * Static Functions to set pin high/low
@@ -62,20 +66,24 @@ void lp32x32_latch(void);
  * @brief Set target row by setting control signals A,B,C,D
  */
 void lp32x32_setRow(int row);
+
 /**
  * @brief Set color for upper half of the panel
  */
-void lp32x32_setTopColor(RGB color);
+void lp32x32_setTopColor(void);
+
 /**
  * @brief Set color for lower half of the panel
  */
-void lp32x32_setBottomColor(RGB color);
+void lp32x32_setBottomColor(void);
+
 /**
  * @brief Refresh the panel
  * @details Each pixel condition has to previously be defined before
  *          calling this function
  */
-void lp32x32_refresh_fixed(void);
-void lp32x32_refresh(RGB panel[ROW_NUM][COL_NUM]);
+void lp32x32_refresh_fixed(bool panel_temp[ROW_NUM][COL_NUM]);
+void lp32x32_refresh_fixed_scroll(bool panel_temp[ROW_NUM][COL_NUM]);
+void lp32x32_refresh(void);
 
 #endif // LED32X32_H_

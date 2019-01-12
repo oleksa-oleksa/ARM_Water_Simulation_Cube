@@ -45,8 +45,15 @@ bool particle_init_list(particle_list_element_t* list, uint32_t size);
 
 bool particle_init_grid(particle_grid_element_t grid[PARTICLE_GRID_X][PARTICLE_GRID_Y], particle_list_element_t* list, uint32_t size);
 
-bool particle_move(particle_grid_element_t grid[PARTICLE_GRID_X][PARTICLE_GRID_Y], double d_time, double ex_force[2]);
+bool particle_move_single_panel(particle_grid_element_t grid[PARTICLE_GRID_X][PARTICLE_GRID_Y], double d_time, double ex_force[2]);
 
+bool particle_move_cube(particle_grid_element_t top[PARTICLE_GRID_X][PARTICLE_GRID_Y], 
+                        particle_grid_element_t bottom[PARTICLE_GRID_X][PARTICLE_GRID_Y], 
+                        particle_grid_element_t front[PARTICLE_GRID_X][PARTICLE_GRID_Y], 
+                        particle_grid_element_t back[PARTICLE_GRID_X][PARTICLE_GRID_Y], 
+                        particle_grid_element_t left[PARTICLE_GRID_X][PARTICLE_GRID_Y], 
+                        particle_grid_element_t right[PARTICLE_GRID_X][PARTICLE_GRID_Y], 
+                        double d_time, double ex_force[2]);
 
 
 

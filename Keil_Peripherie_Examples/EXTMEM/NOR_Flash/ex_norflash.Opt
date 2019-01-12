@@ -1,0 +1,79 @@
+### uVision2 Project, (C) Keil Software
+### Do not modify !
+
+ cExt (*.c)
+ aExt (*.s*; *.src; *.a*)
+ oExt (*.obj)
+ lExt (*.lib)
+ tExt (*.txt; *.h; *.inc)
+ pExt (*.plm)
+ CppX (*.cpp)
+ DaveTm { 0,0,0,0,0,0,0,0 }
+
+Target (MCB2400), 0x0004 // Tools: 'ARM-ADS'
+Target (MCB2400 Debug), 0x0004 // Tools: 'ARM-ADS'
+GRPOPT 1,(Source Files),1,0,0
+GRPOPT 2,(Documentation),1,0,0
+GRPOPT 3,(Startup Files),1,0,0
+
+OPTFFF 1,1,1,0,0,193,193,0,<.\ex_norflash.c><ex_norflash.c> { 44,0,0,0,0,0,0,0,1,0,0,0,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,0,0,0,31,0,0,0,236,3,0,0,171,1,0,0 }
+OPTFFF 1,2,1,2,0,9,9,0,<.\norflash_test.c><norflash_test.c> { 44,0,0,0,0,0,0,0,1,0,0,0,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,44,1,0,0,45,0,0,0,215,3,0,0,98,1,0,0 }
+OPTFFF 1,3,1,0,0,0,0,0,<..\..\Common\src\irq.c><irq.c> 
+OPTFFF 1,4,1,0,0,0,0,0,<..\..\Common\src\target.c><target.c> 
+OPTFFF 1,5,1,0,0,0,0,0,<..\..\Common\src\timer.c><timer.c> 
+OPTFFF 3,6,2,0,0,0,0,0,<..\..\Common\src\swi_handler.s><swi_handler.s> 
+OPTFFF 3,7,2,0,0,85,88,0,<..\..\Common\src\Startup.s><Startup.s> { 44,0,0,0,0,0,0,0,1,0,0,0,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,66,0,0,0,87,0,0,0,194,2,0,0,74,1,0,0 }
+
+ExtF <C:\Philips\FCC1\LPC23xx_24xxSampleSoftware\Keil\EXTMEM\NOR_Flash\ex_norflash.h> 26,40,0,{ 44,0,0,0,0,0,0,0,1,0,0,0,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,50,1,0,0,37,0,0,0,221,3,0,0,90,1,0,0 }
+
+TARGOPT 1, (MCB2400)
+ ADSCLK=12000000
+  OPTTT 1,1,1,0
+  OPTHX 1,65535,0,0,0
+  OPTLX 79,66,8,<.\Lst\>
+  OPTOX 16
+  OPTLT 1,1,1,0,1,1,0,1,0,0,0,0
+  OPTXL 1,1,1,1,1,1,1,0,0
+  OPTFL 1,0,0
+  OPTAX 255
+  OPTBL 0,(Data Sheet)<DATASHTS\PHILIPS\LPC24xx_DS.PDF>
+  OPTBL 1,(User Manual)<DATASHTS\PHILIPS\User_Manual_LPC2368.pdf>
+  OPTDL (SARM.DLL)(-cLPC2100)(DARMP.DLL)(-pLPC2468)(SARM.DLL)()(TARMP.DLL)(-pLPC2468)
+  OPTDBG 49146,0,()()()()()()()()()() (BIN\UL2ARM.DLL)()()()
+  OPTKEY 0,(DLGTARM)((134=-1,-1,-1,-1,0)(135=-1,-1,-1,-1,0)(107=-1,-1,-1,-1,0)(108=-1,-1,-1,-1,0)(106=-1,-1,-1,-1,0)(105=-1,-1,-1,-1,0)(80=-1,-1,-1,-1,0)(104=-1,-1,-1,-1,0)(100=-1,-1,-1,-1,0)(113=-1,-1,-1,-1,0)(112=-1,-1,-1,-1,0)(136=-1,-1,-1,-1,0)(117=-1,-1,-1,-1,0)(110=-1,-1,-1,-1,0)(111=-1,-1,-1,-1,0)(114=-1,-1,-1,-1,0)(115=-1,-1,-1,-1,0)(116=-1,-1,-1,-1,0))
+  OPTKEY 0,(ARMDBGFLAGS)()
+  OPTKEY 0,(UL2ARM)(-U268761108 -O7 -S0 -C0 -FO15 -FD40000000 -FC800 -FN1 -FF0LPC_IAP2_512 -FS00 -FL07D000)
+  OPTBB 0,0,61,1,1180,0,0,0,0,1,<norflash_test.c>()()
+  OPTMM 1,10,(0x80000000)
+  OPTMM 2,1,(0xffe00000)
+  OPTMM 3,1,(0x7fe0170)
+  OPTDF 0x80
+  OPTLE <>
+  OPTLC <>
+EndOpt
+
+TARGOPT 2, (MCB2400 Debug)
+ ADSCLK=12000000
+  OPTTT 1,1,1,0
+  OPTHX 1,65535,0,0,0
+  OPTLX 79,66,8,<.\Lst\>
+  OPTOX 16
+  OPTLT 1,1,1,0,1,1,0,1,0,0,0,0
+  OPTXL 1,1,1,1,1,1,1,0,0
+  OPTFL 1,0,1
+  OPTAX 255
+  OPTBL 0,(Data Sheet)<DATASHTS\PHILIPS\LPC24xx_DS.PDF>
+  OPTBL 1,(User Manual)<DATASHTS\PHILIPS\User_Manual_LPC2368.pdf>
+  OPTDL (SARM.DLL)(-cLPC2100)(DARMP.DLL)(-pLPC2468)(SARM.DLL)()(TARMP.DLL)(-pLPC2468)
+  OPTDBG 48122,0,()()()()()()()()()(.\RAM.ini) (BIN\UL2ARM.DLL)()()()
+  OPTKEY 0,(DLGTARM)((134=-1,-1,-1,-1,0)(135=-1,-1,-1,-1,0)(107=-1,-1,-1,-1,0)(108=-1,-1,-1,-1,0)(106=-1,-1,-1,-1,0)(105=-1,-1,-1,-1,0)(80=-1,-1,-1,-1,0)(104=-1,-1,-1,-1,0)(100=-1,-1,-1,-1,0)(113=-1,-1,-1,-1,0)(112=-1,-1,-1,-1,0)(136=-1,-1,-1,-1,0)(117=-1,-1,-1,-1,0)(110=-1,-1,-1,-1,0)(111=-1,-1,-1,-1,0)(114=-1,-1,-1,-1,0)(115=-1,-1,-1,-1,0)(116=-1,-1,-1,-1,0))
+  OPTKEY 0,(ARMDBGFLAGS)()
+  OPTKEY 0,(UL2ARM)(-U268761108 -O7 -S0 -C0 -FO15 -FD40000000 -FC800 -FN1 -FF0LPC_IAP2_512 -FS00 -FL07D000)
+  OPTMM 1,10,(0x80000000)
+  OPTMM 2,1,(0xffe00000)
+  OPTMM 3,1,(0x7fe0170)
+  OPTDF 0x80
+  OPTLE <>
+  OPTLC <>
+EndOpt
+
