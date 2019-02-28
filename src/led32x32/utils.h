@@ -32,7 +32,7 @@ void led_selectOn(unsigned int nums);
  ********************************************************************/
 
 /**
- * @brief Set port 2 as PWM
+ * @brief Set port 2 (on-board LEDs) as PWM
  */
 void led_setPwm(void);
 

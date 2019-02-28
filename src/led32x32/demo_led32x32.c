@@ -6,7 +6,6 @@
 #include <stdbool.h>
 #include <string.h>
 
-#define LED32X32_PWMMODE 0
 #define LED32X32         1
 #define LED_PWMMODE      2
 #define LED_DEFAULT      3
@@ -15,36 +14,14 @@
 
 int main(void)
 {
+    #if MODE == LED32X32
+        static panel_t panel_1; // Each pixel has 32-bit
+        static panel_t panel_2;
+        static panel_t panel_3;
+        static panel_t panel_4;
+        static panel_t panel_5;
 
-    #if MODE == LED32X32_PWMMODE
-        //uint32_t demoGrid[ROW_NUM][COL_NUM]; ///< Include information on particle density per LED pixel
-
-        led32x32_init();
-        led_setPwm();
-
-        while(1)
-        {
-            lp32x32_refresh();
-        }
-
-    // #elif MODE == LED32X32
-    //     bool panel_temp[ROW_NUM][COL_NUM] = {false};
-
-    //     fill_panel_fixed_info(panel_temp);
-    //     led32x32_init();
-
-    //     while(1)
-    //     {
-    //         lp32x32_refresh_fixed_scroll(panel_temp);
-    //     }
-
-    #elif MODE == LED32X32
-        static T_PANEL panel_1; // Each pixel has 32-bit
-        static T_PANEL panel_2;
-        static T_PANEL panel_3;
-        static T_PANEL panel_4;
-        static T_PANEL panel_5;
-        static T_PANEL panels[CHAIN_LEN];
+        static panel_t panels[CHAIN_LEN];
 
         int r,c;
 
@@ -54,11 +31,11 @@ int main(void)
             for (c = 0; c < COL_NUM; ++c)
             {
                 panel_1[r][c] = 1; // fill top area with 1
-                panel_2[r][c] = 2;
-                panel_3[r][c] = 1;
-                panel_3[r + ROW_NUM/2][c] = 2; // fill bottom area
+                panel_2[r][c] = 1;
+                panel_3[r][c] = 0;
+                panel_3[r + ROW_NUM/2][c] = 1; // fill bottom area
                 panel_4[r][c] = 1;
-                panel_5[r][c] = 2;
+                panel_5[r][c] = 1;
             }
         }
 
