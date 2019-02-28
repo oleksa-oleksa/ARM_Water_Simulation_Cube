@@ -23,9 +23,15 @@
 
 [8]: https://qiita.com/onokatio/items/1b99ae9475b6a9fc2f15
 
-## Binary Code Manipulation
+## (WIP) Binary Code Manipulation for Color Intensity
+> TODO complete this section
+
 - 3 bits * 2 parts (top,bottom) * 4 panels = 24 bits = 3 bytes
 - 32 pixels in a row
 - 16 rows to control
 
 that result in that we need totally 3-byte * 32 * 16 = 1536 Byte to store color information for only one image.
+
+## Dev Note
+Panel information: integer 32-bit per pixel  
+Chained panels are considered as if the width becomes larger.

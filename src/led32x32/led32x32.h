@@ -14,11 +14,18 @@
 
 #include "paint_tool.h"
 
+/**
+ * One panel consisting of 'ROW_NUM x COL_NUM' pixels each having 32-bit integer information
+ */
+typedef int T_PANEL[ROW_NUM][COL_NUM];
+
+#define CHAIN_LEN 5 ///< Number of panels to be chained
+
 /********************************************************************
  * Configuration for PWM1 on port 2
  ********************************************************************/
-#define ROW_NUM 32
-#define COL_NUM 32
+// #define ROW_NUM 32
+// #define COL_NUM 32
 
 #define LED32X32_RGBPIN_SETTER   FIO2SET
 #define LED32X32_RGBPIN_CLEANER  FIO2CLR
@@ -85,5 +92,7 @@ void lp32x32_setBottomColor(void);
 void lp32x32_refresh_fixed(bool panel_temp[ROW_NUM][COL_NUM]);
 void lp32x32_refresh_fixed_scroll(bool panel_temp[ROW_NUM][COL_NUM]);
 void lp32x32_refresh(void);
+
+void lp32x32_refresh_chain(T_PANEL panels[CHAIN_LEN]);
 
 #endif // LED32X32_H_

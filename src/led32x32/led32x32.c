@@ -332,3 +332,52 @@ void lp32x32_refresh(void)
         lp32x32_clearCtrlPin(LED32X32_PIN_OE);
     }
 }
+
+
+void lp32x32_refresh_chain(T_PANEL panels[CHAIN_LEN])
+{
+    uint8_t row;
+    uint8_t col;
+    uint8_t layer;
+    uint8_t panelIndex = 0;
+
+    for (row = 0; row < (ROW_NUM/2); ++row)
+    {
+        // TODO find the best match of the number of layers and clock speed
+        // to make color intensity
+        for (layer = 0; layer < 1; ++layer)
+        {
+            for (col = 0; col < (COL_NUM * CHAIN_LEN); ++col)
+            {
+                panelIndex = col / COL_NUM;
+                
+                /* Upper area */
+                if (panels[panelIndex][row][col - COL_NUM*panelIndex] == 1) {
+                    _lp32x32_clearAllRgb1Pins();
+                    lp32x32_setRgbPin(LED32X32_PIN_G1);
+                } else if (panels[panelIndex][row][col - COL_NUM*panelIndex] == 2) {
+                    _lp32x32_clearAllRgb1Pins();
+                    lp32x32_setRgbPin(LED32X32_PIN_G1);lp32x32_setRgbPin(LED32X32_PIN_R1);
+                } else
+                    _lp32x32_clearAllRgb1Pins();
+                
+                /* Bottom area */
+                if (panels[panelIndex][row+ROW_NUM/2][col - COL_NUM*panelIndex] == 1) {
+                    _lp32x32_clearAllRgb2Pins();
+                    lp32x32_setRgbPin(LED32X32_PIN_G2);
+                } else if (panels[panelIndex][row+ROW_NUM/2][col - COL_NUM*panelIndex] == 2) {
+                    _lp32x32_clearAllRgb2Pins();
+                    lp32x32_setRgbPin(LED32X32_PIN_B2);lp32x32_setRgbPin(LED32X32_PIN_R2);
+                } else
+                    _lp32x32_clearAllRgb2Pins();
+
+                lp32x32_clock(); ///< Shift RGB information of each column
+            }
+
+            lp32x32_setRow(row);
+            lp32x32_setCtrlPin(LED32X32_PIN_OE);
+            lp32x32_latch();
+            lp32x32_clearCtrlPin(LED32X32_PIN_OE);
+        }
+    }
+}
