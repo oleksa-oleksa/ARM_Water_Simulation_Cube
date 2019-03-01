@@ -1,7 +1,7 @@
 ## Water Simulation Cube
 
 ### Hardware
-- Keil Evaluation Board [MBC2388](http://www.keil.com/mcb2300/mcb2388.asp) (with USB)
+- Keil Evaluation Board [MCB2388](http://www.keil.com/mcb2300/mcb2388.asp) (with USB)
   -  Eval.-version
   -  Legacy Package ARMv7 (NXP LPC 2388)
   -  IDE Keil μversion 5

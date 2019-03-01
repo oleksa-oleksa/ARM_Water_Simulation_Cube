@@ -1,1 +1,47 @@
 %Beschreibung der Implementierung der Darstellungen auf den Displays
+Die Komponente Display empfängt Daten der Panelinformationen von der Komponente Flüssigkeitssimulation und beleuchtet die Panels entsprechend dieser Daten.
+
+\subsection{Hardware}
+Display des RGB-Würfels wird aus sechs 32$\times$32 RGB Matrix LED-Panels aufgebaut. Ein Panel benötigt den Strom von 2$A$. Die Panels werden anhand einer Stromversorgung in Abbildung \ref{fig:pw} geschaltet. Ein Panel wird über 16 Kabel direkt mit dem Board verbunden und die restlichen fünf Panels werden nebeneinander verbunden (sogenannte Daisy-Chain). Abbildung \ref{fig:assembly:display} stellt den gesamten Aufbau der Komponente Display dar.
+\begin{figure}
+	\centering
+	\includegraphics[width=0.95\linewidth]{example-image}
+	\caption{Aufbau von sechs 32$\times$32 RGB Matrix LED-Panels}
+	\label{fig:assembly:display}
+\end{figure}
+
+\subsubsection{Pinbelegung}
+Ein Panel kann durch freie GPIO-Pins mit dem Board verbunden werden. Abbildung \ref{fig:pins} zeigt diese Pinbelegung. Es ist dabei zu beachten, die bereits vom Hersteller belegten Pins zu vermeiden, um den Board erfolgreich in Betrieb zu nehmen.
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.95\linewidth]{example-image}
+	\caption[Pinbelegung]{Pinbelegung}
+	\label{fig:pins}
+\end{figure}
+
+\subsection{Software}
+
+\subsubsection{Initialisierung}
+Die belegten Pins und die relevanten Ports 2 und 3 müssen wie Code \ref{code:led-init} initialisiert werden, um diese als GPIO/Output-Pins verwenden zu können.
+
+\subsubsection{Mechanismus und Konfiguration einer Anzeige}
+Eine Anzeige hat 32 LEDs in einer Reihe beziehungsweise $32 \times 32 = 1024$ LEDs. Diese werden in 16 Teile abgeschnitten. Erster Teil ist für die 1.- und 16. Zeile, zweiter Teil ist für die 2.- und 17. Zeile bis hin zum sechzehnten Teil für die 16.- und 32. Zeile. \\
+
+\emph{<Schritte>}
+\begin{enumerate}
+	\item Setzen alle Pins auf \texttt{Low} (anfang)
+	\item \texttt{R1,G1,B1,R2,G2,B2} Pins auf \texttt{High/Low} setzen
+	\item \texttt{CLK} Pin auf \texttt{High} setzen
+	\item \texttt{CLK} Pin auf \texttt{Low} setzen
+	\item Schritte 2-4 für alle Spalten wiederholen
+	\item Mit Adresspins \texttt{ABCD} eine gezielte Zeile auswählen
+	\item \texttt{OE} Pin auf \texttt{High} setzen
+	\item \texttt{LAT} Pin auf \texttt{High} setzen (erleuchtet LED)
+	\item \texttt{LAT} Pin auf \texttt{Low} setzen
+	\item \texttt{OE} Pin auf \texttt{Low} setzen
+\end{enumerate}
+
+Die Information eines Pixels wird per Takt mittels des Schiebregisters verschoben. Werden mehrere Panels verkettet, wird die Information zum weiteren Panel verschoben. Das heißt, die verketteten Panels können als ein Panel mit den breiteren Spalten betrachtet werden.
+
+Jeder Zyklus leuchtet LEDs und schaltet diese gleich aus. Die Unterfunktion \texttt{refresh} muss daher kontinuierlich aufgerufen werden.
