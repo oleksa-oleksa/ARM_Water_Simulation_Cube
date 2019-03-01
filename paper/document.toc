@@ -1,6 +1,0 @@
-\babel@toc {ngerman}{}
-\contentsline {chapter}{\numberline {1}Einf\IeC {\"u}hrung}{1}{chapter.1}
-\contentsline {chapter}{\numberline {2}Implementierung}{3}{chapter.2}
-\contentsline {section}{\numberline {2.1}Fl\IeC {\"u}ssigkeitssimulation}{3}{section.2.1}
-\contentsline {section}{\numberline {2.2}Gyro}{3}{section.2.2}
-\contentsline {section}{\numberline {2.3}Display}{3}{section.2.3}

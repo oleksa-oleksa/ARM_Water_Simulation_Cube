@@ -20,6 +20,24 @@ src/sim/simulation_test
 Objects/
 Listings/
 
+# LaTex
+*.aux
+*.ist
+*.lof
+*.lol
+*.glo
+*.acn
+*.nav
+*.log
+*.out
+*.synctex.gz
+*.toc
+*.lot
+*.snm
+*.out
+*.cb
+*.cb2
+
 # Mac
 .DS_Store
 .com.apple.timemachine.supported
