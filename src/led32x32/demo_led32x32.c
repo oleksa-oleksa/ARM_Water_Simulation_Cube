@@ -12,44 +12,63 @@
 
 #define MODE LED32X32
 
+/* Prepare panels to be chained */
+static panel_t panel_1; // Each pixel has 32-bit
+static panel_t panel_2;
+static panel_t panel_3;
+static panel_t panel_4;
+static panel_t panel_5;
+static panel_t panel_6;
+static panel_t panels[CHAIN_LEN];
+
+// TODO replace with data from simulation
+void fillPanel(void)
+{
+    int r,c;
+
+    for (r = 0; r < ROW_NUM/2; ++r)
+    {
+        for (c = 0; c < COL_NUM; ++c)
+        {
+            panel_1[r][c] = 1;             // Upper
+            panel_1[r + ROW_NUM/2][c] = 0; // Bottom
+
+            panel_2[r][c] = 0;
+            panel_2[r + ROW_NUM/2][c] = 1;
+
+            panel_3[r][c] = 1;
+            panel_3[r + ROW_NUM/2][c] = 0;
+
+            panel_4[r][c] = 0;
+            panel_4[r + ROW_NUM/2][c] = 1;
+
+            panel_5[r][c] = 1;
+            panel_5[r + ROW_NUM/2][c] = 0;
+
+            panel_6[r][c] = 0;
+            panel_6[r + ROW_NUM/2][c] = 0;
+        }
+    }
+
+    /* Store panels to array */
+    memcpy(panels[0], panel_1, sizeof(panel_t));
+    memcpy(panels[1], panel_2, sizeof(panel_t));
+    memcpy(panels[2], panel_3, sizeof(panel_t));
+    memcpy(panels[3], panel_4, sizeof(panel_t));
+    memcpy(panels[4], panel_5, sizeof(panel_t));
+    memcpy(panels[5], panel_6, sizeof(panel_t));
+}
+
 int main(void)
 {
     #if MODE == LED32X32
-        static panel_t panel_1; // Each pixel has 32-bit
-        static panel_t panel_2;
-        static panel_t panel_3;
-        static panel_t panel_4;
-        static panel_t panel_5;
-
-        static panel_t panels[CHAIN_LEN];
-
-        int r,c;
-
-        // TODO fix these temporary panel information
-        for (r = 0; r < ROW_NUM/2; ++r)
-        {
-            for (c = 0; c < COL_NUM; ++c)
-            {
-                panel_1[r][c] = 1; // fill top area with 1
-                panel_2[r][c] = 1;
-                panel_3[r][c] = 0;
-                panel_3[r + ROW_NUM/2][c] = 1; // fill bottom area
-                panel_4[r][c] = 1;
-                panel_5[r][c] = 1;
-            }
-        }
-
-        /* Store panels to array */
-        memcpy(panels[0], panel_1, sizeof(panel_1));
-        memcpy(panels[1], panel_2, sizeof(panel_2));
-        memcpy(panels[2], panel_3, sizeof(panel_3));
-        memcpy(panels[3], panel_4, sizeof(panel_4));
-        memcpy(panels[4], panel_5, sizeof(panel_5));
-
+        /* Initialize hardware */
         led32x32_init();
 
+        /* Keep updating and refreshing panels */
         while(1)
         {
+            fillPanel();
             lp32x32_refresh_chain(panels);
         }
 

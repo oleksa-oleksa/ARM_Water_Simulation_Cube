@@ -19,7 +19,7 @@
  */
 typedef int panel_t[ROW_NUM][COL_NUM];
 
-#define CHAIN_LEN 5 ///< Number of panels to be chained
+#define CHAIN_LEN 6 ///< Number of panels to be chained
 
 /********************************************************************
  * Configuration for PWM1 on port 2

@@ -156,10 +156,10 @@ void lp32x32_refresh_chain(panel_t panels[CHAIN_LEN])
                 /* Bottom area */
                 if (bottomPixel)
                 {
-                    lp32x32_setUpperPixelInfo(bottomPixel); // TODO consider layer
+                    lp32x32_setBottomPixelInfo(bottomPixel); // TODO consider layer
                 }
 
-                lp32x32_clock(); ///< Shift RGB information of each column
+                lp32x32_clock(); ///< Shift RGB information of each pixel to horizontal direction
             }
 
             lp32x32_setRow(row);
