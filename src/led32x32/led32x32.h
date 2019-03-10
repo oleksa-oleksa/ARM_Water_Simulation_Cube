@@ -2,7 +2,7 @@
  * @file   led32x32.h
  * @brief  Library for one RGB LED matrix panel
  * @date   2018-11-08
- * @author Kayoko Abe
+ * @author Kayoko Abe, Heiko Radde
  */
  
 #ifndef LED32X32_H_
@@ -13,19 +13,13 @@
 #include <stdbool.h>
 
 #include "paint_tool.h"
+#include <particle.h>
 
-/**
- * One panel consisting of 'ROW_NUM x COL_NUM' pixels each having 32-bit integer information
- */
-typedef int panel_t[ROW_NUM][COL_NUM];
-
-#define CHAIN_LEN 6 ///< Number of panels to be chained
+#define CHAIN_LEN 1 ///< Number of panels to be chained
 
 /********************************************************************
  * Configuration for PWM1 on port 2
  ********************************************************************/
-// #define ROW_NUM 32
-// #define COL_NUM 32
 
 #define LED32X32_RGBPIN_SETTER   FIO2SET
 #define LED32X32_RGBPIN_CLEANER  FIO2CLR

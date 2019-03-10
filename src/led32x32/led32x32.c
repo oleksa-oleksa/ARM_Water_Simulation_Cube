@@ -141,8 +141,8 @@ void lp32x32_refresh_chain(panel_t panels[CHAIN_LEN])
             for (col = 0; col < (COL_NUM * CHAIN_LEN); ++col)
             {
                 panelIndex = col / COL_NUM;
-                upperPixel = panels[panelIndex][row][col - COL_NUM * panelIndex];
-                bottomPixel = panels[panelIndex][row + ROW_NUM / 2][col - COL_NUM * panelIndex];
+                upperPixel = panels[panelIndex][row][col - COL_NUM * panelIndex].particle_count;
+                bottomPixel = panels[panelIndex][row + ROW_NUM / 2][col - COL_NUM * panelIndex].particle_count;
                 
                 lp32x32_clearAllRgb1Pins();
                 lp32x32_clearAllRgb2Pins();

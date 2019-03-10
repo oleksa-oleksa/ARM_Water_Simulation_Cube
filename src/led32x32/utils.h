@@ -4,6 +4,10 @@
 #include <LPC23xx.H>
 #include <stdint.h>
 
+#define SEC_TO_USEC(sec) (sec * 1000000)
+
+#define SEC_TO_MSEC(sec) (sec * 1000)
+
 #define SYS_CLK 1000 // [kHz]
 
 /**

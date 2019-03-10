@@ -38,7 +38,7 @@ typedef struct
     uint32_t particle_count;
 } particle_grid_element_t;
 
-
+typedef particle_grid_element_t panel_t[PARTICLE_GRID_X][PARTICLE_GRID_Y];
 
 
 bool particle_init_list(particle_list_element_t* list, uint32_t size);

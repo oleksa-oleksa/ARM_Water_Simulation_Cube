@@ -8,8 +8,10 @@
 #ifndef PAINT_TOOL_H_
 #define PAINT_TOOL_H_
 
-#define ROW_NUM 32
-#define COL_NUM 32
+#include <particle.h>
+
+#define ROW_NUM PARTICLE_GRID_X
+#define COL_NUM PARTICLE_GRID_Y
 
 /*****************************************************************************
  * Color Pallet
