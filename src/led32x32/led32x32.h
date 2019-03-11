@@ -15,7 +15,7 @@
 #include "paint_tool.h"
 #include <particle.h>
 
-#define CHAIN_LEN 1 ///< Number of panels to be chained
+#define CHAIN_LEN 6 ///< Number of panels to be chained
 
 /********************************************************************
  * Configuration for PWM1 on port 2

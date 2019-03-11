@@ -132,13 +132,13 @@ void lp32x32_refresh_chain(panel_t panels[CHAIN_LEN])
     int upperPixel = 0;
     int bottomPixel = 0;
 
-    for (row = 0; row < (ROW_NUM/2); ++row)
+    for(row = 0; row < (ROW_NUM/2); ++row)
     {
         // TODO find the best match of the number of layers and clock speed
         // to make color intensity
-        for (layer = 0; layer < 1; ++layer)
+        for(layer = 0; layer < 1; ++layer)
         {
-            for (col = 0; col < (COL_NUM * CHAIN_LEN); ++col)
+            for(col = 0; col < (COL_NUM * CHAIN_LEN); ++col)
             {
                 panelIndex = col / COL_NUM;
                 upperPixel = panels[panelIndex][row][col - COL_NUM * panelIndex].particle_count;
@@ -148,13 +148,13 @@ void lp32x32_refresh_chain(panel_t panels[CHAIN_LEN])
                 lp32x32_clearAllRgb2Pins();
 
                 /* Upper area */
-                if (upperPixel)
+                if(upperPixel)
                 {
                     lp32x32_setUpperPixelInfo(upperPixel); // TODO consider layer
                 }
                 
                 /* Bottom area */
-                if (bottomPixel)
+                if(bottomPixel)
                 {
                     lp32x32_setBottomPixelInfo(bottomPixel); // TODO consider layer
                 }
