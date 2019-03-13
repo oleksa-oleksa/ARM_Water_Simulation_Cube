@@ -12,6 +12,18 @@
 #define M_PI 3.141592653589793238
 #endif
 
+#if (PARTICLE_DEBUG == 1)
+    #define DEBUG(...) fprintf(stdout, __VA_ARGS__)
+#else
+    #define DEBUG(...) {;}
+#endif
+
+#if (PARTICLE_DEBUG == 1)
+    #define ERROR(...) fprintf(stderr, __VA_ARGS__)
+#else
+    #define ERROR(...) {;}
+#endif
+
 #define PARTICLE_MASS       6.5    ///< 
 #define REST_DENS           1.0    ///< rest density
 #define GAS_CONST           2.0    ///< gas constant for equation of state
@@ -20,9 +32,12 @@
 #define KERNEL_RADIUS 1
 #define KERNEL_RADIUS_SQ (KERNEL_RADIUS * KERNEL_RADIUS)
 #define UPPER_BOUNDS_DELTA 0.001    ///< Stop the position from becomming PARTICLE_GRID_X or PARTICLE_GRID_Y
+#define MAX_X_POS ((PARTICLE_GRID_X * PARTICLE_GRID_CELL_WIDTH ) - UPPER_BOUNDS_DELTA)
+#define MAX_Y_POS ((PARTICLE_GRID_Y * PARTICLE_GRID_CELL_HEIGHT) - UPPER_BOUNDS_DELTA)
 
 #define X 0
 #define Y 1
+#define Z 2
 
 void _compute_density_pressure(particle_grid_element_t grid[PARTICLE_GRID_X][PARTICLE_GRID_Y]);
 inline double _kernel_smoothing_density(double distance);
@@ -31,158 +46,17 @@ inline double _kernel_smoothing_pressure(double distance);
 inline double _kernel_smoothing_viscosity(double distance);
 void _integrate(particle_grid_element_t grid[PARTICLE_GRID_X][PARTICLE_GRID_Y], double d_time);
 void _integrate_cube(particle_grid_element_t grid[PARTICLE_GRID_X][PARTICLE_GRID_Y], double d_time);
+static inline void _update_grid_position(particle_grid_element_t grid[PARTICLE_GRID_X][PARTICLE_GRID_Y]);
+static inline void _update_grid_position_particle(particle_grid_element_t grid[PARTICLE_GRID_X][PARTICLE_GRID_Y], int orig_grid_x, int orig_grid_y, particle_list_element_t* element);
+static inline bool _remove_particle(particle_grid_element_t* cell, particle_list_element_t* element);
+static inline void _add_particle(particle_grid_element_t* cell, particle_list_element_t* element);
+static inline void _manage_rolloff(particle_grid_element_t top[PARTICLE_GRID_X][PARTICLE_GRID_Y], 
+                                   particle_grid_element_t bottom[PARTICLE_GRID_X][PARTICLE_GRID_Y], 
+                                   particle_grid_element_t front[PARTICLE_GRID_X][PARTICLE_GRID_Y], 
+                                   particle_grid_element_t back[PARTICLE_GRID_X][PARTICLE_GRID_Y], 
+                                   particle_grid_element_t left[PARTICLE_GRID_X][PARTICLE_GRID_Y], 
+                                   particle_grid_element_t right[PARTICLE_GRID_X][PARTICLE_GRID_Y]);\
 
-
-
-
-static inline void _update_grid_position(particle_grid_element_t grid[PARTICLE_GRID_X][PARTICLE_GRID_Y], int orig_grid_x, int orig_grid_y, particle_list_element_t* element)
-{
-    int new_grid_x, new_grid_y;
-    uint32_t i;
-    particle_list_element_t* curr;
-
-    new_grid_x = element->particle.position[X] / PARTICLE_GRID_CELL_WIDTH;   //c always cuts off decimal places double to int
-    new_grid_y = element->particle.position[Y] / PARTICLE_GRID_CELL_HEIGHT;  //c always cuts off decimal places double to int
-
-
-    if((new_grid_x != orig_grid_x) ||
-       (new_grid_y != orig_grid_y))
-    {
-        //remove element from old grid-cell
-        curr = grid[orig_grid_x][orig_grid_y].particle_list;
-        for(i = 0; i < grid[orig_grid_x][orig_grid_y].particle_count; ++i)
-        {
-            if(curr == element)
-            { //found the element to remove
-                grid[orig_grid_x][orig_grid_y].particle_count -= 1;
-                if(grid[orig_grid_x][orig_grid_y].particle_count == 0)
-                {
-                    grid[orig_grid_x][orig_grid_y].particle_list = NULL;
-                }
-                else
-                {
-                    if(element->prev != NULL)
-                    {
-                        element->prev->next = element->next;
-                    }
-                    else
-                    {//element was the first of the particle_list
-                        grid[orig_grid_x][orig_grid_y].particle_list = element->next;
-                    }
-                    if(element->next != NULL)
-                    {
-                        element->next->prev = element->prev;
-                    }
-                    else
-                    {//element was the last of the particle_list
-                        ;
-                    }
-                }
-            }
-            curr = curr->next;
-        }
-        element->next = NULL;
-        element->prev = NULL;
-        //add element to new grid-cell
-        if(grid[new_grid_x][new_grid_y].particle_count != 0)
-        {
-            curr = grid[new_grid_x][new_grid_y].particle_list;
-            for(i = 1; i < grid[new_grid_x][new_grid_y].particle_count; ++i)
-            {
-                curr = curr->next;
-            }
-            curr->next = element;
-            element->prev = curr;
-            element->next = NULL;
-        }
-        else
-        {
-            grid[new_grid_x][new_grid_y].particle_list = element;
-            element->prev = element->next = NULL;
-        }
-        grid[new_grid_x][new_grid_y].particle_count += 1;
-    }
-}
-
-static inline void _update_cube_position(particle_grid_element_t top[PARTICLE_GRID_X][PARTICLE_GRID_Y], 
-                        particle_grid_element_t bottom[PARTICLE_GRID_X][PARTICLE_GRID_Y], 
-                        particle_grid_element_t front[PARTICLE_GRID_X][PARTICLE_GRID_Y], 
-                        particle_grid_element_t back[PARTICLE_GRID_X][PARTICLE_GRID_Y], 
-                        particle_grid_element_t left[PARTICLE_GRID_X][PARTICLE_GRID_Y], 
-                        particle_grid_element_t right[PARTICLE_GRID_X][PARTICLE_GRID_Y])
-{
-    (void)top;
-    (void)bottom;
-    (void)front;
-    (void)back;
-    (void)left;
-    (void)right;
-    // int new_grid_x, new_grid_y;
-    // uint32_t i;
-    // particle_list_element_t* curr;
-
-    // new_grid_x = element->particle.position[X] / PARTICLE_GRID_CELL_WIDTH;   //c always cuts off decimal places double to int
-    // new_grid_y = element->particle.position[Y] / PARTICLE_GRID_CELL_HEIGHT;  //c always cuts off decimal places double to int
-
-
-    // if((new_grid_x != orig_grid_x) ||
-    //    (new_grid_y != orig_grid_y))
-    // {
-    //     //remove element from old grid-cell
-    //     curr = grid[orig_grid_x][orig_grid_y].particle_list;
-    //     for(i = 0; i < grid[orig_grid_x][orig_grid_y].particle_count; ++i)
-    //     {
-    //         if(curr == element)
-    //         { //found the element to remove
-    //             grid[orig_grid_x][orig_grid_y].particle_count -= 1;
-    //             if(grid[orig_grid_x][orig_grid_y].particle_count == 0)
-    //             {
-    //                 grid[orig_grid_x][orig_grid_y].particle_list = NULL;
-    //             }
-    //             else
-    //             {
-    //                 if(element->prev != NULL)
-    //                 {
-    //                     element->prev->next = element->next;
-    //                 }
-    //                 else
-    //                 {//element was the first of the particle_list
-    //                     grid[orig_grid_x][orig_grid_y].particle_list = element->next;
-    //                 }
-    //                 if(element->next != NULL)
-    //                 {
-    //                     element->next->prev = element->prev;
-    //                 }
-    //                 else
-    //                 {//element was the last of the particle_list
-    //                     ;
-    //                 }
-    //             }
-    //         }
-    //         curr = curr->next;
-    //     }
-    //     element->next = NULL;
-    //     element->prev = NULL;
-    //     //add element to new grid-cell
-    //     if(grid[new_grid_x][new_grid_y].particle_count != 0)
-    //     {
-    //         curr = grid[new_grid_x][new_grid_y].particle_list;
-    //         for(i = 1; i < grid[new_grid_x][new_grid_y].particle_count; ++i)
-    //         {
-    //             curr = curr->next;
-    //         }
-    //         curr->next = element;
-    //         element->prev = curr;
-    //         element->next = NULL;
-    //     }
-    //     else
-    //     {
-    //         grid[new_grid_x][new_grid_y].particle_list = element;
-    //         element->prev = element->next = NULL;
-    //     }
-    //     grid[new_grid_x][new_grid_y].particle_count += 1;
-    // }
-}
 
 
 
@@ -214,6 +88,13 @@ bool particle_init_grid(particle_grid_element_t grid[PARTICLE_GRID_X][PARTICLE_G
     int particle_x, particle_y;
     uint32_t i, j;
     particle_list_element_t* curr;
+
+    if(grid == NULL)
+    {
+        ERROR("grid == NULL\r\n");
+        return false;
+    }
+
     for(i = 0; i < PARTICLE_GRID_X; ++i)
     {
         for(j = 0; j < PARTICLE_GRID_Y; ++j)
@@ -225,6 +106,11 @@ bool particle_init_grid(particle_grid_element_t grid[PARTICLE_GRID_X][PARTICLE_G
 
     for(i = 0; i < size; ++i)
     {
+        if(list == NULL)
+        {
+            ERROR("list == NULL\r\n");
+            return false;
+        }
         particle_x = (int)list[i].particle.position[X] / PARTICLE_GRID_CELL_WIDTH;
         particle_y = (int)list[i].particle.position[Y] / PARTICLE_GRID_CELL_HEIGHT;
         if(grid[particle_x][particle_y].particle_count == 0)
@@ -253,27 +139,11 @@ bool particle_init_grid(particle_grid_element_t grid[PARTICLE_GRID_X][PARTICLE_G
 
 bool particle_move_single_panel(particle_grid_element_t grid[PARTICLE_GRID_X][PARTICLE_GRID_Y], double d_time, double ex_force[2])
 {
-    int i_x, i_y;
-    uint32_t part;
-    particle_list_element_t* curr;
-    particle_list_element_t* following;
     _compute_density_pressure(grid);
     _compute_forces(grid, ex_force);
     _integrate(grid, d_time);
-
-    for(i_x = 0; i_x < PARTICLE_GRID_X; ++i_x)
-    {
-        for(i_y = 0; i_y < PARTICLE_GRID_Y; ++i_y)
-        {
-            curr = grid[i_x][i_y].particle_list;
-            for(part = 0; part < grid[i_x][i_y].particle_count; ++part)
-            {
-                following = curr->next;
-                _update_grid_position(grid, i_x, i_y, curr);
-                curr = following;
-            }
-        }
-    }
+    _update_grid_position(grid);
+    
     return true;
 }
 
@@ -284,20 +154,45 @@ bool particle_move_cube(particle_grid_element_t top[PARTICLE_GRID_X][PARTICLE_GR
                         particle_grid_element_t back[PARTICLE_GRID_X][PARTICLE_GRID_Y], 
                         particle_grid_element_t left[PARTICLE_GRID_X][PARTICLE_GRID_Y], 
                         particle_grid_element_t right[PARTICLE_GRID_X][PARTICLE_GRID_Y], 
-                        double d_time, double ex_force[2])
+                        double d_time, double ex_force[3])
 {
+    double rel_force[2] = {ex_force[0], ex_force[1]};
+
+    //forces: global x, y
+    rel_force[X] = ex_force[X];
+    rel_force[Y] = ex_force[Y];
     _compute_density_pressure(top);
-    _compute_forces(top, ex_force);
+    _compute_forces(top, rel_force);
+
+    //forces: x = -x, y = -y
+    rel_force[X] = -1 * ex_force[X];
+    rel_force[Y] = -1 * ex_force[Y];
     _compute_density_pressure(bottom);
-    _compute_forces(bottom, ex_force);
+    _compute_forces(bottom, rel_force);
+
+    //forces: x = x, y = z
+    rel_force[X] = ex_force[X];
+    rel_force[Y] = ex_force[Z];
     _compute_density_pressure(front);
-    _compute_forces(front, ex_force);
+    _compute_forces(front, rel_force);
+
+    //forces: x = -x, y = z
+    rel_force[X] = -1 * ex_force[X];
+    rel_force[Y] = ex_force[Z];
     _compute_density_pressure(back);
-    _compute_forces(back, ex_force);
+    _compute_forces(back, rel_force);
+
+    //forces: x = -y, y = z
+    rel_force[X] = -1 * ex_force[Y];
+    rel_force[Y] = ex_force[Z];
     _compute_density_pressure(left);
-    _compute_forces(left, ex_force);
+    _compute_forces(left, rel_force);
+
+    //forces: x = y, y = z
+    rel_force[X] = ex_force[Y];
+    rel_force[Y] = ex_force[Z];
     _compute_density_pressure(right);
-    _compute_forces(right, ex_force);
+    _compute_forces(right, rel_force);
 
     _integrate_cube(top, d_time);
     _integrate_cube(bottom, d_time);
@@ -306,7 +201,14 @@ bool particle_move_cube(particle_grid_element_t top[PARTICLE_GRID_X][PARTICLE_GR
     _integrate_cube(left, d_time);
     _integrate_cube(right, d_time);
 
-    _update_cube_position(top, bottom, front, back, left, right);
+    _manage_rolloff(top, bottom, front, back, left, right);
+
+    _update_grid_position(top);
+    _update_grid_position(bottom);
+    _update_grid_position(front);
+    _update_grid_position(back);
+    _update_grid_position(left);
+    _update_grid_position(right);
     
     return true;
 }
@@ -491,9 +393,9 @@ void _integrate(particle_grid_element_t grid[PARTICLE_GRID_X][PARTICLE_GRID_Y], 
                     curr->particle.position[X] = 0 + UPPER_BOUNDS_DELTA;
                     curr->particle.velocity[X] *= BOUNDARY_DAMPENING;
                 }
-                if(curr->particle.position[X] >= (PARTICLE_GRID_X * PARTICLE_GRID_CELL_WIDTH) - UPPER_BOUNDS_DELTA)
+                if(curr->particle.position[X] >= MAX_X_POS)
                 {
-                    curr->particle.position[X] = (PARTICLE_GRID_X * PARTICLE_GRID_CELL_WIDTH) - UPPER_BOUNDS_DELTA;
+                    curr->particle.position[X] = MAX_X_POS;
                     curr->particle.velocity[X] *= BOUNDARY_DAMPENING;
                 }
                 if(curr->particle.position[Y] <= 0 + UPPER_BOUNDS_DELTA)
@@ -501,9 +403,9 @@ void _integrate(particle_grid_element_t grid[PARTICLE_GRID_X][PARTICLE_GRID_Y], 
                     curr->particle.position[Y] = 0 + UPPER_BOUNDS_DELTA;
                     curr->particle.velocity[Y] *= BOUNDARY_DAMPENING;
                 }
-                if(curr->particle.position[Y] >= (PARTICLE_GRID_Y * PARTICLE_GRID_CELL_HEIGHT) - UPPER_BOUNDS_DELTA)
+                if(curr->particle.position[Y] >= MAX_Y_POS)
                 {
-                    curr->particle.position[Y] = (PARTICLE_GRID_Y * PARTICLE_GRID_CELL_HEIGHT) - UPPER_BOUNDS_DELTA;
+                    curr->particle.position[Y] = MAX_Y_POS;
                     curr->particle.velocity[Y] *= BOUNDARY_DAMPENING;
                 }
                 curr = curr->next;
@@ -544,9 +446,9 @@ void _integrate_cube(particle_grid_element_t grid[PARTICLE_GRID_X][PARTICLE_GRID
                 //     curr->particle.position[X] = 0 + UPPER_BOUNDS_DELTA;
                 //     curr->particle.velocity[X] *= BOUNDARY_DAMPENING;
                 // }
-                // if(curr->particle.position[X] >= (PARTICLE_GRID_X * PARTICLE_GRID_CELL_WIDTH) - UPPER_BOUNDS_DELTA)
+                // if(curr->particle.position[X] >= MAX_X_POS)
                 // {
-                //     curr->particle.position[X] = (PARTICLE_GRID_X * PARTICLE_GRID_CELL_WIDTH) - UPPER_BOUNDS_DELTA;
+                //     curr->particle.position[X] = MAX_X_POS;
                 //     curr->particle.velocity[X] *= BOUNDARY_DAMPENING;
                 // }
                 // if(curr->particle.position[Y] <= 0 + UPPER_BOUNDS_DELTA)
@@ -554,9 +456,9 @@ void _integrate_cube(particle_grid_element_t grid[PARTICLE_GRID_X][PARTICLE_GRID
                 //     curr->particle.position[Y] = 0 + UPPER_BOUNDS_DELTA;
                 //     curr->particle.velocity[Y] *= BOUNDARY_DAMPENING;
                 // }
-                // if(curr->particle.position[Y] >= (PARTICLE_GRID_Y * PARTICLE_GRID_CELL_HEIGHT) - UPPER_BOUNDS_DELTA)
+                // if(curr->particle.position[Y] >= MAX_Y_POS)
                 // {
-                //     curr->particle.position[Y] = (PARTICLE_GRID_Y * PARTICLE_GRID_CELL_HEIGHT) - UPPER_BOUNDS_DELTA;
+                //     curr->particle.position[Y] = MAX_Y_POS;
                 //     curr->particle.velocity[Y] *= BOUNDARY_DAMPENING;
                 // }
                 curr = curr->next;
@@ -564,3 +466,517 @@ void _integrate_cube(particle_grid_element_t grid[PARTICLE_GRID_X][PARTICLE_GRID
         }
     }
 }
+
+
+void _update_grid_position(particle_grid_element_t grid[PARTICLE_GRID_X][PARTICLE_GRID_Y])
+{
+    int i_x, i_y;
+    uint32_t part;
+    particle_list_element_t* curr;
+    particle_list_element_t* following;
+
+    for(i_x = 0; i_x < PARTICLE_GRID_X; ++i_x)
+    {
+        for(i_y = 0; i_y < PARTICLE_GRID_Y; ++i_y)
+        {
+            curr = grid[i_x][i_y].particle_list;
+            for(part = 0; part < grid[i_x][i_y].particle_count; ++part)
+            {
+                following = curr->next;
+                _update_grid_position_particle(grid, i_x, i_y, curr);
+                curr = following;
+            }
+        }
+    }
+}
+
+
+
+void _update_grid_position_particle(particle_grid_element_t grid[PARTICLE_GRID_X][PARTICLE_GRID_Y], int orig_grid_x, int orig_grid_y, particle_list_element_t* element)
+{
+    int new_grid_x, new_grid_y;
+
+    new_grid_x = element->particle.position[X] / PARTICLE_GRID_CELL_WIDTH;   //c always cuts off decimal places double to int
+    new_grid_y = element->particle.position[Y] / PARTICLE_GRID_CELL_HEIGHT;  //c always cuts off decimal places double to int
+
+
+    if((new_grid_x != orig_grid_x) ||
+       (new_grid_y != orig_grid_y))
+    {
+        //remove element from old grid-cell
+        _remove_particle(&grid[orig_grid_x][orig_grid_y], element);
+
+        //add element to new grid-cell
+        _add_particle(&grid[new_grid_x][new_grid_y], element);
+    }
+}
+
+
+bool _remove_particle(particle_grid_element_t* cell, particle_list_element_t* element)
+{
+    uint32_t i;
+    particle_list_element_t* curr = cell->particle_list;
+
+    for(i = 0; i < cell->particle_count; ++i)
+    {
+        if(curr == element)
+        { //found the element to remove
+            cell->particle_count -= 1;
+            if(cell->particle_count == 0)
+            {
+                cell->particle_list = NULL;
+            }
+            else
+            {
+                if(element->prev != NULL)
+                {
+                    element->prev->next = element->next;
+                }
+                else
+                {//element was the first of the particle_list
+                    cell->particle_list = element->next;
+                }
+                if(element->next != NULL)
+                {
+                    element->next->prev = element->prev;
+                }
+                else
+                {//element was the last of the particle_list
+                    ;
+                }
+            }
+        }
+        curr = curr->next;
+    }
+    if(i == cell->particle_count)
+    {//element not in cell
+        ERROR("element %p not in cell\r\n", (void*)element);
+        return false;
+    }
+    element->next = NULL;
+    element->prev = NULL;
+    DEBUG("Removed element %p\r\n", (void*)element);
+    return true;
+}
+
+
+void _add_particle(particle_grid_element_t* cell, particle_list_element_t* element)
+{
+    uint32_t i;
+    particle_list_element_t* curr;
+
+    if(cell->particle_count != 0)
+    {
+        curr = cell->particle_list;
+        for(i = 1; i < cell->particle_count; ++i)
+        {
+            curr = curr->next;
+        }
+        curr->next = element;
+        element->prev = curr;
+        element->next = NULL;
+    }
+    else
+    {
+        cell->particle_list = element;
+        element->prev = element->next = NULL;
+    }
+    cell->particle_count += 1;
+}
+
+
+void _manage_rolloff(particle_grid_element_t top[PARTICLE_GRID_X][PARTICLE_GRID_Y], 
+                     particle_grid_element_t bottom[PARTICLE_GRID_X][PARTICLE_GRID_Y], 
+                     particle_grid_element_t front[PARTICLE_GRID_X][PARTICLE_GRID_Y], 
+                     particle_grid_element_t back[PARTICLE_GRID_X][PARTICLE_GRID_Y], 
+                     particle_grid_element_t left[PARTICLE_GRID_X][PARTICLE_GRID_Y], 
+                     particle_grid_element_t right[PARTICLE_GRID_X][PARTICLE_GRID_Y])
+{
+    int i_x, i_y;
+    particle_list_element_t* curr;
+
+    DEBUG("\r\n");
+    DEBUG("Manage rolloff top:\r\n");
+    //top
+    for(i_x = 0; i_x < PARTICLE_GRID_X; ++i_x)
+    {
+        for(i_y = 0; i_y < PARTICLE_GRID_Y; ++i_y)
+        {
+            curr = top[i_x][i_y].particle_list;
+            while(curr != NULL)
+            {
+                //enforce boundary conditions
+                if(curr->particle.position[X] < 0 + UPPER_BOUNDS_DELTA)
+                {//rolloff left
+                    DEBUG("particle %p [%2d][%2d] to left\r\n", (void*)&curr->particle, i_x, i_y);
+                    if(_remove_particle(&top[i_x][i_y], curr) == true)
+                    {
+                        _add_particle(&left[0][0], curr);
+                    }
+                    curr->particle.velocity[X] = -1 * curr->particle.velocity[Y];
+                    curr->particle.velocity[Y] = 0;
+                    curr->particle.position[X] = -1 * curr->particle.position[Y];
+                    curr->particle.position[Y] = MAX_Y_POS;
+                }
+                if(curr->particle.position[X] > MAX_X_POS)
+                {//rolloff right
+                    DEBUG("particle %p [%2d][%2d] to right\r\n", (void*)&curr->particle, i_x, i_y);
+                    if(_remove_particle(&top[i_x][i_y], curr) == true)
+                    {
+                        _add_particle(&right[0][0], curr);
+                    }
+                    curr->particle.velocity[X] = curr->particle.velocity[Y];
+                    curr->particle.velocity[Y] = 0;
+                    curr->particle.position[X] = curr->particle.position[Y];
+                    curr->particle.position[Y] = MAX_Y_POS;
+                }
+                if(curr->particle.position[Y] < 0 + UPPER_BOUNDS_DELTA)
+                {//rolloff bottom
+                    DEBUG("particle %p [%2d][%2d] to bottom\r\n", (void*)&curr->particle, i_x, i_y);
+                    if(_remove_particle(&top[i_x][i_y], curr) == true)
+                    {
+                        _add_particle(&front[0][0], curr);
+                    }
+                    //vel X = vel X
+                    curr->particle.velocity[Y] = 0;
+                    //pos X = pos X
+                    curr->particle.position[Y] = MAX_Y_POS;
+                }
+                if(curr->particle.position[Y] > MAX_Y_POS)
+                {//rolloff top
+                    DEBUG("particle %p [%2d][%2d] to top\r\n", (void*)&curr->particle, i_x, i_y);
+                    if(_remove_particle(&top[i_x][i_y], curr) == true)
+                    {
+                        _add_particle(&back[0][0], curr);
+                    }
+                    curr->particle.velocity[X] *= -1;
+                    curr->particle.velocity[Y]  = 0;
+                    curr->particle.position[X] *= -1;
+                    curr->particle.position[X] *= MAX_Y_POS;
+                }
+                curr = curr->next;
+            }
+        }
+    }
+
+    DEBUG("\r\n");
+    DEBUG("Manage rolloff bottom:\r\n");
+    //bottom
+    for(i_x = 0; i_x < PARTICLE_GRID_X; ++i_x)
+    {
+        for(i_y = 0; i_y < PARTICLE_GRID_Y; ++i_y)
+        {
+            curr = bottom[i_x][i_y].particle_list;
+            while(curr != NULL)
+            {
+                //enforce boundary conditions
+                if(curr->particle.position[X] < 0 + UPPER_BOUNDS_DELTA)
+                {//rolloff left
+                    DEBUG("particle %p [%2d][%2d] to left\r\n", (void*)&curr->particle, i_x, i_y);
+                    if(_remove_particle(&bottom[i_x][i_y], curr) == true)
+                    {
+                        _add_particle(&right[0][0], curr);
+                    }
+                    curr->particle.velocity[X] = curr->particle.velocity[Y];
+                    curr->particle.velocity[Y] = 0;
+                    curr->particle.position[X] = curr->particle.position[Y];
+                    curr->particle.position[Y] = MAX_Y_POS;
+                }
+                if(curr->particle.position[X] > MAX_X_POS)
+                {//rolloff right
+                    DEBUG("particle %p [%2d][%2d] to right\r\n", (void*)&curr->particle, i_x, i_y);
+                    if(_remove_particle(&bottom[i_x][i_y], curr) == true)
+                    {
+                        _add_particle(&left[0][0], curr);
+                    }
+                    curr->particle.velocity[X] = -1 * curr->particle.velocity[Y];
+                    curr->particle.velocity[Y] = 0;
+                    curr->particle.position[X] = curr->particle.position[Y];
+                    curr->particle.position[Y] = 0 + UPPER_BOUNDS_DELTA;
+                }
+                if(curr->particle.position[Y] < 0 + UPPER_BOUNDS_DELTA)
+                {//rolloff bottom
+                    DEBUG("particle %p [%2d][%2d] to bottom\r\n", (void*)&curr->particle, i_x, i_y);
+                    if(_remove_particle(&bottom[i_x][i_y], curr) == true)
+                    {
+                        _add_particle(&front[0][0], curr);
+                    }
+                    curr->particle.velocity[X] *= -1;
+                    curr->particle.velocity[Y] = 0;
+                    curr->particle.position[X] *= -1;
+                    curr->particle.position[Y] = 0 + UPPER_BOUNDS_DELTA;
+                }
+                if(curr->particle.position[Y] > MAX_Y_POS)
+                {//rolloff top
+                    DEBUG("particle %p [%2d][%2d] to top\r\n", (void*)&curr->particle, i_x, i_y);
+                    if(_remove_particle(&bottom[i_x][i_y], curr) == true)
+                    {
+                        _add_particle(&back[0][0], curr);
+                    }
+                    //vel X = vel X
+                    curr->particle.velocity[Y] = 0;
+                   //pos X = pos X
+                    curr->particle.position[X] = 0 + UPPER_BOUNDS_DELTA;
+                }
+                curr = curr->next;
+            }
+        }
+    }
+
+    DEBUG("\r\n");
+    DEBUG("Manage rolloff front:\r\n");
+    //front
+    for(i_x = 0; i_x < PARTICLE_GRID_X; ++i_x)
+    {
+        for(i_y = 0; i_y < PARTICLE_GRID_Y; ++i_y)
+        {
+            curr = front[i_x][i_y].particle_list;
+            while(curr != NULL)
+            {
+                //enforce boundary conditions
+                if(curr->particle.position[X] < 0 + UPPER_BOUNDS_DELTA)
+                {//rolloff left
+                    DEBUG("particle %p [%2d][%2d] to left\r\n", (void*)&curr->particle, i_x, i_y);
+                    if(_remove_particle(&front[i_x][i_y], curr) == true)
+                    {
+                        _add_particle(&left[0][0], curr);
+                    }
+                    curr->particle.velocity[X] = 0;
+                    //vel Y = vel Y
+                    curr->particle.position[X] = MAX_X_POS;
+                    //pos Y = pos Y
+                }
+                if(curr->particle.position[X] > MAX_X_POS)
+                {//rolloff right
+                    DEBUG("particle %p [%2d][%2d] to right\r\n", (void*)&curr->particle, i_x, i_y);
+                    if(_remove_particle(&front[i_x][i_y], curr) == true)
+                    {
+                        _add_particle(&right[0][0], curr);
+                    }
+                    curr->particle.velocity[X] = 0;
+                    //vel Y = vel Y
+                    curr->particle.position[X] = 0 + UPPER_BOUNDS_DELTA;
+                    //pos Y = pos Y
+                }
+                if(curr->particle.position[Y] < 0 + UPPER_BOUNDS_DELTA)
+                {//rolloff bottom
+                    DEBUG("particle %p [%2d][%2d] to bottom\r\n", (void*)&curr->particle, i_x, i_y);
+                    if(_remove_particle(&front[i_x][i_y], curr) == true)
+                    {
+                        _add_particle(&bottom[0][0], curr);
+                    }
+                    curr->particle.velocity[X] *= -1;
+                    curr->particle.velocity[Y] = 0;
+                    curr->particle.position[X] *= -1;
+                    curr->particle.position[Y] = 0 + UPPER_BOUNDS_DELTA;
+                }
+                if(curr->particle.position[Y] > MAX_Y_POS)
+                {//rolloff top
+                    DEBUG("particle %p [%2d][%2d] to top\r\n", (void*)&curr->particle, i_x, i_y);
+                    if(_remove_particle(&front[i_x][i_y], curr) == true)
+                    {
+                        _add_particle(&top[0][0], curr);
+                    }
+                    //vel X = vel X
+                    curr->particle.velocity[Y] = 0;
+                    //pos X = pos X
+                    curr->particle.position[Y] = 0 + UPPER_BOUNDS_DELTA;
+                }
+                curr = curr->next;
+            }
+        }
+    }
+
+    DEBUG("\r\n");
+    DEBUG("Manage rolloff back:\r\n");
+    //back
+    for(i_x = 0; i_x < PARTICLE_GRID_X; ++i_x)
+    {
+        for(i_y = 0; i_y < PARTICLE_GRID_Y; ++i_y)
+        {
+            curr = back[i_x][i_y].particle_list;
+            while(curr != NULL)
+            {
+                //enforce boundary conditions
+                if(curr->particle.position[X] < 0 + UPPER_BOUNDS_DELTA)
+                {//rolloff left
+                    DEBUG("particle %p [%2d][%2d] to left\r\n", (void*)&curr->particle, i_x, i_y);
+                    if(_remove_particle(&back[i_x][i_y], curr) == true)
+                    {
+                        _add_particle(&right[0][0], curr);
+                    }
+                    curr->particle.velocity[X] = 0;
+                    //vel Y = vel Y
+                    curr->particle.position[X] = MAX_X_POS;
+                    //pos Y = pos Y
+                }
+                if(curr->particle.position[X] > MAX_X_POS)
+                {//rolloff right
+                    DEBUG("particle %p [%2d][%2d] to right\r\n", (void*)&curr->particle, i_x, i_y);
+                    if(_remove_particle(&back[i_x][i_y], curr) == true)
+                    {
+                        _add_particle(&left[0][0], curr);
+                    }
+                    curr->particle.velocity[X] = 0;
+                    //vel Y = vel Y
+                    curr->particle.position[X] = 0 + UPPER_BOUNDS_DELTA;
+                    //pos Y = pos Y
+                }
+                if(curr->particle.position[Y] < 0 + UPPER_BOUNDS_DELTA)
+                {//rolloff bottom
+                    DEBUG("particle %p [%2d][%2d] to bottom\r\n", (void*)&curr->particle, i_x, i_y);
+                    if(_remove_particle(&back[i_x][i_y], curr) == true)
+                    {
+                        _add_particle(&bottom[0][0], curr);
+                    }
+                    //vel X = vel X
+                    curr->particle.velocity[Y] = 0;
+                    //pos X = pos X
+                    curr->particle.position[Y] = MAX_Y_POS;
+                }
+                if(curr->particle.position[Y] > MAX_Y_POS)
+                {//rolloff top
+                    DEBUG("particle %p [%2d][%2d] to top\r\n", (void*)&curr->particle, i_x, i_y);
+                    if(_remove_particle(&back[i_x][i_y], curr) == true)
+                    {
+                        _add_particle(&top[0][0], curr);
+                    }
+                    //vel X = vel X
+                    curr->particle.velocity[Y] = 0;
+                    //pos X = pos X
+                    curr->particle.position[Y] = MAX_Y_POS;
+                }
+                curr = curr->next;
+            }
+        }
+    }
+
+    DEBUG("\r\n");
+    DEBUG("Manage rolloff left:\r\n");
+    //left
+    for(i_x = 0; i_x < PARTICLE_GRID_X; ++i_x)
+    {
+        for(i_y = 0; i_y < PARTICLE_GRID_Y; ++i_y)
+        {
+            curr = left[i_x][i_y].particle_list;
+            while(curr != NULL)
+            {
+                //enforce boundary conditions
+                if(curr->particle.position[X] < 0 + UPPER_BOUNDS_DELTA)
+                {//rolloff left
+                    DEBUG("particle %p [%2d][%2d] to left\r\n", (void*)&curr->particle, i_x, i_y);
+                    if(_remove_particle(&left[i_x][i_y], curr) == true)
+                    {
+                        _add_particle(&back[0][0], curr);
+                    }
+                    curr->particle.velocity[X] = 0;
+                    //vel Y = vel Y
+                    curr->particle.position[X] = MAX_X_POS;
+                    //pos Y = pos Y
+                }
+                if(curr->particle.position[X] > MAX_X_POS)
+                {//rolloff right
+                    DEBUG("particle %p [%2d][%2d] to right\r\n", (void*)&curr->particle, i_x, i_y);
+                    if(_remove_particle(&left[i_x][i_y], curr) == true)
+                    {
+                        _add_particle(&front[0][0], curr);
+                    }
+                    curr->particle.velocity[X] = 0;
+                    //vel Y = vel Y
+                    curr->particle.position[X] = 0 + UPPER_BOUNDS_DELTA;
+                    //pos Y = pos Y
+                }
+                if(curr->particle.position[Y] < 0 + UPPER_BOUNDS_DELTA)
+                {//rolloff bottom
+                    DEBUG("particle %p [%2d][%2d] to bottom\r\n", (void*)&curr->particle, i_x, i_y);
+                    if(_remove_particle(&left[i_x][i_y], curr) == true)
+                    {
+                        _add_particle(&bottom[0][0], curr);
+                    }
+                    curr->particle.velocity[Y] = -1 * curr->particle.velocity[X];
+                    curr->particle.velocity[X] = 0;
+                    curr->particle.position[Y] = -1 * curr->particle.position[X];
+                    curr->particle.position[X] = MAX_X_POS;
+                }
+                if(curr->particle.position[Y] > MAX_Y_POS)
+                {//rolloff top
+                    DEBUG("particle %p [%2d][%2d] to top\r\n", (void*)&curr->particle, i_x, i_y);
+                    if(_remove_particle(&left[i_x][i_y], curr) == true)
+                    {
+                        _add_particle(&top[0][0], curr);
+                    }
+                    curr->particle.velocity[Y] = curr->particle.velocity[X];
+                    curr->particle.velocity[X] = 0;
+                    curr->particle.position[Y] = curr->particle.position[X];
+                    curr->particle.position[X] = 0 + UPPER_BOUNDS_DELTA;
+                }
+                curr = curr->next;
+            }
+        }
+    }
+
+    DEBUG("\r\n");
+    DEBUG("Manage rolloff right:\r\n");
+    //right
+    for(i_x = 0; i_x < PARTICLE_GRID_X; ++i_x)
+    {
+        for(i_y = 0; i_y < PARTICLE_GRID_Y; ++i_y)
+        {
+            curr = right[i_x][i_y].particle_list;
+            while(curr != NULL)
+            {
+                //enforce boundary conditions
+                if(curr->particle.position[X] < 0 + UPPER_BOUNDS_DELTA)
+                {//rolloff left
+                    DEBUG("particle %p [%2d][%2d] to left\r\n", (void*)&curr->particle, i_x, i_y);
+                    if(_remove_particle(&right[i_x][i_y], curr) == true)
+                    {
+                        _add_particle(&front[0][0], curr);
+                    }
+                    curr->particle.velocity[X] = 0;
+                    //vel Y = vel Y
+                    curr->particle.position[X] = MAX_X_POS;
+                    //pos Y = pos Y
+                }
+                if(curr->particle.position[X] > MAX_X_POS)
+                {//rolloff right
+                    DEBUG("particle %p [%2d][%2d] to right\r\n", (void*)&curr->particle, i_x, i_y);
+                    if(_remove_particle(&right[i_x][i_y], curr) == true)
+                    {
+                        _add_particle(&back[0][0], curr);
+                    }
+                    curr->particle.velocity[X] = 0;
+                    //vel Y = vel Y
+                    curr->particle.position[X] = 0 + UPPER_BOUNDS_DELTA;
+                    //pos Y = pos Y
+                }
+                if(curr->particle.position[Y] < 0 + UPPER_BOUNDS_DELTA)
+                {//rolloff bottom
+                    DEBUG("particle %p [%2d][%2d] to bottom\r\n", (void*)&curr->particle, i_x, i_y);
+                    if(_remove_particle(&right[i_x][i_y], curr) == true)
+                    {
+                        _add_particle(&bottom[0][0], curr);
+                    }
+                    curr->particle.velocity[Y] = curr->particle.velocity[X];
+                    curr->particle.velocity[X] = 0;
+                    curr->particle.position[Y] = curr->particle.position[X];
+                    curr->particle.position[X] = 0 + UPPER_BOUNDS_DELTA;
+                }
+                if(curr->particle.position[Y] > MAX_Y_POS)
+                {//rolloff top
+                    DEBUG("particle %p [%2d][%2d] to top\r\n", (void*)&curr->particle, i_x, i_y);
+                    if(_remove_particle(&right[i_x][i_y], curr) == true)
+                    {
+                        _add_particle(&top[0][0], curr);
+                    }
+                    curr->particle.velocity[Y] = curr->particle.velocity[X];
+                    curr->particle.velocity[X] = 0;
+                    curr->particle.position[Y] = curr->particle.position[X];
+                    curr->particle.position[X] = MAX_X_POS;
+                }
+                curr = curr->next;
+            }
+        }
+    }
+}
+

@@ -1,6 +1,5 @@
 #include "particle_linux_display.h"
 
-#include <X11/Xlib.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -17,9 +16,6 @@
 #define SEC_TO_USEC(sec) (sec * 1000000)
 
 
-Display* display;   ///< pointer to X Display structure.
-Window win;         ///< pointer to the newly created window.
-GC gc;              ///< GC (graphics context) used for drawing
 
 
 /*
@@ -98,15 +94,15 @@ GC _create_gc(Display* display, Window win, int reverse_video)
 
 
 
-void particle_linux_display_init(void)
+void particle_linux_display_init(x11_win_struct* handle, char* window_name)
 {
     unsigned int width, height;   /* height and width for the new window.      */
     char *display_name = getenv("DISPLAY");  /* address of the X display.      */
                 /*  in our window.               */
 
     /* open connection with the X server. */
-    display = XOpenDisplay(display_name);
-    if (display == NULL) {
+    handle->display = XOpenDisplay(display_name);
+    if (handle->display == NULL) {
         fprintf(stderr, "cannot connect to X server '%s'\n", display_name);
         return;
     }
@@ -127,49 +123,52 @@ void particle_linux_display_init(void)
     /* root window. Use the screen's white color as the background */
     /* color of the window. Place the new window's top-left corner */
     /* at the given 'x,y' coordinates.                             */
-    win = _create_simple_window(display, width, height, 0, 0);
+    handle->win = _create_simple_window(handle->display, width, height, 0, 0);
 
     /* allocate a new GC (graphics context) for drawing in the window. */
-    gc = _create_gc(display, win, 0);
-    XSync(display, False);
+    handle->gc = _create_gc(handle->display, handle->win, 0);
 
-    XFlush(display);
+    XStoreName(handle->display, handle->win, window_name);
+
+    XSync(handle->display, False);
+
+    XFlush(handle->display);
     // usleep(SEC_TO_USEC(0.05));  //20ms needed to let X11 initialise everyting
     sleep(1);
 }
 
-void particle_linux_display_draw_pixels(particle_grid_element_t grid[PARTICLE_GRID_X][PARTICLE_GRID_Y])
+void particle_linux_display_draw_pixels(x11_win_struct* handle, particle_grid_element_t grid[PARTICLE_GRID_X][PARTICLE_GRID_Y])
 {
     unsigned int i, j, k;
     XColor grey;
     Status rc;            /* return status of various Xlib functions.  */
     Colormap screen_colormap;     /* color map to use for allocating colors.   */
-    XClearWindow(display, win);
-    screen_colormap = DefaultColormap(display, DefaultScreen(display));
-    rc = XAllocNamedColor(display, screen_colormap, "grey", &grey, &grey);
-    XSetForeground(display, gc, grey.pixel);
-    XFlush(display);
+    XClearWindow(handle->display, handle->win);
+    screen_colormap = DefaultColormap(handle->display, DefaultScreen(handle->display));
+    rc = XAllocNamedColor(handle->display, screen_colormap, "grey", &grey, &grey);
+    XSetForeground(handle->display, handle->gc, grey.pixel);
+    XFlush(handle->display);
     for(i = 0; i <= PARTICLE_GRID_X; ++i)
     {
-        XDrawLine(display, win, gc, 
+        XDrawLine(handle->display, handle->win, handle->gc, 
                     /*x1*/DISPLAY_GRID_BORDER_OFFSET + (DISPLAY_GRID_WIDTH * i), /*y1*/DISPLAY_GRID_BORDER_OFFSET, 
                     /*x1*/DISPLAY_GRID_BORDER_OFFSET + (DISPLAY_GRID_WIDTH * i), /*y1*/DISPLAY_GRID_BORDER_OFFSET + (DISPLAY_GRID_WIDTH * PARTICLE_GRID_Y));
     }
     for(i = 0; i <= PARTICLE_GRID_Y; ++i)
     {
-        XDrawLine(display, win, gc, 
+        XDrawLine(handle->display, handle->win, handle->gc, 
                     /*x1*/DISPLAY_GRID_BORDER_OFFSET, /*y1*/DISPLAY_GRID_BORDER_OFFSET + (DISPLAY_GRID_WIDTH * i), 
                     /*x1*/DISPLAY_GRID_BORDER_OFFSET + (DISPLAY_GRID_WIDTH * PARTICLE_GRID_Y), /*y1*/DISPLAY_GRID_BORDER_OFFSET + (DISPLAY_GRID_WIDTH * i));
     }
     XColor blue;
-    screen_colormap = DefaultColormap(display, DefaultScreen(display));
-    rc = XAllocNamedColor(display, screen_colormap, "blue", &blue, &blue);
+    screen_colormap = DefaultColormap(handle->display, DefaultScreen(handle->display));
+    rc = XAllocNamedColor(handle->display, screen_colormap, "blue", &blue, &blue);
     if (rc == 0) {
         fprintf(stderr, "XAllocNamedColor - failed to allocated 'blue' color.\n");
         exit(1);
     }
-    XSetForeground(display, gc, blue.pixel);
-    XFlush(display);
+    XSetForeground(handle->display, handle->gc, blue.pixel);
+    XFlush(handle->display);
 
     // printf("start printing of particles\r\n");
     for(i = 0; i < PARTICLE_GRID_X; ++i)
@@ -186,20 +185,19 @@ void particle_linux_display_draw_pixels(particle_grid_element_t grid[PARTICLE_GR
                     // printf("[%d][%d] %d %lf \r\n", i, j, posx, curr->particle.position[X]);
                     int posy =  DISPLAY_GRID_BORDER_OFFSET + //(j * DISPLAY_GRID_WIDTH) + 
                                 ((curr->particle.position[Y] / PARTICLE_GRID_CELL_HEIGHT) * DISPLAY_GRID_WIDTH);
-                    XFillRectangle(display, win, gc, posx, posy, DISPLAY_PARTICLE_SIZE, DISPLAY_PARTICLE_SIZE);
+                    XFillRectangle(handle->display, handle->win, handle->gc, posx, posy, DISPLAY_PARTICLE_SIZE, DISPLAY_PARTICLE_SIZE);
                     curr = curr->next;
                 }
             }
         }
     }
     // flush all pending requests to the X server.
-    XFlush(display);
-    usleep(SEC_TO_USEC(0.015)); //X11 needs some tome to display everything
+    XFlush(handle->display);
     // sleep(1);
 }
 
 
-void particle_linux_display_close(void)
+void particle_linux_display_close(x11_win_struct* handle)
 {
-    XCloseDisplay(display);
+    XCloseDisplay(handle->display);
 }

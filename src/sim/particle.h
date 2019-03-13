@@ -10,6 +10,8 @@
 #define PARTICLE_GRID_CELL_WIDTH  1
 #define PARTICLE_GRID_CELL_HEIGHT 1
 
+#define PARTICLE_DEBUG 1
+#define PARTICLE_ERROR 1
 
 
 typedef struct
@@ -53,7 +55,7 @@ bool particle_move_cube(particle_grid_element_t top[PARTICLE_GRID_X][PARTICLE_GR
                         particle_grid_element_t back[PARTICLE_GRID_X][PARTICLE_GRID_Y], 
                         particle_grid_element_t left[PARTICLE_GRID_X][PARTICLE_GRID_Y], 
                         particle_grid_element_t right[PARTICLE_GRID_X][PARTICLE_GRID_Y], 
-                        double d_time, double ex_force[2]);
+                        double d_time, double ex_force[3]);
 
 
 
