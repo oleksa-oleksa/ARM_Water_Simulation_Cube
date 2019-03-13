@@ -222,6 +222,11 @@ void _compute_density_pressure(particle_grid_element_t grid[PARTICLE_GRID_X][PAR
     uint32_t i_part, j_part;
     particle_list_element_t* curr;
     particle_list_element_t* partner;
+    if(grid == NULL)
+    {
+        ERROR("grid == NULL\r\n");
+        return;
+    }
 
     for(i_x = 0; i_x < PARTICLE_GRID_X; ++i_x)
     {
@@ -287,6 +292,11 @@ void _compute_forces(particle_grid_element_t grid[PARTICLE_GRID_X][PARTICLE_GRID
     double f_pressure[2];
     double f_viscosity[2];
     double f_gravity[2];
+    if(grid == NULL)
+    {
+        ERROR("grid == NULL\r\n");
+        return;
+    }
 
     for(i_x = 0; i_x < PARTICLE_GRID_X; ++i_x)
     {
@@ -366,6 +376,11 @@ void _integrate(particle_grid_element_t grid[PARTICLE_GRID_X][PARTICLE_GRID_Y], 
 {
     int i_x, i_y;
     particle_list_element_t* curr;
+    if(grid == NULL)
+    {
+        ERROR("grid == NULL\r\n");
+        return;
+    }
     for(i_x = 0; i_x < PARTICLE_GRID_X; ++i_x)
     {
         for(i_y = 0; i_y < PARTICLE_GRID_Y; ++i_y)
@@ -419,6 +434,11 @@ void _integrate_cube(particle_grid_element_t grid[PARTICLE_GRID_X][PARTICLE_GRID
 {
     int i_x, i_y;
     particle_list_element_t* curr;
+    if(grid == NULL)
+    {
+        ERROR("grid == NULL\r\n");
+        return;
+    }
     for(i_x = 0; i_x < PARTICLE_GRID_X; ++i_x)
     {
         for(i_y = 0; i_y < PARTICLE_GRID_Y; ++i_y)
@@ -440,27 +460,7 @@ void _integrate_cube(particle_grid_element_t grid[PARTICLE_GRID_X][PARTICLE_GRID
                 curr->particle.position[X] += d_time * curr->particle.velocity[X];
                 curr->particle.position[Y] += d_time * curr->particle.velocity[Y];
 
-                //enforce boundary conditions
-                // if(curr->particle.position[X] <= 0 + UPPER_BOUNDS_DELTA)
-                // {
-                //     curr->particle.position[X] = 0 + UPPER_BOUNDS_DELTA;
-                //     curr->particle.velocity[X] *= BOUNDARY_DAMPENING;
-                // }
-                // if(curr->particle.position[X] >= MAX_X_POS)
-                // {
-                //     curr->particle.position[X] = MAX_X_POS;
-                //     curr->particle.velocity[X] *= BOUNDARY_DAMPENING;
-                // }
-                // if(curr->particle.position[Y] <= 0 + UPPER_BOUNDS_DELTA)
-                // {
-                //     curr->particle.position[Y] = 0 + UPPER_BOUNDS_DELTA;
-                //     curr->particle.velocity[Y] *= BOUNDARY_DAMPENING;
-                // }
-                // if(curr->particle.position[Y] >= MAX_Y_POS)
-                // {
-                //     curr->particle.position[Y] = MAX_Y_POS;
-                //     curr->particle.velocity[Y] *= BOUNDARY_DAMPENING;
-                // }
+                //enforce boundary conditions done in _manage_rolloff()
                 curr = curr->next;
             }
         }
@@ -474,6 +474,11 @@ void _update_grid_position(particle_grid_element_t grid[PARTICLE_GRID_X][PARTICL
     uint32_t part;
     particle_list_element_t* curr;
     particle_list_element_t* following;
+    if(grid == NULL)
+    {
+        ERROR("grid == NULL\r\n");
+        return;
+    }
 
     for(i_x = 0; i_x < PARTICLE_GRID_X; ++i_x)
     {
@@ -495,6 +500,11 @@ void _update_grid_position(particle_grid_element_t grid[PARTICLE_GRID_X][PARTICL
 void _update_grid_position_particle(particle_grid_element_t grid[PARTICLE_GRID_X][PARTICLE_GRID_Y], int orig_grid_x, int orig_grid_y, particle_list_element_t* element)
 {
     int new_grid_x, new_grid_y;
+    if(grid == NULL)
+    {
+        ERROR("grid == NULL\r\n");
+        return;
+    }
 
     new_grid_x = element->particle.position[X] / PARTICLE_GRID_CELL_WIDTH;   //c always cuts off decimal places double to int
     new_grid_y = element->particle.position[Y] / PARTICLE_GRID_CELL_HEIGHT;  //c always cuts off decimal places double to int
@@ -516,6 +526,11 @@ bool _remove_particle(particle_grid_element_t* cell, particle_list_element_t* el
 {
     uint32_t i;
     particle_list_element_t* curr = cell->particle_list;
+    if(cell == NULL)
+    {
+        ERROR("cell == NULL\r\n");
+        return false;
+    }
 
     for(i = 0; i < cell->particle_count; ++i)
     {
@@ -564,6 +579,11 @@ void _add_particle(particle_grid_element_t* cell, particle_list_element_t* eleme
 {
     uint32_t i;
     particle_list_element_t* curr;
+    if(cell == NULL)
+    {
+        ERROR("cell == NULL\r\n");
+        return;
+    }
 
     if(cell->particle_count != 0)
     {
