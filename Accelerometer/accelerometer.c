@@ -19,7 +19,7 @@
 
 /* Global variables */
 unsigned char I2Cdata; // data to send into I2C
-unsigned char I2Cmessage; // received data fron I2C
+int16_t I2Cmessage; // received data fron I2C
 unsigned int BNOI2CAddress = 0x50; //01010000 Device (Slave) Address (7 bits) shifted BNO055_I2C_ADDR1 (0x28) 
 unsigned int ADXLI2CAdresss = 0x3A; // With the ALT ADDRESS pin high, the 7-bit I2C address for the device is 0x1D, followed by the R/W bit. 
 																		// This translates to 0x3A for a write and 0x3B for a read.
@@ -30,13 +30,15 @@ unsigned char GlobalI2CReg;
 unsigned char GlobalI2CData;
 unsigned char GlobalI2CRead;
 volatile enum {I2C_IDLE, I2C_ADR, I2C_STARTED, I2C_RESTARTED, I2C_REG, I2C_DAT, I2C_DAT_ACK, I2C_RESTART, I2C_DAT_NACK, I2C_WRITE, I2C_READ, I2C_ERR, I2C_LOST, I2C_DONE} GlobalI2CState;
-unsigned char GlobalI2CRegAxesBuffer[] = {ADXL345_REG_DATAX0, ADXL345_REG_DATAX1, ADXL345_REG_DATAY0, ADXL345_REG_DATAY1, ADXL345_REG_DATAZ0, ADXL345_REG_DATAZ1};
 volatile int ReadLenght = 1;
 unsigned int ReadIndex = 0;
 volatile int WriteLenght = 1;
 unsigned int WriteIndex = 0;
 unsigned char I2CReadBuffer[2];
 unsigned char I2CMasterBuffer[2]; // for multibyte read: keeps 2 registers
+unsigned char XRegs[] = {ADXL345_REG_DATAX0, ADXL345_REG_DATAX1};
+unsigned char YRegs[] = {ADXL345_REG_DATAY0, ADXL345_REG_DATAY1};
+unsigned char ZRegs[] = {ADXL345_REG_DATAZ0, ADXL345_REG_DATAZ1};
 volatile uint8_t DebugI2CState;
 
 /**************************************************************************/
@@ -53,7 +55,7 @@ void delay(int delay) {
 
 /**************************************************************************/
 /*!
-    @brief  Greeting message before I2C init
+    @brief  LCD Design functions
 */
 /**************************************************************************/
 void lcd_print_greeting(void) {
@@ -69,6 +71,14 @@ void lcd_print_greeting(void) {
 	lcd_clear();
 	set_cursor (0, 0);
   lcd_print(msg);
+}
+
+void lcd_print_coordinates(unsigned char *msg) {
+	lcd_clear();
+	set_cursor (0, 0);
+	lcd_print ("X:    Y:     Z:");
+  set_cursor (0, 1);
+	lcd_print(msg);
 }
 
 /**************************************************************************/
@@ -251,7 +261,8 @@ uint8_t I2CReadReg(unsigned char addr, unsigned char reg) {
 */
 /**************************************************************************/
 uint16_t I2CRead16Bits(unsigned char addr, unsigned char regs[]) {
-  ReadLenght = 2;
+  uint16_t i2c16bit = 0x00;
+	ReadLenght = 2;
 	GlobalI2CAddr = addr;
 	I2CMasterBuffer[0] = regs[0];
 	I2CMasterBuffer[1] = regs[1];
@@ -267,9 +278,46 @@ uint16_t I2CRead16Bits(unsigned char addr, unsigned char regs[]) {
 	GlobalI2CState = I2C_IDLE;
 	ReadLenght = 1;
 	// merge the data from two registers
-	return GlobalI2CData;
+	i2c16bit = i2c16bit | I2CReadBuffer[1]; // [REG0, REG1]: REG1 as MSB
+	i2c16bit = i2c16bit << 8;
+	
+	i2c16bit = i2c16bit | I2CReadBuffer[0]; // [REG0, REG1]: REG0 as LSB
+
+	return i2c16bit;
 } 
 
+
+/**************************************************************************/
+/*! 
+    @brief  Gets the most recent X axis value
+*/
+/**************************************************************************/
+int16_t getX() {
+
+	return I2CRead16Bits(ADXLI2CAdresss, XRegs);
+}
+
+
+/**************************************************************************/
+/*! 
+    @brief  Gets the most recent Y axis value
+*/
+/**************************************************************************/
+int16_t getY() {
+
+	return I2CRead16Bits(ADXLI2CAdresss, YRegs);
+}
+
+
+/**************************************************************************/
+/*! 
+    @brief  Gets the most recent Z axis value
+*/
+/**************************************************************************/
+int16_t getZ() {
+
+	return I2CRead16Bits(ADXLI2CAdresss, ZRegs);
+}
 
 /**************************************************************************/
 /*!
@@ -343,7 +391,9 @@ int accelerometer_init() {
 
 int main (void) {
 	volatile uint8_t id;
-	char i2c_msg[10];
+	char i2c_msg[16];
+	int16_t x, y, z;
+	
 	GlobalI2CState = I2C_IDLE;
 
 	// LCD Init
@@ -368,11 +418,15 @@ int main (void) {
 	delay(ldelay);
 
 	while (1) {
-		I2Cmessage = I2CReadReg(ADXLI2CAdresss, ADXL345_REG_DATAY0);
-		sprintf(i2c_msg, "0x%x", I2Cmessage);
-		lcd_print_message(i2c_msg);
-		delay(sdelay);
-		//sensors_event_t event; 
+		// Debug
+		//sprintf(i2c_msg, "0x%x", I2Cmessage);
+		//lcd_print_message(i2c_msg);
 
+		x = getX();
+		y = getY();
+		z = getZ();
+		sprintf(i2c_msg, "%4d %4d %4d", x, y, z);
+		lcd_print_coordinates(i2c_msg);	
+		delay(sdelay);
   }  
 }
