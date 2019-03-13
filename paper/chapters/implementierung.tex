@@ -5,4 +5,20 @@ Zur Entwicklung der Softwarekomponente soll erst Keil\textsuperscript{\scriptsiz
 
 Der Board kann durch einen USB-Anschluss vom Rechner eingeschaltet werden. Der ULINK-ME kann ebenfalls durch einen USB-Anschluss zum Laden des Programms und zum Debuggen verwendet werden.
 
+Der Quellcode wurde auf C geschrieben und durch Doxygen dokumentiert.
+
 %Beschreibung der Konfiguration von IDE
+
+\section{Pinbelegung}
+Der Accelerometer und ein der 6 Panels werden durch freie GPIO-Pins mit dem Board verbunden. Abbildung \ref{fig:pins} zeigt diese Pinbelegung. Es ist dabei zu beachten, die bereits vom Hersteller belegten Pins zu vermeiden, um den Board erfolgreich in Betrieb zu nehmen.
+
+Die belegten Pins und die relevanten Ports 2 und 3 müssen wie Code \ref{code:led-init} initialisiert werden, um diese als GPIO/Output-Pins verwenden zu können.
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.8\linewidth]{example-image}
+	\caption[Pinbelegung]{Pinbelegung}
+	\label{fig:pins}
+\end{figure}
+
+\newpage

@@ -1,7 +1,10 @@
 Im Rahmen des Moduls `Fortgeschrittene ARM Programmierung' wird der Keil Evaluation Board MCB2388 verwenden, welcher einen NXP LPC2388 Microcontroller installiert und verschiedene Schnittstellen wie LCD, USB oder Ethernet besitzt. Der ARM7-Prozessor auf dem Board kann mit der bis zu seinesr höchsten Betriebsfrequenz von ?? MHz getaktet werden. Diese Merkmale lassen unterschiedliche Applikationen umsetzen.
 
-Insbesondere unter Berücksichtigung von seiner hohen Taktrate sind wir zur Idee gekommen, Flüssigkeit in einem aus 6 LED-Matrix Panels aufgebauten Würfel zu simulieren und auf denen anzuzeigen. Zur Realisierung unseres Projekts sollte eine sehr hohe Taktrate benötigt werden, um die Bewegung der Wasserteilchen auszurechnen und diese auf den LED Panels in Echtzeit zu übertragen.
+Insbesondere unter Berücksichtigung von seiner hohen Taktrate sind wir zur Idee gekommen, Flüssigkeit zu simulieren und in 3 Dimension anhand eines aus 6 LED-Matrix Panels aufgebauten Würfel zu visualisieren. Zur Realisierung unseres Projekts sollte eine sehr hohe Taktrate benötigt werden, um die Bewegung der Wasserteilchen auszurechnen und diese auf den LED Panels in Echtzeit zu übertragen. Zusätzlich zu dem Entwicklungsboard sowie zu den Panels wird ein Accelerometer benötigt, um die 3-D Position des Würfels zu bestimmen und die Flüssigkeit darin entsprechend zu visualisieren.
+
+Im folgenden Kapital wird die detaillierte Beschreibung jeder Komponente bezüglich der Theorie und der Implementierung vorgestellt.
 
 %Main oscillator = 1M - 24 MHz
 %Max cpu operating takt with PLL = 
 %output from multiplier OCC = 275M - 550 MHz
+
