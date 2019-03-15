@@ -1,18 +1,22 @@
+/**
+ * @file   accelerometer.c
+ * @brief  Accelerometer Adafruit BNO55
+ * @date   2019-03-13
+ * @author Oleksandra Baga
+ */
+
 /******************************************************************************/
 /* Accelerometer Adafruit BNO55                             */
 /******************************************************************************/
 /* This file is part of the project for university course   */
-/* Advanced ARM Programming                                   */
+/* Advanced ARM Programming                                 */
 /* Wintersemester 2018/2019                                 */
 /******************************************************************************/
-#pragma anon_unions
-#define ldelay 5000000
-#define sdelay 500000
+#include "accelerometer.h"
 
-#include <stdio.h>
+#pragma anon_unions  /* Enable and disable support for anonymous structures and unions */
+
 #include <LPC23xx.H> /* LPC23xx definitions             */
-#include "LCD.h"     /* Graphic LCD function prototypes */
-#include <stdint.h>
 #include <string.h>
 #include <time.h>
 #include "include/ada_sensor.h"
@@ -63,12 +67,12 @@ unsigned char ZRegs[] = {ADXL345_REG_DATAZ0, ADXL345_REG_DATAZ1};
 volatile uint8_t DebugI2CState;
 
 /*!
- *   @brief  delay
+ *   @brief  Hard-coded delay
  */
 void delay(int delay) {
     int i;
     for (i = 0; i < delay; ++i) {
-        // just a hadrcore delay
+
     };
 }
 
@@ -305,21 +309,21 @@ uint16_t I2CRead16Bits(unsigned char addr, unsigned char regs[]) {
 /*!
  * @brief  Gets the most recent X axis value
  */
-int16_t getX() {
+int16_t getX(void) {
     return I2CRead16Bits(ADXLI2CAdresss, XRegs);
 }
 
 /*!
  * @brief  Gets the most recent Y axis value
  */
-int16_t getY() {
+int16_t getY(void) {
     return I2CRead16Bits(ADXLI2CAdresss, YRegs);
 }
 
 /*!
  * @brief  Gets the most recent Z axis value
  */
-int16_t getZ() {
+int16_t getZ(void) {
     return I2CRead16Bits(ADXLI2CAdresss, ZRegs);
 }
 
@@ -355,6 +359,8 @@ void i2c_init(void) {
     delay(sdelay);
     // Before the master transmitter mode can be entered, I2CONSET must be initialized with 0100 0000
     I21CONSET = 0x00000040; // Enable the I2C interface
+
+    GlobalI2CState = I2C_IDLE;
 }
 
 /*!
@@ -384,46 +390,4 @@ int accelerometer_init() {
     I2CWriteReg(ADXLI2CAdresss, ADXL345_REG_BW_RATE, ADXL345_DATARATE_400_HZ);
 
     return 1;
-}
-
-int main (void) {
-    volatile uint8_t id;
-    char i2c_msg[16];
-    int16_t x, y, z;
-
-    GlobalI2CState = I2C_IDLE;
-
-    // LCD Init
-    lcd_init();
-    lcd_print_greeting();
-    delay(ldelay);
-
-    // I2C Init
-    i2c_init(); // fixed, works properly
-    lcd_print_message("I2C Init done...");
-    delay(ldelay);
-
-    if (accelerometer_init()) {
-        lcd_print_message("ADXL345 found");
-        delay(ldelay);
-    } else {
-        lcd_print_message("ADXL345 error");
-        delay(ldelay);
-    }
-
-    lcd_print_message("ADXL345 started!");
-    delay(ldelay);
-
-    while (1) {
-        // Debug
-        //sprintf(i2c_msg, "0x%x", I2Cmessage);
-        //lcd_print_message(i2c_msg);
-
-        x = getX();
-        y = getY();
-        z = getZ();
-        sprintf(i2c_msg, "%4d %4d %4d", x, y, z);
-        lcd_print_coordinates(i2c_msg);
-        delay(sdelay);
-    }
 }
