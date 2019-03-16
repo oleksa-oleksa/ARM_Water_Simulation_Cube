@@ -10,9 +10,9 @@
 
 int main()
 {
+    static panel_t panels[CHAIN_LEN];
+    static particle_list_element_t particles[50];
     double force[3] = {1, 9.8, 1};
-    panel_t panels[CHAIN_LEN];
-    particle_list_element_t particles[50];
     
     /* Initialize hardware */
     led32x32_init();
@@ -28,7 +28,7 @@ int main()
 
     while(1)
     {
-        delay(SEC_TO_MSEC(0.1));
+        //delay(SEC_TO_MSEC(0.1));
         for(int i = 1; i < CHAIN_LEN; ++i)
         {
             particle_move_cube(/*top=*/panels[0], /*bottom=*/panels[1], /*front=*/panels[2], /*back=*/panels[3], /*left=*/panels[4], /*right=*/panels[5], 0.005, force);
