@@ -377,7 +377,7 @@
               <MiscControls></MiscControls>
               <Define></Define>
               <Undefine></Undefine>
-              <IncludePath>..\led32x32;..\sim</IncludePath>
+              <IncludePath>..\led32x32;..\sim;..\Accelerometer</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
