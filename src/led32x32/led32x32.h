@@ -50,15 +50,15 @@
  * @brief     Set pin relevant to control
  * @param[in] pin 
  */
-static void lp32x32_setCtrlPin(int pin);
+static inline void lp32x32_setCtrlPin(int pin);
 /**
  * @brief     Clear pin relevant to control
  * @param[in] pin
  */
-static void lp32x32_clearCtrlPin(int pin);
+static inline void lp32x32_clearCtrlPin(int pin);
 
-static void sp32x32_setRgbPin(int pin);
-static void sp32x32_clearRgbPin(int pin);
+static inline void sp32x32_setRgbPin(int pin);
+static inline void sp32x32_clearRgbPin(int pin);
 
 /**
  * @brief Initialize LED functionality and enable output on port 3
@@ -72,41 +72,41 @@ void led32x32_init(void);
 /**
  * @brief Set and clear clock pin
  */
-void lp32x32_clock(void);
+static inline void lp32x32_clock(void);
 /**
  * @brief Set and clear latch pin
  */
-void lp32x32_latch(void);
+static inline void lp32x32_latch(void);
 
 /**
  * @brief Clear all address pins
  */
-void lp32x32_clearAllAddrPins(void);
+static inline void lp32x32_clearAllAddrPins(void);
 /**
  * @brief     Set target row by setting control signals A,B,C,D
  * @param[in] raw Row number of a panel
  */
-void lp32x32_setRow(int row);
+static inline void lp32x32_setRow(int row);
 
 /**
  * @brief Clear all RGB pins for upper panel
  */
-void lp32x32_clearAllRgb1Pins(void);
+static inline void lp32x32_clearAllRgb1Pins(void);
 /**
  * @brief Clear all RGB pins for bottom panel
  */
-void lp32x32_clearAllRgb2Pins(void);
+static inline void lp32x32_clearAllRgb2Pins(void);
 
 /**
  * @brief Set color (Blue) for upper half of the panel
  * @param[in] info Information on pixel color intensity
  */
-void lp32x32_setUpperPixelInfo(int info);
+static inline void lp32x32_setUpperPixelInfo(int info);
 /**
  * @brief Set color (Blue) for lower half of the panel
  * @param[in] info Information on pixel color intensity
  */
-void lp32x32_setBottomPixelInfo(int info);
+static inline void lp32x32_setBottomPixelInfo(int info);
 
 /**
  * @brief     Refresh chained panels

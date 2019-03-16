@@ -87,7 +87,7 @@
             <nStopA1X>0</nStopA1X>
             <nStopA2X>0</nStopA2X>
           </AfterMake>
-          <SelectedForBatchBuild>0</SelectedForBatchBuild>
+          <SelectedForBatchBuild>1</SelectedForBatchBuild>
           <SVCSIdString></SVCSIdString>
         </TargetCommonOption>
         <CommonProperty>
@@ -377,7 +377,7 @@
               <MiscControls></MiscControls>
               <Define></Define>
               <Undefine></Undefine>
-              <IncludePath>..\led32x32;..\sim;..\Accelerometer</IncludePath>
+              <IncludePath>..\led32x32;..\sim;..\Accelerometer;.</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -475,6 +475,26 @@
               <FileName>utils.h</FileName>
               <FileType>5</FileType>
               <FilePath>..\led32x32\utils.h</FilePath>
+            </File>
+            <File>
+              <FileName>timer.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\timer.h</FilePath>
+            </File>
+            <File>
+              <FileName>timer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\timer.c</FilePath>
+            </File>
+            <File>
+              <FileName>irq.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\irq.h</FilePath>
+            </File>
+            <File>
+              <FileName>irq.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\irq.c</FilePath>
             </File>
           </Files>
         </Group>

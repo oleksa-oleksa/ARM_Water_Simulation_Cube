@@ -2,24 +2,34 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#define DISPLAY_IT_PER_SIM_IT 15
-#define ENABLE_ACCELEROMETER 0
+#define DISPLAY_IT_PER_SIM_IT 50
 #define DT_SIM 0.005
+
+#define ENABLE_ACCELEROMETER 0
 
 #include <particle.h>
 #include <led32x32.h>
 #include <utils.h>
+#include <timer.h>
 #include <paint_tool.h>
 #if ENABLE_ACCELEROMETER
 #include <accelerometer.h>
 #endif
 
+static panel_t panels[CHAIN_LEN];
+static particle_list_element_t particles[50];
+static uint32_t no_refreshed;
+
+void refresh_display(void)
+{
+    //lp32x32_refresh_chain(panels);
+    //++no_refreshed;
+}
+
+
 int main()
 {
-    static panel_t panels[CHAIN_LEN];
-    static particle_list_element_t particles[50];
     double force[3] = {1, 9.8, 1};
-    uint32_t iteration = 0;
     #if ENABLE_ACCELEROMETER
     volatile uint8_t id;
     char i2c_msg[16];
@@ -27,6 +37,7 @@ int main()
     int16_t y;
     int16_t z;
     #endif
+    no_refreshed = 0;
     
     /* Initialize hardware */
     led32x32_init();
@@ -58,11 +69,12 @@ int main()
     particle_init_grid(panels[3], NULL, 0);
     particle_init_grid(panels[4], NULL, 0);
     particle_init_grid(panels[5], NULL, 0);
+    
+    //init_timer(/*timer_num=*/0, /*timer_isr_t=*/refresh_display);
 
     while(1)
     {
-        ++iteration;
-        if(iteration >= DISPLAY_IT_PER_SIM_IT)
+        if(no_refreshed >= DISPLAY_IT_PER_SIM_IT)
         {
             #if ENABLE_ACCELEROMETER
             x = getX();
@@ -76,9 +88,10 @@ int main()
             force[2] = z;
             #endif
             particle_move_cube(/*top=*/panels[0], /*bottom=*/panels[1], /*front=*/panels[2], /*back=*/panels[3], /*left=*/panels[4], /*right=*/panels[5], DT_SIM, force);
-            iteration = 0;
+            no_refreshed = 0;
         }
         lp32x32_refresh_chain(panels);
+        ++no_refreshed;
     }
 
     return 0;

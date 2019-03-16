@@ -11,19 +11,19 @@
 /*****************************************************************************
  * Static Functions to set pin high/low
  *****************************************************************************/
-static void lp32x32_setCtrlPin(int pin)
+void lp32x32_setCtrlPin(int pin)
 {
     LED32X32_CTRLPIN_SETTER |= (1 << pin);
 }
-static void lp32x32_clearCtrlPin(int pin)
+void lp32x32_clearCtrlPin(int pin)
 {
     LED32X32_CTRLPIN_CLEANER |= (1 << pin);
 }
-static void lp32x32_setRgbPin(int pin)
+void lp32x32_setRgbPin(int pin)
 {
     LED32X32_RGBPIN_SETTER |= (1 << pin);
 }
-static void lp32x32_clearRgbPin(int pin)
+void lp32x32_clearRgbPin(int pin)
 {
     LED32X32_RGBPIN_CLEANER |= (1 << pin);
 }
