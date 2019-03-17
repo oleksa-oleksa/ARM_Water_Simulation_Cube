@@ -377,7 +377,7 @@
               <MiscControls></MiscControls>
               <Define></Define>
               <Undefine></Undefine>
-              <IncludePath>..\led32x32;..\sim;..\Accelerometer;.</IncludePath>
+              <IncludePath>..\led32x32;..\sim;..\Accelerometer;.;..\Accelerometer\include</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -495,6 +495,31 @@
               <FileName>irq.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\irq.c</FilePath>
+            </File>
+            <File>
+              <FileName>accelerometer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Accelerometer\accelerometer.c</FilePath>
+            </File>
+            <File>
+              <FileName>accelerometer.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Accelerometer\accelerometer.h</FilePath>
+            </File>
+            <File>
+              <FileName>LCD.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Accelerometer\LCD.h</FilePath>
+            </File>
+            <File>
+              <FileName>LCD_4bit.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Accelerometer\LCD_4bit.c</FilePath>
+            </File>
+            <File>
+              <FileName>ada_sensor.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Accelerometer\include\ada_sensor.h</FilePath>
             </File>
           </Files>
         </Group>

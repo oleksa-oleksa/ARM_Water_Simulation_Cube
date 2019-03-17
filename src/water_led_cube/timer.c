@@ -114,10 +114,11 @@ void Timer1FIQHandler (void)
 ** 
 ******************************************************************************/
 
-#define MR0_VALUE TIME_INTERVAL / 2 ///< 250us
+#define MR0_VALUE TIME_INTERVAL ///< 250us
 
 bool init_timer (uint8_t timer_num, timer_isr_t timer_isr) 
 {
+    CCLKCFG = 0x03;
     if(timer_num == 0)
     {
         _timer_0_isr = timer_isr;

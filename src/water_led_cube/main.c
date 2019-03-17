@@ -3,9 +3,9 @@
 #include <stdlib.h>
 
 #define DISPLAY_IT_PER_SIM_IT 50
-#define DT_SIM 0.005
+#define DT_SIM 0.05
 
-#define ENABLE_ACCELEROMETER 0
+#define ENABLE_ACCELEROMETER 1
 
 #include <particle.h>
 #include <led32x32.h>
@@ -23,7 +23,7 @@ static uint32_t no_refreshed;
 void refresh_display(void)
 {
     //lp32x32_refresh_chain(panels);
-    //++no_refreshed;
+   // ++no_refreshed;
 }
 
 
@@ -44,21 +44,20 @@ int main()
     #if ENABLE_ACCELEROMETER
     lcd_init();
     lcd_print_greeting();
-    delay(ldelay);
+    delay(2000);
     i2c_init(); // fixed, works properly
     lcd_print_message((unsigned char *)"I2C Init done...");
-    delay(ldelay);
+    delay(2000);
     if (accelerometer_init()) {
         lcd_print_message((unsigned char *)"ADXL345 found");
-        delay(ldelay);
+        delay(2000);
     } else {
         lcd_print_message((unsigned char *)"ADXL345 error");
-        delay(ldelay);
-
+        delay(2000);
         return 1;
     }
     lcd_print_message((unsigned char *)"ADXL345 started!");
-    delay(ldelay);
+    delay(2000);
     #endif
 
     /*Initialise simulation*/
@@ -80,12 +79,12 @@ int main()
             x = getX();
             y = getY();
             z = getZ();
-            sprintf(i2c_msg, "%4d %4d %4d", x, y, z);
+            force[0] = ((x * 1.0) / 128.0) * 9.8;
+            force[1] = ((y * 1.0) / 128.0) * 9.8;
+            force[2] = ((z * 1.0) / 128.0) * 9.8;
+            sprintf(i2c_msg, "%4.2f %4.2f %4.2f", force[0], force[1], force[2]);
             lcd_print_coordinates((unsigned char *)i2c_msg);
-            delay(sdelay);
-            force[0] = x;
-            force[1] = y;
-            force[2] = z;
+            //delay(2000);
             #endif
             particle_move_cube(/*top=*/panels[0], /*bottom=*/panels[1], /*front=*/panels[2], /*back=*/panels[3], /*left=*/panels[4], /*right=*/panels[5], DT_SIM, force);
             no_refreshed = 0;

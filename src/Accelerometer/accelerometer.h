@@ -12,8 +12,6 @@
 
 #include "LCD.h"     /* Graphic LCD function prototypes */
 
-#define ldelay 5000000
-#define sdelay 500000
 
 /**
  *   @brief hard-coded delay

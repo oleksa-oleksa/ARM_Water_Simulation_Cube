@@ -21,6 +21,10 @@
 #include <time.h>
 #include "include/ada_sensor.h"
 
+
+#define l_delay 5000000
+#define s_delay 500000
+
 /* Global variables */
 unsigned char I2Cdata; ///< Data to send into I2C
 int16_t I2Cmessage;    ///< Received data from I2C
@@ -67,11 +71,11 @@ unsigned char ZRegs[] = {ADXL345_REG_DATAZ0, ADXL345_REG_DATAZ1};
 volatile uint8_t DebugI2CState;
 
 /*!
- *   @brief  Hard-coded delay
+ *   @brief  Hard-coded _delay
  */
-void delay(int delay) {
+void _delay(int _delay) {
     int i;
-    for (i = 0; i < delay; ++i) {
+    for (i = 0; i < _delay; ++i) {
 
     };
 }
@@ -81,7 +85,7 @@ void delay(int delay) {
  */
 void lcd_print_greeting(void) {
     lcd_clear();
-    lcd_print ("Accelerometer");
+    lcd_print ("Water Cube");
     set_cursor (0, 1);
     lcd_print ("Beuth Hochschule");
     set_cursor (0, 0);
@@ -336,7 +340,7 @@ int16_t getZ(void) {
 */
 void i2c_init(void) {
     PCONP |= 0x00080000;
-    delay(sdelay);
+    _delay(s_delay);
 
     VICVectCntl19 = 0x0000001;       // select a priority slot for a given interrupt
     VICVectAddr19 = (unsigned)i2c_irq; //pass the address of the IRQ into the VIC slot
@@ -356,7 +360,7 @@ void i2c_init(void) {
     //I21SCLH  = 30;
 
     I21CONCLR = 0x000000FF; // Clear all I2C settings
-    delay(sdelay);
+    _delay(s_delay);
     // Before the master transmitter mode can be entered, I2CONSET must be initialized with 0100 0000
     I21CONSET = 0x00000040; // Enable the I2C interface
 
