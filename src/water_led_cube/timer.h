@@ -17,7 +17,7 @@
 #include <stdbool.h>
 
 /* System frequence,should be less than 72MHz. */
-#define Fcclk	96000000
+#define Fcclk	72000000
 #define Fpclk	(Fcclk / 4)
 
 /* depending on the CCLK and PCLK setting, e.g. CCLK = 60Mhz, 

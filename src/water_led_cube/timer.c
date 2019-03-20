@@ -54,8 +54,8 @@ void Timer0Handler (void) __irq
 void Timer0FIQHandler(void) 
 {  
   T0IR = 1;			/* clear interrupt flag */
-  timer0_counter++;
-//  VICVectAddr = 0;	/* Acknowledge Interrupt */
+  _timer_0_isr();
+  VICVectAddr = 0;	/* Acknowledge Interrupt */
 }
 #endif
 
@@ -95,8 +95,8 @@ void Timer1Handler (void) __irq
 void Timer1FIQHandler (void)
 {  
   T1IR = 1;			/* clear interrupt flag */
-  timer1_counter++;
-//  VICVectAddr = 0;	/* Acknowledge Interrupt */
+  _timer_1_isr();
+  VICVectAddr = 0;	/* Acknowledge Interrupt */
 }
 #endif
 
@@ -114,19 +114,20 @@ void Timer1FIQHandler (void)
 ** 
 ******************************************************************************/
 
-#define MR0_VALUE TIME_INTERVAL ///< 250us
+#define MR0_VALUE (TIME_INTERVAL / 4) ///< 
 
 bool init_timer (uint8_t timer_num, timer_isr_t timer_isr) 
 {
-    CCLKCFG = 0x03;
     if(timer_num == 0)
     {
         _timer_0_isr = timer_isr;
+        T0MR0 = MR0_VALUE;
+        T0MCR = 3;		    /* Interrupt and Reset on MR0 */
         #if FIQ
         /* FIQ is always installed. */
         VICIntSelect |= (0x1<<4);
         VICIntEnable = (0x1<<4);
-        return (TRUE);
+        return true;
         #else
         if(install_irq( TIMER0_INT, (void*)Timer0Handler, HIGHEST_PRIORITY ) == 0 )
         {
@@ -137,8 +138,6 @@ bool init_timer (uint8_t timer_num, timer_isr_t timer_isr)
             T0TCR = 0x02;		/* reset timer */
             T0PR  = 0x00;		/* set prescaler to zero */
             T0IR  = 0xff;		/* reset all interrrupts */
-            T0MR0 = MR0_VALUE;
-            T0MCR = 3;		    /* Interrupt and Reset on MR0 */
             T0TCR = 0x01;		/* start timer */
             return false;
         }
@@ -147,10 +146,12 @@ bool init_timer (uint8_t timer_num, timer_isr_t timer_isr)
     else if(timer_num == 1)
     {
         _timer_1_isr = timer_isr;
+        T1MR0 = MR0_VALUE;
+        T1MCR = 3;		    /* Interrupt and Reset on MR0 */
         #if FIQ
         VICIntSelect |= (0x1<<5);
         VICIntEnable = (0x1<<5);
-        return (TRUE);
+        return true;
         #else
         if(install_irq( TIMER1_INT, (void *)Timer1Handler, HIGHEST_PRIORITY) == 0)
         {
@@ -161,8 +162,6 @@ bool init_timer (uint8_t timer_num, timer_isr_t timer_isr)
             T1TCR = 0x02;		/* reset timer */
             T1PR  = 0x00;		/* set prescaler to zero */
             T1IR  = 0xff;		/* reset all interrrupts */
-            T1MR0 = MR0_VALUE;
-            T1MCR = 3;		    /* Interrupt and Reset on MR0 */
             T1TCR = 0x01;		/* start timer */
             return true;
         }

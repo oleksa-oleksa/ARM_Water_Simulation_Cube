@@ -125,14 +125,14 @@ void lp32x32_setBottomPixelInfo(int info)
 
 void lp32x32_refresh_chain(panel_t panels[CHAIN_LEN])
 {
-    uint8_t row;
+    static uint8_t row = 0;
     uint8_t col;
     uint8_t layer;
     uint8_t panelIndex = 0;
     int upperPixel = 0;
     int bottomPixel = 0;
 
-    for(row = 0; row < (ROW_NUM/2); ++row)
+    //for(row = 0; row < (ROW_NUM/2); ++row)
     {
         // TODO find the best match of the number of layers and clock speed
         // to make color intensity
@@ -168,6 +168,12 @@ void lp32x32_refresh_chain(panel_t panels[CHAIN_LEN])
             lp32x32_clearCtrlPin(LED32X32_PIN_OE);
         }
     }
+    ++row;
+    if(row >= (ROW_NUM/2))
+    {
+        row = 0;
+    }
+    
 }
 
 /**
