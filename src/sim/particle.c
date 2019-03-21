@@ -156,59 +156,168 @@ bool particle_move_cube(particle_grid_element_t top[PARTICLE_GRID_X][PARTICLE_GR
                         particle_grid_element_t right[PARTICLE_GRID_X][PARTICLE_GRID_Y], 
                         double d_time, double ex_force[3])
 {
-    double rel_force[2] = {ex_force[0], ex_force[1]};
+    static uint8_t no_called = 0;
+    static double rel_force[2] = {0};
 
-    //forces: global x, y
-    rel_force[X] = ex_force[X];
-    rel_force[Y] = ex_force[Y];
-    _compute_density_pressure(top);
-    _compute_forces(top, rel_force);
+    ++no_called;
+    switch(no_called)
+    {
+        //forces: global x, y
+        case  1:
+        {
+            rel_force[X] = ex_force[X];
+            rel_force[Y] = ex_force[Y];
+            _compute_density_pressure(top);
+            break;
+        }
+        case  2:
+        {
+            _compute_forces(top, rel_force);
+            break;
+        }
 
-    //forces: x = -x, y = -y
-    rel_force[X] = -1 * ex_force[X];
-    rel_force[Y] = -1 * ex_force[Y];
-    _compute_density_pressure(bottom);
-    _compute_forces(bottom, rel_force);
+        //forces: x = -x, y = -y
+        case  3:
+        {
+            rel_force[X] = -1 * ex_force[X];
+            rel_force[Y] = -1 * ex_force[Y];
+            _compute_density_pressure(bottom);
+            break;
+        }
+        case  4:
+        {
+            _compute_forces(bottom, rel_force);
+            break;
+        }
 
-    //forces: x = x, y = z
-    rel_force[X] = ex_force[X];
-    rel_force[Y] = ex_force[Z];
-    _compute_density_pressure(front);
-    _compute_forces(front, rel_force);
+        //forces: x = x, y = z
+        case  5:
+        {
+            rel_force[X] = ex_force[X];
+            rel_force[Y] = ex_force[Z];
+            _compute_density_pressure(front);
+            break;
+        }
+        case  6:
+        {
+            _compute_forces(front, rel_force);
+            break;
+        }
 
-    //forces: x = -x, y = z
-    rel_force[X] = -1 * ex_force[X];
-    rel_force[Y] = ex_force[Z];
-    _compute_density_pressure(back);
-    _compute_forces(back, rel_force);
+        //forces: x = -x, y = z
+        case  7:
+        {
+            rel_force[X] = -1 * ex_force[X];
+            rel_force[Y] = ex_force[Z];
+            _compute_density_pressure(back);
+            break;
+        }
+        case  8:
+        {
+            _compute_forces(back, rel_force);
+            break;
+        }
 
-    //forces: x = -y, y = z
-    rel_force[X] = -1 * ex_force[Y];
-    rel_force[Y] = ex_force[Z];
-    _compute_density_pressure(left);
-    _compute_forces(left, rel_force);
+        //forces: x = -y, y = z
+        case  9:
+        {
+            rel_force[X] = -1 * ex_force[Y];
+            rel_force[Y] = ex_force[Z];
+            _compute_density_pressure(left);
+            break;
+        }
+        case 10:
+        {
+            _compute_forces(left, rel_force);
+            break;
+        }
 
-    //forces: x = y, y = z
-    rel_force[X] = ex_force[Y];
-    rel_force[Y] = ex_force[Z];
-    _compute_density_pressure(right);
-    _compute_forces(right, rel_force);
+        //forces: x = y, y = z
+        case 11:
+        {
+            rel_force[X] = ex_force[Y];
+            rel_force[Y] = ex_force[Z];
+            _compute_density_pressure(right);
+            break;
+        }
+        case 12:
+        {
+            _compute_forces(right, rel_force);
+            break;
+        }
 
-    _integrate_cube(top, d_time);
-    _integrate_cube(bottom, d_time);
-    _integrate_cube(front, d_time);
-    _integrate_cube(back, d_time);
-    _integrate_cube(left, d_time);
-    _integrate_cube(right, d_time);
+        case 13:
+        {
+            _integrate_cube(top, d_time);
+            break;
+        }
+        case 14:
+        {
+            _integrate_cube(bottom, d_time);
+            break;
+        }
+        case 15:
+        {
+            _integrate_cube(front, d_time);
+            break;
+        }
+        case 16:
+        {
+            _integrate_cube(back, d_time);
+            break;
+        }
+        case 17:
+        {
+            _integrate_cube(left, d_time);
+            break;
+        }
+        case 18:
+        {
+            _integrate_cube(right, d_time);
+            break;
+        }
 
-    _manage_rolloff(top, bottom, front, back, left, right);
+        case 19:
+        {
+            _manage_rolloff(top, bottom, front, back, left, right);
+            break;
+        }
 
-    _update_grid_position(top);
-    _update_grid_position(bottom);
-    _update_grid_position(front);
-    _update_grid_position(back);
-    _update_grid_position(left);
-    _update_grid_position(right);
+        case 20:
+        {
+            _update_grid_position(top);
+            break;
+        }
+        case 21:
+        {
+            _update_grid_position(bottom);
+            break;
+        }
+        case 22:
+        {
+            _update_grid_position(front);
+            break;
+        }
+        case 23:
+        {
+            _update_grid_position(back);
+            break;
+        }
+        case 24:
+        {
+            _update_grid_position(left);
+            break;
+        }
+        case 25:
+        {
+            _update_grid_position(right);
+            break;
+        }
+        default:
+        {
+            no_called = 0;
+        }
+    }
     
     return true;
 }
