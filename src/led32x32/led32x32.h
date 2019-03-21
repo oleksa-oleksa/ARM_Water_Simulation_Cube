@@ -101,17 +101,20 @@ static inline void lp32x32_clearAllRgb2Pins(void);
  * @brief Set color (Blue) for upper half of the panel
  * @param[in] info Information on pixel color intensity
  */
-static inline void lp32x32_setUpperPixelInfo(int info);
+static inline void lp32x32_setUpperPixelInfo(bool r, bool g, bool b);
 /**
  * @brief Set color (Blue) for lower half of the panel
  * @param[in] info Information on pixel color intensity
  */
-static inline void lp32x32_setBottomPixelInfo(int info);
+static inline void lp32x32_setBottomPixelInfo(bool r, bool g, bool b);
 
 /**
  * @brief     Refresh chained panels
  * @param[in] panels Array of panels each has 2D-array for storing pixel information
  */
-void lp32x32_refresh_chain(panel_t panels[CHAIN_LEN]);
+void lp32x32_refresh_chain_blue(panel_t panels[CHAIN_LEN]);
+
+void lp32x32_refresh_chain_24bit_rgb(panel_t panels[CHAIN_LEN]);
+
 
 #endif // LED32X32_H_

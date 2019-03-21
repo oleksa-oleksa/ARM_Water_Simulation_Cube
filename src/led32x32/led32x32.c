@@ -8,22 +8,26 @@
 #include "led32x32.h"
 #include "utils.h"
 
+#define LED32X32_RGB24_R_MASK 0x00FF0000
+#define LED32X32_RGB24_G_MASK 0x0000FF00
+#define LED32X32_RGB24_B_MASK 0x000000FF
+
 /*****************************************************************************
- * Static Functions to set pin high/low
+ * Static functions to set pin high/low
  *****************************************************************************/
-void lp32x32_setCtrlPin(int pin)
+static inline void lp32x32_setCtrlPin(int pin)
 {
     LED32X32_CTRLPIN_SETTER |= (1 << pin);
 }
-void lp32x32_clearCtrlPin(int pin)
+static inline void lp32x32_clearCtrlPin(int pin)
 {
     LED32X32_CTRLPIN_CLEANER |= (1 << pin);
 }
-void lp32x32_setRgbPin(int pin)
+static inline void lp32x32_setRgbPin(int pin)
 {
     LED32X32_RGBPIN_SETTER |= (1 << pin);
 }
-void lp32x32_clearRgbPin(int pin)
+static inline void lp32x32_clearRgbPin(int pin)
 {
     LED32X32_RGBPIN_CLEANER |= (1 << pin);
 }
@@ -31,31 +35,6 @@ void lp32x32_clearRgbPin(int pin)
 /*****************************************************************************
  * Communication Steps
  *****************************************************************************/
-/*
-void _led32x32_pwm_registersInit(void)
-{
-    PWM1IR = 0x70F; ///< Generate interrupts 0-6
-    PWM1TC = 0;     ///< Reset timer counter
-    PWM1TCR = 0x2;  ///< Reset counter and prescaler
-    PWM1PR = 0x1;   ///< Load prescale register
-
-    // TODO check configuration of MR registers
-    PWM1MR0 = 0x100; ///< Set cycle rate of PWMs
-
-    PWM1MR1 = 0x01; ///< Set rising edge of PWM1
-    PWM1MR2 = 0x01; ///< Set rising edge of PWM2
-    PWM1MR3 = 0x01; ///< Set rising edge of PWM3
-
-    PWM1MR4 = 0x01; ///< Set rising edge of PWM4
-    PWM1MR5 = 0x01; ///< Set rising edge of PWM5
-    PWM1MR6 = 0x01; ///< Set rising edge of PWM6
-
-    PWM1MCR = 0x03;   ///< Generate interrupt and reset counter on match
-    PWM1LER = 0x7F;   ///< Enable shadow latch for match 0-6
-    PWM1PCR = 0x7F00; ///< Set sin edge mode and enable output of PWM1-6
-    PWM1TCR = 0x09;   ///< Enable counter and PWM, clear reset, release counter from reset
-}
-*/
 void led32x32_init(void)
 {
     led_init();
@@ -114,66 +93,151 @@ void lp32x32_clearAllRgb2Pins(void)
 }
 
 
-void lp32x32_setUpperPixelInfo(int info)
+void lp32x32_setUpperPixelInfo(bool r, bool g, bool b)
 {
-    lp32x32_setRgbPin(LED32X32_PIN_B1);
+    if(r)
+    {
+        lp32x32_setRgbPin(LED32X32_PIN_R1);
+    }
+    else
+    {
+        lp32x32_clearRgbPin(LED32X32_PIN_R1);
+    }
+    if(g)
+    {
+        lp32x32_setRgbPin(LED32X32_PIN_G1);
+    }
+    else
+    {
+        lp32x32_clearRgbPin(LED32X32_PIN_G1);
+    }
+    if(b)
+    {
+        lp32x32_setRgbPin(LED32X32_PIN_B1);
+    }
+    else
+    {
+        lp32x32_clearRgbPin(LED32X32_PIN_B1);
+    }
 }
-void lp32x32_setBottomPixelInfo(int info)
+void lp32x32_setBottomPixelInfo(bool r, bool g, bool b)
 {
-    lp32x32_setRgbPin(LED32X32_PIN_B2);
+    if(r)
+    {
+        lp32x32_setRgbPin(LED32X32_PIN_R2);
+    }
+    else
+    {
+        lp32x32_clearRgbPin(LED32X32_PIN_R2);
+    }
+    if(g)
+    {
+        lp32x32_setRgbPin(LED32X32_PIN_G2);
+    }
+    else
+    {
+        lp32x32_clearRgbPin(LED32X32_PIN_G2);
+    }
+    if(b)
+    {
+        lp32x32_setRgbPin(LED32X32_PIN_B2);
+    }
+    else
+    {
+        lp32x32_clearRgbPin(LED32X32_PIN_B2);
+    }
 }
 
-void lp32x32_refresh_chain(panel_t panels[CHAIN_LEN])
+void lp32x32_refresh_chain_blue(panel_t panels[CHAIN_LEN])
 {
     static uint8_t row = 0;
     uint8_t col;
     uint8_t layer;
     uint8_t panelIndex = 0;
-    int upperPixel = 0;
-    int bottomPixel = 0;
+    uint32_t upperPixel = 0;
+    uint32_t bottomPixel = 0;
 
-    //for(row = 0; row < (ROW_NUM/2); ++row)
+    for(layer = 0; layer < 1; ++layer)
     {
-        // TODO find the best match of the number of layers and clock speed
-        // to make color intensity
-        for(layer = 0; layer < 1; ++layer)
+        for(col = 0; col < (COL_NUM * CHAIN_LEN); ++col)
         {
-            for(col = 0; col < (COL_NUM * CHAIN_LEN); ++col)
+            panelIndex = col / COL_NUM;
+            upperPixel = panels[panelIndex][row][col - COL_NUM * panelIndex].particle_count;
+            bottomPixel = panels[panelIndex][row + ROW_NUM / 2][col - COL_NUM * panelIndex].particle_count;
+            
+            lp32x32_clearAllRgb1Pins();
+            lp32x32_clearAllRgb2Pins();
+
+            /* Upper area */
+            if(upperPixel)
             {
-                panelIndex = col / COL_NUM;
-                upperPixel = panels[panelIndex][row][col - COL_NUM * panelIndex].particle_count;
-                bottomPixel = panels[panelIndex][row + ROW_NUM / 2][col - COL_NUM * panelIndex].particle_count;
-                
-                lp32x32_clearAllRgb1Pins();
-                lp32x32_clearAllRgb2Pins();
-
-                /* Upper area */
-                if(upperPixel)
-                {
-                    lp32x32_setUpperPixelInfo(upperPixel); // TODO consider layer
-                }
-                
-                /* Bottom area */
-                if(bottomPixel)
-                {
-                    lp32x32_setBottomPixelInfo(bottomPixel); // TODO consider layer
-                }
-
-                lp32x32_clock(); ///< Shift RGB information of each pixel to horizontal direction
+                lp32x32_setUpperPixelInfo(false, false, true);
+            }
+            
+            /* Bottom area */
+            if(bottomPixel)
+            {
+                lp32x32_setBottomPixelInfo(false, false, true);
             }
 
-            lp32x32_setRow(row);
-            lp32x32_setCtrlPin(LED32X32_PIN_OE);
-            lp32x32_latch();
-            lp32x32_clearCtrlPin(LED32X32_PIN_OE);
+            lp32x32_clock(); ///< Shift RGB information of each pixel to horizontal direction
         }
+
+        lp32x32_setRow(row);
+        lp32x32_setCtrlPin(LED32X32_PIN_OE);
+        lp32x32_latch();
+        lp32x32_clearCtrlPin(LED32X32_PIN_OE);
     }
     ++row;
     if(row >= (ROW_NUM/2))
     {
         row = 0;
     }
-    
+}
+
+void lp32x32_refresh_chain_24bit_rgb(panel_t panels[CHAIN_LEN])
+{
+    static uint8_t row = 0;
+    static uint8_t color_bit = 0;
+    uint8_t col;
+    uint8_t layer;
+    uint8_t panelIndex = 0;
+    uint32_t upperPixel = 0;
+    uint32_t bottomPixel = 0;
+
+    for(layer = 0; layer < 1; ++layer)
+    {
+        for(col = 0; col < (COL_NUM * CHAIN_LEN); ++col)
+        {
+            panelIndex = col / COL_NUM;
+            upperPixel = panels[panelIndex][row][col - COL_NUM * panelIndex].particle_count;
+            bottomPixel = panels[panelIndex][row + ROW_NUM / 2][col - COL_NUM * panelIndex].particle_count;
+            
+            lp32x32_setUpperPixelInfo ((/*red=  */((upperPixel  & LED32X32_RGB24_R_MASK) >> 16) & (0x01 << color_bit)), 
+                                       (/*green=*/((upperPixel  & LED32X32_RGB24_G_MASK) >>  8) & (0x01 << color_bit)),
+                                       (/*blue= */((upperPixel  & LED32X32_RGB24_B_MASK)      ) & (0x01 << color_bit)));
+            lp32x32_setBottomPixelInfo((/*red=  */((bottomPixel & LED32X32_RGB24_R_MASK) >> 16) & (0x01 << color_bit)), 
+                                       (/*green=*/((bottomPixel & LED32X32_RGB24_G_MASK) >>  8) & (0x01 << color_bit)),
+                                       (/*blue= */((bottomPixel & LED32X32_RGB24_B_MASK)      ) & (0x01 << color_bit)));
+
+            lp32x32_clock(); ///< Shift RGB information of each pixel to horizontal direction
+        }
+
+        lp32x32_setRow(row);
+        lp32x32_setCtrlPin(LED32X32_PIN_OE);
+        lp32x32_latch();
+        lp32x32_clearCtrlPin(LED32X32_PIN_OE);
+    }
+    ++row;
+    if(row >= (ROW_NUM/2))
+    {
+        row = 0;
+        ++color_bit;
+    }
+    if(color_bit >= 8)
+    {
+        color_bit = 0;
+    }
 }
 
 /**
