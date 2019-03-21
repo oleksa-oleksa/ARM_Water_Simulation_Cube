@@ -457,16 +457,6 @@
               <FilePath>..\led32x32\led32x32.h</FilePath>
             </File>
             <File>
-              <FileName>paint_tool.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\led32x32\paint_tool.c</FilePath>
-            </File>
-            <File>
-              <FileName>paint_tool.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\led32x32\paint_tool.h</FilePath>
-            </File>
-            <File>
               <FileName>utils.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\led32x32\utils.c</FilePath>
@@ -520,6 +510,16 @@
               <FileName>ada_sensor.h</FileName>
               <FileType>5</FileType>
               <FilePath>..\Accelerometer\include\ada_sensor.h</FilePath>
+            </File>
+            <File>
+              <FileName>paint_tool.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\led32x32\paint_tool.c</FilePath>
+            </File>
+            <File>
+              <FileName>paint_tool.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\led32x32\paint_tool.h</FilePath>
             </File>
           </Files>
         </Group>

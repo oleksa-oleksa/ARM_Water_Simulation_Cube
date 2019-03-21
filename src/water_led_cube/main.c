@@ -2,7 +2,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#define DISPLAY_IT_PER_SIM_IT 250
+#define DISPLAY_IT_PER_SIM_IT 50
 #define DT_SIM 0.05
 
 #define ENABLE_ACCELEROMETER 0
@@ -22,8 +22,8 @@ static uint32_t no_refreshed;
 
 void refresh_display(void)
 {
-    lp32x32_refresh_chain(panels);
-    ++no_refreshed;
+    //lp32x32_refresh_chain(panels);
+    //++no_refreshed;
 }
 
 
@@ -87,16 +87,11 @@ int main()
             sprintf(i2c_msg, "%4.2f %4.2f %4.2f", force[0], force[1], force[2]);
             lcd_print_coordinates((unsigned char *)i2c_msg);
             //delay(2000);
-            #else
-            double hand = force[0];
-            force[0] = force[1];
-            force[1] = force[2];
-            force[2] = hand;
             #endif
             particle_move_cube(/*top=*/panels[0], /*bottom=*/panels[1], /*front=*/panels[2], /*back=*/panels[3], /*left=*/panels[4], /*right=*/panels[5], DT_SIM, force);
             no_refreshed = 0;
         }
-        lp32x32_refresh_chain(panels);
+        lp32x32_refresh_chain_24bit_rgb(panels);
         ++no_refreshed;
     }
 

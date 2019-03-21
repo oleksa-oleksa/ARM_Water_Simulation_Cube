@@ -12,7 +12,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "paint_tool.h"
+#include <paint_tool.h>
 #include <particle.h>
 
 #define CHAIN_LEN 6 ///< Number of panels to be chained
