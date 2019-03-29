@@ -7,28 +7,10 @@
 #include "uart.h"
 #include <irq.h>
 
-volatile DWORD uart0Status;
+volatile DWORD uart0Status; // TODO check for its usage and necessity
 volatile BYTE uart0TxEmpty = 1;
-volatile BYTE uart0TxBuffer[BUFSIZE];
 volatile BYTE uart0RxBuffer[BUFSIZE];
 volatile DWORD uart0Count = 0;
-
-void delay(int delay)
-{
-    int i;
-    for (i = 0; i < delay; ++i)
-    {
-        ;
-    }
-}
-
-void lcd_printer(BYTE *msg) {
-    //TODO check len of msg
-    lcd_clear();
-    lcd_print(msg);
-    delay(5000000);
-    lcd_clear(); 
-}
 
 static inline void _readRxFifo(void)
 {
@@ -198,14 +180,14 @@ void uart0_send(BYTE *bufptr, DWORD len)
     }
 }
 
+// TODO deprecate this function as RxBuffer can directly be read in main function.
 void uart0_read(void)
 {
     BYTE* ptr;
 
     for (ptr = uart0RxBuffer; *ptr != '\0'; ++ptr)
     {
-        lcd_printer(ptr);
+        //Read ptr
     }
-
     uart0RxBuffer[0] = 0;
 }

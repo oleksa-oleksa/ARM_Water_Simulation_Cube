@@ -10,12 +10,16 @@
 
 #include "LPC23xx.h"
 
-#include <lcd.h>
-
 #define BUFSIZE 0x40 // = 64
 
 typedef unsigned long DWORD;
 typedef unsigned char BYTE;
+
+/* Enable/Disable Read or Write interrupt */
+#define RBR_DISABLE ( U0IER = IER_THRE | IER_RLS )
+#define RBR_ENABLE  ( U0IER = IER_RBR | IER_THRE | IER_RLS )
+#define THRE_DISABLE ( U0IER = IER_RBR | IER_RLS )
+#define THRE_ENABLE  ( U0IER = IER_RBR | IER_THRE | IER_RLS )
 
 /* Symbol of Power Control for eripherals register (PCONP) */
 #define PCUART0 0x08
@@ -33,9 +37,6 @@ typedef unsigned char BYTE;
 #define LSR_TEMT 0x40 ///< Transmitter Empty
 #define LSR_RXFE 0x80 ///< Error in Rx FIFO
 
-void delay(int delay);
-void lcd_printer(BYTE *msg);
-
 /**
  * @brief 	  Initialize UART0 interface
  * @param[in] baudrate Baud rate of UART communication
@@ -47,6 +48,7 @@ int uart0_init(unsigned long baudrate);
  * @param[in] len    Data length
  */
 void uart0_send(BYTE *bufptr, DWORD len);
+
 void uart0_read(void);
 
 #endif
