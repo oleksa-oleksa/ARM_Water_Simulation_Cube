@@ -7,6 +7,7 @@ SRCDIRS  = .
 
 CFILES   = main.c
 CFILES  += gpio.c
+CFILES  += ll_time.c
 
 ASFILES  = vectors.s
 
