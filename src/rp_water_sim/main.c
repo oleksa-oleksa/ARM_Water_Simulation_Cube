@@ -1,5 +1,6 @@
 #include <gpio.h>
 #include <util.h>
+#include <uart.h>
 #include <ll_time.h>
 
 
@@ -9,6 +10,7 @@ int main(void)
 
 
     led_setup();
+    uart_init();
 
     while(1)
     {
@@ -27,5 +29,13 @@ int main(void)
         time_usec_wait(500 * 1000);
 
         led_set(false);
+
+        hexstring(0x12345678);
+
+        for(uint32_t i = 0; i < get_rx_buf_size(); ++i)
+        {
+            uart_putc(get_rx_buf()[i]);
+        }
+        reset_rx_buf();
     }
 }
