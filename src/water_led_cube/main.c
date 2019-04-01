@@ -6,14 +6,23 @@
 #define DT_SIM 0.05
 
 #define ENABLE_ACCELEROMETER 0
+#define ENABLE_RPI 0
 
 #include <particle.h>
 #include <led32x32.h>
 #include <utils.h>
 #include <timer.h>
 #include <paint_tool.h>
+
 #if ENABLE_ACCELEROMETER
 #include <accelerometer.h>
+#endif
+
+#if ENABLE_UART0
+#include <uart.h>
+#define DATALEN 11 ///< Data transmitted to RPi
+extern volatile DWORD uart0Count;
+extern volatile BYTE uart0RxBuffer[BUFSIZE];
 #endif
 
 static panel_t panels[CHAIN_LEN];
@@ -39,7 +48,7 @@ int main()
     #endif
     no_refreshed = 0;
     
-    CCLKCFG = 0x02;
+    CCLKCFG = 0x03; // 0x3 => generates 72 MHz (Max.)
     
     /* Initialize hardware */
     led32x32_init();
@@ -62,6 +71,13 @@ int main()
     delay(2000);
     #endif
 
+    #if ENABLE_UART0
+    if (uart0_init(115200))
+    {
+        return 1;
+    }
+    #endif
+
     /*Initialise simulation*/
     particle_init_list(particles, 50);
     particle_init_grid(panels[0], particles, 50);
@@ -75,6 +91,21 @@ int main()
 
     while(1)
     {
+        // TODO integrate UART0 if enabled
+        //   by referring to the following template
+        #if ENABLE_UART0
+        RBR_DISABLE;
+            uart0_send((BYTE *)msg, DATALEN);
+            uart0Count = 0;
+        RBR_ENABLE;
+
+        THRE_DISABLE;
+            // TODO this function will be deprecate
+            // Read the variable uart0RxBuffer directly
+            uart0_read();
+        THRE_ENABLE;
+        #endif
+
         if(no_refreshed >= DISPLAY_IT_PER_SIM_IT)
         {
             #if ENABLE_ACCELEROMETER
