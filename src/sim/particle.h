@@ -40,6 +40,18 @@ typedef struct
     uint32_t particle_count;
 } particle_grid_element_t;
 
+enum side_e
+{
+    side_top    = 0,
+    side_bottom = 1,
+    side_front  = 2,
+    side_back   = 3,
+    side_left   = 4,
+    side_right  = 5
+};
+
+typedef void (*element_change_callback_fp_t)(enum side_e side, int x, int y);
+
 typedef particle_grid_element_t panel_t[PARTICLE_GRID_X][PARTICLE_GRID_Y];
 
 
@@ -48,6 +60,8 @@ bool particle_init_list(particle_list_element_t* list, uint32_t size);
 bool particle_init_grid(particle_grid_element_t grid[PARTICLE_GRID_X][PARTICLE_GRID_Y], particle_list_element_t* list, uint32_t size);
 
 bool particle_move_single_panel(particle_grid_element_t grid[PARTICLE_GRID_X][PARTICLE_GRID_Y], double d_time, double ex_force[2]);
+
+void particle_add_grid_element_change_callback(element_change_callback_fp_t callback);
 
 bool particle_move_cube(particle_grid_element_t top[PARTICLE_GRID_X][PARTICLE_GRID_Y], 
                         particle_grid_element_t bottom[PARTICLE_GRID_X][PARTICLE_GRID_Y], 

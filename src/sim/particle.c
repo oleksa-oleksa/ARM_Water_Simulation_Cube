@@ -39,6 +39,9 @@
 #define Y 1
 #define Z 2
 
+element_change_callback_fp_t _callback = NULL;
+
+
 void _compute_density_pressure(particle_grid_element_t grid[PARTICLE_GRID_X][PARTICLE_GRID_Y]);
 inline double _kernel_smoothing_density(double distance);
 void _compute_forces(particle_grid_element_t grid[PARTICLE_GRID_X][PARTICLE_GRID_Y], double ex_force[2]);
@@ -46,8 +49,8 @@ inline double _kernel_smoothing_pressure(double distance);
 inline double _kernel_smoothing_viscosity(double distance);
 void _integrate(particle_grid_element_t grid[PARTICLE_GRID_X][PARTICLE_GRID_Y], double d_time);
 void _integrate_cube(particle_grid_element_t grid[PARTICLE_GRID_X][PARTICLE_GRID_Y], double d_time);
-static inline void _update_grid_position(particle_grid_element_t grid[PARTICLE_GRID_X][PARTICLE_GRID_Y]);
-static inline void _update_grid_position_particle(particle_grid_element_t grid[PARTICLE_GRID_X][PARTICLE_GRID_Y], int orig_grid_x, int orig_grid_y, particle_list_element_t* element);
+static inline void _update_grid_position(enum side_e side, particle_grid_element_t grid[PARTICLE_GRID_X][PARTICLE_GRID_Y]);
+static inline void _update_grid_position_particle(enum side_e side, particle_grid_element_t grid[PARTICLE_GRID_X][PARTICLE_GRID_Y], int orig_grid_x, int orig_grid_y, particle_list_element_t* element);
 static inline bool _remove_particle(particle_grid_element_t* cell, particle_list_element_t* element);
 static inline void _add_particle(particle_grid_element_t* cell, particle_list_element_t* element);
 static inline void _manage_rolloff(particle_grid_element_t top[PARTICLE_GRID_X][PARTICLE_GRID_Y], 
@@ -142,9 +145,14 @@ bool particle_move_single_panel(particle_grid_element_t grid[PARTICLE_GRID_X][PA
     _compute_density_pressure(grid);
     _compute_forces(grid, ex_force);
     _integrate(grid, d_time);
-    _update_grid_position(grid);
+    _update_grid_position(side_front, grid);
     
     return true;
+}
+
+void particle_add_grid_element_change_callback(element_change_callback_fp_t callback)
+{
+    _callback = callback;
 }
 
 
@@ -285,32 +293,32 @@ bool particle_move_cube(particle_grid_element_t top[PARTICLE_GRID_X][PARTICLE_GR
 
         case 20:
         {
-            _update_grid_position(top);
+            _update_grid_position(side_top, top);
             break;
         }
         case 21:
         {
-            _update_grid_position(bottom);
+            _update_grid_position(side_bottom, bottom);
             break;
         }
         case 22:
         {
-            _update_grid_position(front);
+            _update_grid_position(side_front, front);
             break;
         }
         case 23:
         {
-            _update_grid_position(back);
+            _update_grid_position(side_back, back);
             break;
         }
         case 24:
         {
-            _update_grid_position(left);
+            _update_grid_position(side_left, left);
             break;
         }
         case 25:
         {
-            _update_grid_position(right);
+            _update_grid_position(side_right, right);
             break;
         }
         default:
@@ -577,7 +585,7 @@ void _integrate_cube(particle_grid_element_t grid[PARTICLE_GRID_X][PARTICLE_GRID
 }
 
 
-void _update_grid_position(particle_grid_element_t grid[PARTICLE_GRID_X][PARTICLE_GRID_Y])
+void _update_grid_position(enum side_e side, particle_grid_element_t grid[PARTICLE_GRID_X][PARTICLE_GRID_Y])
 {
     int i_x, i_y;
     uint32_t part;
@@ -597,7 +605,7 @@ void _update_grid_position(particle_grid_element_t grid[PARTICLE_GRID_X][PARTICL
             for(part = 0; part < grid[i_x][i_y].particle_count; ++part)
             {
                 following = curr->next;
-                _update_grid_position_particle(grid, i_x, i_y, curr);
+                _update_grid_position_particle(side, grid, i_x, i_y, curr);
                 curr = following;
             }
         }
@@ -606,9 +614,9 @@ void _update_grid_position(particle_grid_element_t grid[PARTICLE_GRID_X][PARTICL
 
 
 
-void _update_grid_position_particle(particle_grid_element_t grid[PARTICLE_GRID_X][PARTICLE_GRID_Y], int orig_grid_x, int orig_grid_y, particle_list_element_t* element)
-{
-    int new_grid_x, new_grid_y;
+void _update_grid_position_particle(enum side_e side, particle_grid_element_t grid[PARTICLE_GRID_X][PARTICLE_GRID_Y], int orig_grid_x, int orig_grid_y, particle_list_element_t* element)
+
+{    int new_grid_x, new_grid_y;
     if(grid == NULL)
     {
         ERROR("grid == NULL\r\n");
@@ -627,6 +635,12 @@ void _update_grid_position_particle(particle_grid_element_t grid[PARTICLE_GRID_X
 
         //add element to new grid-cell
         _add_particle(&grid[new_grid_x][new_grid_y], element);
+
+        if(_callback != NULL)
+        {
+            _callback(side, orig_grid_x, orig_grid_y);
+            _callback(side, new_grid_x, new_grid_y);
+        }
     }
 }
 
