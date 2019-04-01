@@ -1,6 +1,7 @@
 #include <gpio.h>
 #include <util.h>
 #include <uart.h>
+#include <protocol.h>
 #include <ll_time.h>
 
 
@@ -10,7 +11,7 @@ int main(void)
 
 
     led_setup();
-    uart_init();
+    protocol_init();
 
     while(1)
     {
@@ -32,10 +33,7 @@ int main(void)
 
         hexstring(0x12345678);
 
-        for(uint32_t i = 0; i < get_rx_buf_size(); ++i)
-        {
-            uart_putc(get_rx_buf()[i]);
-        }
-        reset_rx_buf();
+        pixeldata_t pixel = {.x_pos = 0x43, .y_pos = 0x44, .color = 0x57575757};
+        protocol_send_pixel(pixel);
     }
 }

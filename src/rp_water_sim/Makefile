@@ -9,8 +9,10 @@ CFILES   = main.c
 CFILES  += gpio.c
 CFILES  += uart.c
 CFILES  += ll_time.c
+CFILES  += protocol.c
 
 ASFILES  = vectors.s
+ASFILES += memcpy.S
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -27,6 +29,7 @@ OBJS       = $(addprefix $(OBJDIR)/,$(OBJFILES))
 vpath %.c $(SRCDIRS)
 vpath %.h $(SRCDIRS)
 vpath %.s $(SRCDIRS)
+vpath %.S $(SRCDIRS)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -54,6 +57,13 @@ $(OBJDIR):
 	mkdir -p $(BINDIR)
 
 $(OBJDIR)/%.s.o : %.s
+	@echo
+	@echo === Compiling $<
+	@echo
+	$(CC)-as $(ASFLAGS) $(INC_PARAMS) $< -o $@
+	@echo
+
+$(OBJDIR)/%.S.o : %.S
 	@echo
 	@echo === Compiling $<
 	@echo

@@ -32,7 +32,9 @@
 #define IRQ_DISABLE2 0x2000B220
 #define IRQ_DISABLE_BASIC 0x2000B224
 
-void uart_init(void)
+rx_handler_fp_t _rx_handler;
+
+void uart_init(rx_handler_fp_t rx_handler)
 {
     uint32_t ra;
 
@@ -66,13 +68,15 @@ void uart_init(void)
 
     PUT32(AUX_MU_CNTL_REG, 3);
 
+    _rx_handler = rx_handler;
+
     reset_rx_buf();
     PUT32(IRQ_ENABLE1, (1 << 29));
     enable_irq();
 }
 
 
-void uart_putc(uint32_t c)
+void uart_putc(uint8_t c)
 {
     while(1)
     {
@@ -147,6 +151,10 @@ void c_irq_handler ( void )
             rxhead = (rxhead + 1) & RXBUFMASK;
         }
     }
+    if(_rx_handler != NULL)
+    {
+        _rx_handler();
+    }
 }
 
 
@@ -155,6 +163,18 @@ void reset_rx_buf(void)
     rxhead = 0;
 }
 
+
+void remove_n_rx_buf(uint32_t n)
+{
+    if(n <= rxhead)
+    {
+        rxhead -= n;
+    }
+    else
+    {
+        rxhead = 0;
+    }
+}
 
 uint8_t* get_rx_buf(void)
 {
