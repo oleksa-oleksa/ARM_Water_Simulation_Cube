@@ -1,15 +1,17 @@
 CC       = arm-none-eabi
 CFLAGS   = -Wall -Wextra -Wstrict-aliasing -pedantic -Werror -O0 -mfpu=vfp -march=armv6zk -mtune=arm1176jzf-s -nostdlib -nostartfiles -std=c99 -ffreestanding 
-LDFLAGS  = 
+LDFLAGS  = -Wall -Wextra -Wstrict-aliasing -pedantic -Werror -O0 -mfpu=vfp -march=armv6zk -mtune=arm1176jzf-s -nostartfiles -std=c99 -ffreestanding -L ~/CodeSourcery/Sourcery_G++_Lite/arm-none-eabi/lib -lm
 ASFLAGS  =  
 
 SRCDIRS  = .
+SRCDIRS += ../sim
 
 CFILES   = main.c
 CFILES  += gpio.c
 CFILES  += uart.c
 CFILES  += ll_time.c
 CFILES  += protocol.c
+CFILES  += particle.c
 
 ASFILES  = vectors.s
 ASFILES += memcpy.S
@@ -81,7 +83,7 @@ elf: memmap $(OBJS)
 	@echo
 	@echo === Build kernel.elf
 	@echo
-	$(CC)-ld $(LDFLAGS) $(OBJS) -T memmap -o $(BINDIR)/kernel.elf
+	$(CC)-gcc $(OBJS) $(LDFLAGS)  -T memmap -o $(BINDIR)/kernel.elf
 	@echo
 
 bin: $(OBJDIR) elf

@@ -4,12 +4,11 @@
 #include <protocol.h>
 #include <ll_time.h>
 
+#define LED_BLINK_IVAL (500 * 1000)
+
 
 int main(void)
 {
-    // uint32_t tim;
-
-
     led_setup();
     protocol_init();
 
