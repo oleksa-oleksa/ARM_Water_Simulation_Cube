@@ -1,10 +1,39 @@
 %Beschreibung der Implementierung der Kommunikation mit & Auswertung der Werte von dem Gyro
 
 \subsection{Hardware}
-Für die Ermittlung der Position des Würfels wurde ein digital Accelerometer verwendet. 
+Für die Ermittlung der Position des Würfels wurde ein digital Beschleunigungsmesser verwendet. Für ein Projekt standen zwei Beschleunigungsmesser zur Verfügung: BNO055 von Adafruit und ADXL345 von Analog Devices. Zwar ein Beschleunigungsmesser von Adafruit mächtiger ist und mehr Messungen erlaubt, das Projekt wurde am Ende unter der Verwendung des Beschleunigungsmessers ADXL345 geschrieben. Nach mehreren Versuchen, mit Adafruit zu arbeiten, wurde es festgestellt, dass Beschleunigungsmesser nicht arbeitsfähig ist. In alle Registern des Bausteins anstatt der vorprogrammierte Daten liegt nur die Zahl "0xe5", was laut der Hersteller zeigt, dass Registern irgendwie geleert wurden.\\
+
+Für die Verwendung des ADXL345 sollte man in Programm nur die Adressen ändern und richtig alle Pins belegen. Die ALT ADDRESS wurde auf 1 gesetzt und die 7-Bit-I2C-Adresse für das Gerät wurde somit als "0x1D" festgelegt. In Programm wurde direkt dir entsprechende 8-Bir-I2C-Adresse "0x3A" verwendet und die notwendige Änderung der Adresse in "0x3B" aus "0x3A" wurde gerade in I2C Routine erledigt. So kann man unterscheiden, ob es Lesen oder Schreiben Operation durchführen sollen werden. \\
+
+Es gibt keine internen Pull-Up- oder Pull-Down-Widerstände für nicht verwendete Pins. Daher gibt es keinen bekannten Status oder Standardstatus für den CS- oder ALT ADDRESS-Pin, wenn er potentialfrei bleibt oder nicht verbunden ist. Es ist erforderlich, dass der CS-Pin an VDD  angeschlossen ist und dass der ALT ADDRESS-Pin bei Verwendung von I2C entweder an VDD oder GND angeschlossen ist (wir haben an VDD angeschlossen).\\
+
+Die gemessene Daten werden aus die Register 0x32 bis Register 0x37 gelesen. Diese sechs Bytes (Register 0x32 bis Register 0x37) sind jeweils acht Bits und enthalten die Ausgangsdaten für jede Achse. Register 0x32 und Register 0x33 enthalten die Ausgangsdaten für die X-Achse, Register 0x34 und Register 0x35 die Ausgangsdaten für die Y-Achse und Register 0x36 und Register 0x37 die Ausgangsdaten für die Z-Achse. \\
+
+Die Ausgangsdaten sind zwei Komplemente, mit DATAx0 als niedrigstwertigem Byte und DATAx1 als höchstwertigem Byte, wobei x X, Y oder Z darstellt. Um die Daten richtig zu lesen, wurde es ein Mehrbyte-Lesen von 2 Register durchgeführt und die Daten aus zwei Lesevorgängen nach dem Lesen als 16-Bit Ausgangsdaten dargestellt. 
+
+\begin{lstlisting}
+uint16_t i2c16bit = 0x00;
+ReadLenght = 2;
+GlobalI2CAddr = addr;
+I2CMasterBuffer[0] = regs[0];
+I2CMasterBuffer[1] = regs[1];
+...
+// merge the data from two registers
+i2c16bit = i2c16bit | I2CReadBuffer[1]; // [REG0, REG1]: REG1 as MSB
+i2c16bit = i2c16bit << 8;
+
+i2c16bit = i2c16bit | I2CReadBuffer[0]; // [REG0, REG1]: REG0 as LSB
+
+\end{lstlisting}
 
 \subsection{I2C und Keil Board}
 
 \subsection{Software}
+
+\begin{lstlisting}
+unsigned int ADXLI2CAdresss = 0x3A;
+
+\end{lstlisting}
+
 
 \subsection{Probleme und Lösungen}
