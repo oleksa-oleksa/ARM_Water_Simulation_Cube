@@ -37,6 +37,7 @@ Listings/
 *.out
 *.cb
 *.cb2
+paper/document.pdf
 
 # Mac
 .DS_Store
