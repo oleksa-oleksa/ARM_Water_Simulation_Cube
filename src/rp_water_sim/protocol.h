@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+#include <particle.h>
+
 typedef struct __attribute__((packed))
 {
     uint8_t a;
@@ -37,8 +39,10 @@ typedef struct __attribute__((packed))
 
 void protocol_init(void);
 
-acc_data_t protocol_get_last_acc_data(void);
+const acc_data_t* protocol_get_last_acc_data(void);
 
 void protocol_send_pixel(pixeldata_t pixel);
+
+void protocol_send_panel(particle_grid_element_t panel[PARTICLE_GRID_X][PARTICLE_GRID_Y], enum side_e side);
 
 #endif

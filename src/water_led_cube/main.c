@@ -68,7 +68,8 @@ int main()
 
     /*Initialise simulation*/
     particle_init_list(particles, 50);
-    particle_init_grid(panels[0], particles, 50);
+    //particle_init_grid(panels[0], particles, 50);
+    particle_init_grid(panels[0], NULL, 0);
     particle_init_grid(panels[1], NULL, 0);
     particle_init_grid(panels[2], NULL, 0);
     particle_init_grid(panels[3], NULL, 0);

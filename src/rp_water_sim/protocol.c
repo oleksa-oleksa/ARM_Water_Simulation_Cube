@@ -2,6 +2,7 @@
 
 #include <util.h>
 #include <uart.h>
+#include <ll_time.h>
 
 acc_data_t _last_acc_data  = {.force_x = 0, \
                               .force_y = 0, \
@@ -36,9 +37,9 @@ void protocol_init(void)
 }
 
 
-acc_data_t protocol_get_last_acc_data(void)
+const acc_data_t* protocol_get_last_acc_data(void)
 {
-    return _last_acc_data;
+    return &_last_acc_data;
 }
 
 
@@ -51,6 +52,25 @@ void protocol_send_pixel(pixeldata_t pixel)
     for(uint32_t i = 0; i < sizeof(pixeldata_t); ++i)
     {
         uart_putc(buff[i]);
+    }
+    time_usec_wait(MSEC2USEC(2));
+}
+
+
+void protocol_send_panel(particle_grid_element_t panel[PARTICLE_GRID_X][PARTICLE_GRID_Y], enum side_e side)
+{
+    uint32_t x, y;
+    for(x = 0; x < PARTICLE_GRID_X; ++x)
+    {
+        for(y = 0; y < PARTICLE_GRID_Y; ++y)
+        {
+            pixeldata_t pixel;
+            pixel.panel_no = side;
+            pixel.x_pos = x;
+            pixel.y_pos = y;
+            pixel.color = panel[x][y].particle_count;
+            protocol_send_pixel(pixel);
+        }
     }
 }
 
