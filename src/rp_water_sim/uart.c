@@ -169,6 +169,7 @@ void remove_n_rx_buf(uint32_t n)
     if(n <= rxhead)
     {
         rxhead -= n;
+        memcpy((void*)&rxbuffer[0], (void*)&rxbuffer[n], rxhead - n);
     }
     else
     {

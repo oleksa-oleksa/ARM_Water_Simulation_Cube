@@ -41,10 +41,6 @@ int main(void)
 
     while(1)
     {
-        // for(tim = 0; tim < 500000; tim++)
-        // {
-        //     foo(tim);
-        // }   
         led_set(true);
 
         particle_move_cube(/*top=*/panels[0], /*bottom=*/panels[1], /*front=*/panels[2], /*back=*/panels[3], /*left=*/panels[4], /*right=*/panels[5], DT_SIM, force);

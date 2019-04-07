@@ -7,10 +7,11 @@
 #include "uart.h"
 #include <irq.h>
 
-volatile DWORD uart0Status; // TODO check for its usage and necessity
-volatile BYTE uart0TxEmpty = 1;
-volatile BYTE uart0RxBuffer[BUFSIZE];
-volatile DWORD uart0Count = 0;
+volatile uint32_t uart0Status; // TODO check for its usage and necessity
+volatile uint8_t uart0TxEmpty = 1;
+volatile uint8_t uart0RxBuffer[BUFSIZE];
+volatile uint32_t uart0Count = 0;
+rx_handler_fp_t _rx_handler = NULL;
 
 static inline void _readRxFifo(void)
 {
@@ -25,7 +26,12 @@ static inline void _readRxFifo(void)
     {
         uart0Count = 0;
     }
+    if(_rx_handler != NULL)
+    {
+        _rx_handler();
+    }
 }
+
 
 /**
  * @brief Interrupt Service Routine for UART0
@@ -43,9 +49,9 @@ static inline void _readRxFifo(void)
  */
 void uart0_isr(void) __irq
 {
-    BYTE intId;    ///< InterruptIdRegister
-    BYTE LSRValue; ///< LineStatusRegister
-    BYTE dummy = dummy;
+    uint8_t intId;    ///< InterruptIdRegister
+    uint8_t LSRValue; ///< LineStatusRegister
+    uint8_t dummy = dummy;
 
     IENABLE; ///< Handles nested interrupt
 
@@ -99,6 +105,7 @@ void uart0_isr(void) __irq
     VICVectAddr = 0; ///< Acknowledge Interrupt
 }
 
+
 /**
  * @brief Initialize UART0 by the following steps:
  * 1. Power in PCONP register, set bit PCUART0 (default enabled)
@@ -111,7 +118,7 @@ void uart0_isr(void) __irq
  * @param[in] baudrate Baud rate of UART communication
  * @warn      Current init seting is for baud rate 115200, Osc 12 MHz, Sysclk 72 MHz.
 */
-int uart0_init(unsigned long baudrate)
+int uart0_init(unsigned long baudrate, rx_handler_fp_t rx_handler)
 {
     PCONP |= PCUART0; ///< UART0 power/clock control
 
@@ -120,6 +127,7 @@ int uart0_init(unsigned long baudrate)
         // TODO baudrate generator algorithm for other variations if needed
         return 1;
     }
+    _rx_handler = rx_handler;
 
     /* Set 7:6 bit of PCLKSEL0
     * 00: PCLK = CCLK/4
@@ -163,7 +171,8 @@ int uart0_init(unsigned long baudrate)
     return 0;
 }
 
-void uart0_send(BYTE *bufptr, DWORD len)
+
+void uart0_send(uint8_t *bufptr, uint32_t len)
 {
     while (0 != len)
     {
@@ -180,12 +189,27 @@ void uart0_send(BYTE *bufptr, DWORD len)
     }
 }
 
+
+uint8_t* uart0_buf(void)
+{
+    return (uint8_t*)uart0RxBuffer;
+}
+
+
+uint32_t* uart0_buf_size(void)
+{
+    return (uint32_t*)&uart0Count;
+}
+
+
+
+
 // TODO deprecate this function as RxBuffer can directly be read in main function.
 void uart0_read(void)
 {
-    BYTE* ptr;
+    uint8_t* ptr;
 
-    for (ptr = uart0RxBuffer; *ptr != '\0'; ++ptr)
+    for (ptr = (uint8_t*)uart0RxBuffer; *ptr != '\0'; ++ptr)
     {
         //Read ptr
     }

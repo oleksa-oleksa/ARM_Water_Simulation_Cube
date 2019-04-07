@@ -52,7 +52,6 @@ void protocol_send_pixel(pixeldata_t pixel)
     {
         uart_putc(buff[i]);
     }
-
 }
 
 

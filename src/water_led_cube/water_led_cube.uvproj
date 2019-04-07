@@ -377,7 +377,7 @@
               <MiscControls></MiscControls>
               <Define></Define>
               <Undefine></Undefine>
-              <IncludePath>..\led32x32;..\sim;..\Accelerometer;.;..\Accelerometer\include</IncludePath>
+              <IncludePath>..\led32x32;..\sim;..\Accelerometer;.;..\Accelerometer\include;..\uart</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -520,6 +520,26 @@
               <FileName>paint_tool.h</FileName>
               <FileType>5</FileType>
               <FilePath>..\led32x32\paint_tool.h</FilePath>
+            </File>
+            <File>
+              <FileName>uart.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\uart\uart.c</FilePath>
+            </File>
+            <File>
+              <FileName>uart.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\uart\uart.h</FilePath>
+            </File>
+            <File>
+              <FileName>protocol.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\protocol.c</FilePath>
+            </File>
+            <File>
+              <FileName>protocol.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\protocol.h</FilePath>
             </File>
           </Files>
         </Group>

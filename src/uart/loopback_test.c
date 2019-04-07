@@ -1,11 +1,16 @@
+
+#include <stdint.h>
+
 #include "uart.h"
 
-extern volatile DWORD uart0Count;
-extern volatile BYTE uart0RxBuffer[BUFSIZE];
+
+
+extern volatile uint32_t uart0Count;
+extern volatile uint8_t uart0RxBuffer[BUFSIZE];
 
 int main(void)
 {
-    const BYTE msg[11] = {"Hello Cube"};
+    const uint8_t msg[11] = {"Hello Cube"};
 
     CCLKCFG = 0x3; // generates 72 MHz
     //lcd_init();
@@ -19,7 +24,7 @@ int main(void)
     while (1)
     {
         RBR_DISABLE;
-            uart0_send((BYTE *)msg, 11);
+            uart0_send((uint8_t *)msg, 11);
             uart0Count = 0;
         RBR_ENABLE;
 
