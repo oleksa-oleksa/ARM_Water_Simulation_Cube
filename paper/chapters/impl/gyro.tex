@@ -27,6 +27,11 @@ i2c16bit = i2c16bit | I2CReadBuffer[0]; // [REG0, REG1]: REG0 as LSB
 \end{lstlisting}
 
 \subsection{I2C und Keil Board}
+Für unseres Projekt haben wir I2C Block auf dem Keil Board in Master Mode programmiert. Mit Master-Sendermodus werden Daten vom Master (Keil Board) zum Slave (Beschleunigungsmesser) übertragen. So erlaubt uns den Beschleunigungsmesser zu initialisieren. \\
+
+Im Master-Empfängermodus werden Daten von einem Slave-Sender empfangen. Nach der Initialisierung des Beschleunigungsmessers wird es immer weiter in diesem Modus gearbeitet, da wir nur ständig die ermittelte Position ablesen wollen. \\
+
+Bevor der Mastersender-Modus aufgerufen werden kann, muss das I2CONSET-Register initialisiert werden
 
 \subsection{Software}
 
