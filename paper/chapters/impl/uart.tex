@@ -1,0 +1,81 @@
+\subsection{Serielle Kommunikationsschnittstelle}
+Als Schnittstelle zwischen dem Board und einem Raspberry Pi wird eine einfache serielle Kommunikationsschnittstelle bzw. Universal Asynchron Receive and Transmitter (UART) ausgewählt. Diese benötigt nur zwei Kabel \texttt{Tx} und \texttt{Rx}, welche mit den freien GPIO Pins auf Port 0.2 bzw. 0.3 verbunden werden. Der Softwareteil einschließlich einer Interrupt-Service-Routine-Funktion sowie Senden und Empfangen der Daten hat sich größtenteils auf einen Referenz-Code bezogen und seine Beschreibung entfällt dementsprechend. Die Initialisierungsschritte insbesondere Einstellung einer gewünschten Baudrate wurden selbst angegangen und werden daher vorgelegt (Quelltext \ref{code:uart:init}).
+
+Mit Bezug auf UM lpc23xx, Kapitel 4.12.1 können die Werte für den relevanten Register zur Einstellung einer gewünschten Baudrate berechnet werden. Die Register lauten UART0 Divisor Latch (U0DLL, U0DLM) und UART0 Fractional Divider Register (DIVADDVAL, MULVAL). Die Berechnungsschritte werden hiernach unter Hinweis auf Abb. 83 vom Benutzerhandbuch beschrieben.
+
+\vspace{5mm}
+%TODO check values in debug mode
+$DL_{est} = PCLK/(16 \times BR) = 39,0625$, wobei $PCLK = 72 MHz$ und $BR = 115200$. \\
+$DL_{est}$ ist keine ganze Zahl, dann $FR_{est} = 1,5$. 			      \\
+$DL_{est} = Int ( PCLK/(16 \times BR \times FR_{est}) ) = 26$ .	    	      \\
+$FR_{est} = PCLK/(16 \times BR \times DL_{est}) = 1,5024$. 		      \\
+$1,1 < FR_{est} < 1,9$, dann 								      \\
+$DivAddVal = table (FR_{est}) = 5$ und $MulVal = table (FR_{est}) = 8$. \\
+$DLM = DL_{est}[15:8] =$ 0x00 und $DLL = DL_{est}[7:0] =$ 0x06.
+\vspace{5mm}
+
+\begin{lstlisting}[language={c}, caption={Initialisierung von UART0. Der Funktionsparameter \texttt{baudrate} erwartet den Wert von 115200, worauf basierend die Werte von relevanten Register vorher berechnet wurden.}, label={code:uart:init}]
+/**
+ * @brief Initialize UART0 by the following steps:
+ * 1. Power in PCONP register, set bit PCUART0 (default enabled)
+ * 2. Peripheral clock in PCLK_SEL0 register, select PCLK_UART0
+ * 3. Baud rate in U0LCR register, set bit DLAB = 1.
+ * 4. UART Fifo: user bit fifo enable (bit 0) in register U0FCR to enable fifo.
+ * 5. Pins, select UART pins and pin modes in register PINSEL and PINMODE
+ * 6. Interrupts: set DLAB = 0 in register U0LCR. VICIntEnable register in VIC.
+ *
+ * @param[in] baudrate Baud rate of UART communication
+ * @warn      Current init setting is for baud rate 115200, Osc 12 MHz, Sysclk 72 MHz.
+*/
+int uart0_init(unsigned long baudrate)
+{
+    PCONP |= PCUART0; ///< UART0 power/clock control
+
+    if (115200 != baudrate)
+    {
+        // TODO baudrate generator algorithm for other variations if needed
+        return 1;
+    }
+
+    /* Set 7:6 bit of PCLKSEL0
+    * 00: PCLK = CCLK/4
+    * 01: PCLK = CCLK
+    * 10: PCLK = CCLK/2
+    * 11: PCLK = CCLK/8
+    */
+    PCLKSEL0 |= 0x00; ///< PCLK_UART0
+
+    U0LCR |= 0x83; ///< Enable access to Divisor Latches, 8 bits, 1 stop bit, no parity
+
+    /*
+    * UART0 Divisor Latch LSB register
+    *
+    * /f[
+    *    UART0_baudrate = PCLK / [16 * (256 * U0DLM + U0DLL) * (1+ DivAddVal/MulVal)]
+    * /f]
+    *
+    * See Fig 83. Algorithm for setting UART dividers in LPC23xx_um for details.
+    */
+    U0DLM = 0; // Higher 8 bits of Divisor
+    U0DLL = 6; // Lower 8 bits of Divisor
+    /* UART0 Fractional Divider Register controls prescaler for baud rate generator */
+    // MULVAL = 8; DIVADDVAL = 5;
+    U0FDR |= 0x05;
+    U0FDR &= 0xFFFFFF0F;
+    U0FDR |= 0x80;
+
+    U0LCR &= 0x7F; ///< Disable access to Divisor Latches
+    U0FCR |= 0x07; ///< Enable Rx and Tx FIFOs and clear them
+
+    PINSEL0 |= 0x50; ///< Set Pins P0.2, P0.3 in TXD0, RXD0 mode (PMODE has to 00 (pull-up))
+
+    if (0 == install_irq(UART0_INT, (void *)uart0_isr, HIGHEST_PRIORITY))
+    {
+        return 1;
+    }
+    
+    U0IER |= (IER_RBR | IER_THRE | IER_RLS); ///< Enable three UART0 interrupt sources: RBR, THRE, Rx Line Status
+
+    return 0;
+}
+\end{lstlisting}
