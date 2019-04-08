@@ -1,34 +1,149 @@
 %Beschreibung der Implementierung der Darstellungen auf den Displays
-Die Komponente Würfel empfängt Daten der Panelinformationen von der Komponente Flüssigkeitssimulation und beleuchtet die Panels entsprechend dieser Daten. Die Anzahl der Teilchen pro Pixel dient als Intensität der blauen Farbe.
+Die Komponente LED-Panels empfängt Daten der Panelinformationen von der Komponente Flüssigkeitssimulation und beleuchtet die Panels entsprechend dieser Daten. Die Anzahl der Wasserteilchen pro Pixel dient als Intensität der blauen Farbe.
 
 \subsection{Hardware}
-Der RGB-Würfel wird aus sechs 32$\times$32 RGB Matrix LED-Panels aufgebaut. Ein Panel benötigt den Strom von $2A$. Die Panels werden anhand einer Stromversorgung geschaltet. Ein Panel wird über 16 Kabel direkt mit dem Board verbunden und die restlichen fünf Panels werden nebeneinander anhand Flachbandkabel verbunden (sogenannte Daisy-Chain). Abbildung \ref{fig:assembly:dice} stellt den gesamten Aufbau der Komponente Würfel dar.
+Der RGB-Würfel wird aus sechs 32$\times$32 RGB Matrix LED-Panels aufgebaut. Betrieb eines Panels benötigt den Strom von ungefähr $2A$. Die 6 Panels werden anhand einer Stromversorgung geschaltet. Auf der Rückseite des Panels befinden sich ein Eingangs- und ein Ausgangsport mit jeweils 16 Pins. Diese sind für die Farbinformation R1, G1, B1, R2, G2, B2, die Adresssignale A, B, C, D und die Steuersignale CLK (Takt), OE (Output Enable), LAT (Latch), und 3 GNDs. Ein Panel wird somit über 16 Kabel direkt mit dem Board verbunden (Abbildung \ref{fig:led:plug}) und die restlichen fünf Panels werden nebeneinander anhand Flachbandkabel verbunden, welches Daisy-Chain genannt wird (Abbildung \ref{fig:led:chain}). 
+
+\begin{figure}
+	\centering
+	\begin{minipage}[t]{0.45\linewidth}
+	\includegraphics[width=.9\linewidth]{example-image-a}
+	\caption{Daten- und Steuersignale mit Beschriftung von Buchse bzw. Flachbandkabel}
+	\label{fig:led:plug}
+	\end{minipage}
+	\hspace{0.05\linewidth}
+	\begin{minipage}[t]{0.45\linewidth}
+	\includegraphics[width=.9\linewidth]{example-image-b}
+	\caption{Panels per Daisy-Chain}
+	\label{fig:led:chain}
+	\end{minipage}
+\end{figure}
+
+Die Eingänge der RGB-, Adress- und Steuersignale eines Panels werden mit GPIO (General Purpose Input Output) Pins auf dem Board verbunden, Port 2.0 bis 2.5 bzw. Port 3.0 bis 3.6. Als Default-Einstellung vom Hersteller sind Port 2.0 bis 2.7 direkt mit den LEDs vom Board verbunden. Daher muss der Jumber XX entnommen werden, um diese Pins für die Anzeige anzuwenden. Abbildung \ref{fig:assembly:dice} stellt den gesamten Aufbau der Komponente Würfel dar.
 \begin{figure}
 	\centering
 	\includegraphics[width=0.95\linewidth]{example-image}
-	\caption{Aufbau von sechs 32$\times$32 RGB Matrix LED-Panels}
+	\caption[Aufbau von sechs 32$\times$32 RGB Matrix LED-Panels]{Aufbau von sechs 32$\times$32 RGB Matrix LED-Panels. }
 	\label{fig:assembly:dice}
 \end{figure}
 
-\subsection{Mechanismus und Konfiguration einer Anzeige}
-Eine Anzeige hat 32 LEDs in einer Reihe beziehungsweise $32 \times 32 = 1024$ LEDs. Diese werden in 16 Teile abgeschnitten. Erster Teil ist für die 1.- und 16. Zeile, zweiter Teil ist für die 2.- und 17. Zeile bis hin zum sechzehnten Teil für die 16.- und 32. Zeile.
-
-Die Information eines Pixels wird per Takt mittels des Schiebregisters horizontal verschoben. Werden mehrere Panels verkettet, wird die Information zum weiteren Panel verschoben. Das heißt, die verketteten Panels können als ein Panel mit den breiteren Spalten betrachtet werden. \\
+\subsection{Konfiguration und Mechanismus einer Anzeige}
+Hier wird beschrieben, wie ein aus 32 Zeilen $\times$ 32 Spalten insgesamt 1024 LEDs bestehendes Panel gesteuert wird. Die  RGB-Signale R1, G1 und B1 sowie R2, G2 und B2 enthalten die Farbinformationen eines Pixels des oberen bzw. unteren Teil des Panels. Das Panel installiert 32-bit Schieberegister, womit die kompletten Farbdaten einer Zeile gespeichert werden. Das Verschieben geschieht durch das Taktsignal. Es lässt somit zwei Zeilen gleichzeitig anzeigen. Dies soll in schneller als 20 $ms$ geschehen, damit menschliche Augen einen Anzeigewechsel nicht merken und diesen als ein Standbild erfassen. Diese zwei Zeilen sind erste und 17. Zeile, zweite und 18. Zeile, ..., und 16. und 32. Zeile, die jeweils durch eine Adresse festgelegt werden, welche von den Adresssignale A, B, C und D definiert wird.\\
 
 \emph{<Schritte>}
 \begin{enumerate}
 	\item Setzen alle Pins auf \texttt{Low} (anfang)
 	\item \texttt{R1,G1,B1,R2,G2,B2} Pins auf \texttt{High/Low} setzen
 	\item \texttt{CLK} Pin auf \texttt{High} setzen
-	\item \texttt{CLK} Pin auf \texttt{Low} setzen
+	\item \texttt{CLK} Pin auf \texttt{Low} setzen \\
+	(Farbinformation wird in den Schiebregister geladen.)
 	\item Schritte 2-4 für alle Spalten wiederholen
-	\item Mit Adresspins \texttt{ABCD} eine gezielte Zeile auswählen
+	\item Mit Adresspins \texttt{ABCD} eine gezielte Zeile (von der oberen und unteren Hälfte) auswählen
 	\item \texttt{OE} Pin auf \texttt{High} setzen
 	\item \texttt{LAT} Pin auf \texttt{High} setzen (erleuchtet LED)
 	\item \texttt{LAT} Pin auf \texttt{Low} setzen
 	\item \texttt{OE} Pin auf \texttt{Low} setzen
+	\item Zurück zum Schritt 1
 \end{enumerate}
 
-Jeder Zyklus leuchtet LEDs und schaltet diese gleich aus. Die Unterfunktion \texttt{refresh} muss daher kontinuierlich aufgerufen werden.
+Werden Panels verkettet, werden die Signale seriell weiter geleitet und die Farbinformation muss daher bis zum letzten Spalten reingeschoben werden. Das bedeutet, die verketteten Panels können letztendlich als ein langes Panel betrachtet werden.
+
+Als nächstes soll die Darstellung der Farbintensität betrachtet werden. Das Display besitzt keine PWM-Funktionalität und lässt ein LED nur \texttt{An} oder \texttt{Aus} schalten. Um unterschiedliche Blaufarben zu realisieren, wird die Methode von Binary Code Manipulation verwendet (siehe XXX zum Detail). 
 
 \subsection{Software}
+ Zur Anwendung GPIO Pins müssen die folgenden Schritte (Quelltext \ref{code:ledinit}) durchgeführt werden.
+\begin{lstlisting}[language={c}, caption={Initialisierung von GPIO als Output}, label={code:ledinit}]
+void led_init(void)
+{
+    PINSEL10 = 0;    ///< Disable ETM interface, enable LEDs (turn all LEDs on)
+    PINSEL4 = 0;     ///< Set function GPIO on port 2
+    FIO2DIR  = 0xFF; ///< P2.0..7 defined as output
+    FIO2MASK = 0;    ///< Enable write, set, clear, and read to R/W port 2
+}
+
+void led32x32_init(void)
+{
+    led_init();
+
+    // Set port 3
+    PINSEL6 = 0;     ///< Set function GPIO on port 3.0..5
+    FIO3DIR = 0xFF;  ///< P3.0..7 defined as output
+    FIO3MASK = 0;    ///< Enable write, set, clear, and read to R/W port 3
+}
+\end{lstlisting}
+
+Zur Steuerung der Signale werden die Unterfunktionen (Quelltext \ref{code:ctrlsig}) geschrieben. Durch \texttt{FIO2SET} und \texttt{FIO2CLR} Register (analog zu \texttt{FIO3}) wird der Ausgang eines Pins auf \texttt{1} bzw. auf \texttt{0} gesetzt. Diese Grundfunktionen werden in den jeweiligen Funktionen (RGB-Signale, Adresssignale und Steuersignale) aufgerufen.
+
+\begin{lstlisting}[language={c}, caption={Funktionen zur Steuerung der Signale.}, label={code:ctrlsig}]
+#define LED32X32_RGBPIN_SETTER   FIO2SET
+#define LED32X32_RGBPIN_CLEANER  FIO2CLR
+#define LED32X32_CTRLPIN_SETTER  FIO3SET
+#define LED32X32_CTRLPIN_CLEANER FIO3CLR
+
+static inline void lp32x32_setCtrlPin(int pin)
+{
+    LED32X32_CTRLPIN_SETTER |= (1 << pin);
+}
+static inline void lp32x32_clearCtrlPin(int pin)
+{
+    LED32X32_CTRLPIN_CLEANER |= (1 << pin);
+}
+static inline void lp32x32_setRgbPin(int pin)
+{
+    LED32X32_RGBPIN_SETTER |= (1 << pin);
+}
+static inline void lp32x32_clearRgbPin(int pin)
+{
+    LED32X32_RGBPIN_CLEANER |= (1 << pin);
+}
+\end{lstlisting}
+
+Überlagerung mehreren Schichten zur Realisierung einer 24-bit Farbe wird dadurch implementiert, dass der Zyklus der 1-zeiligen Anzeige entsprechend wiederholt wird. Dazu benötigt das System noch einen schnelleren Takt. Quelltext \ref{code:ledmain} zeigt die Hauptfunktion des Moduls LED32x32.
+
+\begin{lstlisting}[language={c}, caption={Schritte von Panel-Anzeige}, label={code:ledmain}]
+
+void lp32x32_refresh_chain_24bit_rgb(panel_t panels[CHAIN_LEN])
+{
+    static uint8_t row = 0;
+    static uint8_t color_bit = 0;
+    uint8_t col;
+    uint8_t layer;
+    uint8_t panelIndex = 0;
+    uint32_t upperPixel = 0;
+    uint32_t bottomPixel = 0;
+
+    for(layer = 0; layer < 1; ++layer)
+    {
+        for(col = 0; col < (COL_NUM * CHAIN_LEN); ++col)
+        {
+            panelIndex = col / COL_NUM;
+            upperPixel = panels[panelIndex][row][col - COL_NUM * panelIndex].particle_count;
+            bottomPixel = panels[panelIndex][row + ROW_NUM / 2][col - COL_NUM * panelIndex].particle_count;
+            
+            lp32x32_setUpperPixelInfo((/*red=  */((upperPixel  & LED32X32_RGB24_R_MASK) >> 16) & (0x01 << color_bit)), 
+                                       (/*green=*/((upperPixel  & LED32X32_RGB24_G_MASK) >>  8) & (0x01 << color_bit)),
+                                       (/*blue= */((upperPixel  & LED32X32_RGB24_B_MASK)      ) & (0x01 << color_bit)));
+            lp32x32_setBottomPixelInfo((/*red=  */((bottomPixel & LED32X32_RGB24_R_MASK) >> 16) & (0x01 << color_bit)), 
+                                       (/*green=*/((bottomPixel & LED32X32_RGB24_G_MASK) >>  8) & (0x01 << color_bit)),
+                                       (/*blue= */((bottomPixel & LED32X32_RGB24_B_MASK)      ) & (0x01 << color_bit)));
+
+            lp32x32_clock(); ///< Shift RGB information of each pixel to horizontal direction
+        }
+
+        lp32x32_setRow(row);
+        lp32x32_setCtrlPin(LED32X32_PIN_OE);
+        lp32x32_latch();
+        lp32x32_clearCtrlPin(LED32X32_PIN_OE);
+    }
+    ++row;
+    if(row >= (ROW_NUM/2))
+    {
+        row = 0;
+        ++color_bit;
+    }
+    if(color_bit >= 8)
+    {
+        color_bit = 0;
+    }
+}
+\end{lstlisting}
