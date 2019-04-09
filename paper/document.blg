@@ -1,0 +1,65 @@
+This is BibTeX, Version 0.99d (TeX Live 2016)
+Capacity: max_strings=35307, hash_size=35307, hash_prime=30011
+The top-level auxiliary file: document.aux
+The style file: alphadin.bst
+Reallocated singl_function (elt_size=4) to 100 items from 50.
+Reallocated singl_function (elt_size=4) to 100 items from 50.
+Reallocated wiz_functions (elt_size=4) to 6000 items from 3000.
+Reallocated singl_function (elt_size=4) to 100 items from 50.
+Reallocated singl_function (elt_size=4) to 100 items from 50.
+Database file #1: bhtThesis.bib.bib
+Warning--entry type for "fluid.tutorial_paper" isn't style-file defined
+--line 29 of file bhtThesis.bib.bib
+Name 1 in "Colin Braley, and Adrian Sandu" has a comma at the end for entry fluid.tutorial_paper
+while executing---line 2132 of file alphadin.bst
+Name 1 in "Colin Braley, and Adrian Sandu" has a comma at the end for entry fluid.tutorial_paper
+while executing---line 2132 of file alphadin.bst
+Name 1 in "Colin Braley, and Adrian Sandu" has a comma at the end for entry fluid.tutorial_paper
+while executing---line 2205 of file alphadin.bst
+Name 1 in "Colin Braley, and Adrian Sandu" has a comma at the end for entry fluid.tutorial_paper
+while executing---line 2205 of file alphadin.bst
+Name 1 in "Colin Braley, and Adrian Sandu" has a comma at the end for entry fluid.tutorial_paper
+while executing---line 2205 of file alphadin.bst
+Warning--empty year in fluid.tutorial_paper
+You've used 1 entry,
+            4793 wiz_defined-function locations,
+            893 strings with 6419 characters,
+and the built_in function-call counts, 537 in all, are:
+= -- 51
+> -- 19
+< -- 15
++ -- 19
+- -- 6
+* -- 31
+:= -- 106
+add.period$ -- 0
+call.type$ -- 1
+change.case$ -- 5
+chr.to.int$ -- 1
+cite$ -- 2
+duplicate$ -- 13
+empty$ -- 28
+format.name$ -- 11
+if$ -- 95
+int.to.chr$ -- 1
+int.to.str$ -- 0
+missing$ -- 4
+newline$ -- 14
+num.names$ -- 3
+pop$ -- 10
+preamble$ -- 1
+purify$ -- 7
+quote$ -- 0
+skip$ -- 30
+stack$ -- 0
+substring$ -- 25
+swap$ -- 3
+text.length$ -- 2
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 10
+warning$ -- 1
+while$ -- 5
+width$ -- 2
+write$ -- 16
+(There were 5 error messages)

@@ -26,7 +26,7 @@ i2c16bit = i2c16bit | I2CReadBuffer[0]; // [REG0, REG1]: REG0 as LSB
 
 \end{lstlisting}
 
-\subsection{I2C und Keil Board}
+\subsection{I2C: Grundlagen und Realisierung auf dem Keil Board}
 Für unseres Projekt haben wir I2C Block auf dem Keil Board in Master-Modus programmiert. Mit Master-Sendermodus werden Daten vom Master (Keil Board) zum Slave (Beschleunigungsmesser) übertragen. So erlaubt uns den Beschleunigungsmesser zu initialisieren. \\
 
 Im Master-Empfängermodus werden Daten von einem Slave-Sender empfangen. Nach der Initialisierung des Beschleunigungsmessers wird es immer weiter in diesem Modus gearbeitet, da wir nur ständig die ermittelte Position ablesen wollen. \\
@@ -44,7 +44,7 @@ Das PCONP-Register ermöglicht das Deaktivieren ausgewählter Peripheriefunktion
 \begin{lstlisting}
 PCONP |= 0x00080000;
 \end{lstlisting}
-Die nächste Schritte erlauben es, die 
+Die nächste Schritte erlauben es, die Interrupt zu aktivieren. Da dem I2C1 das Bit 19 entspricht, wird es immer mit 19 Bit in jedem Register gearbeitet. Vector Address Registers 0-31 (VICVectAddr0-31 sind schreibgeschützte Register. Diese Register enthalten die Adressen der Interrupt-Service-Routinen (ISRs) für die 32 vektorisierten IRQ-Slots.
 \begin{lstlisting}
 VICVectCntl19 = 0x0000001;   // select a priority slot for interrupt
 VICVectAddr19 = (unsigned)i2c_irq; //pass the address of the IRQ
@@ -52,18 +52,35 @@ VICIntEnable |= 0x00080000; // enable interrupt
 PINSEL1 |= 0x000003C0; //Switch GPIO to I2C pins
 \end{lstlisting}
 
-Bevor der Master-Modus aufgerufen werden kann, muss das I2CONSET-Register initialisiert werden
+Als nächstes wird ein Auswahl der geeigneten I2C-Datenrate und des Arbeitszyklus durchgeführt. Man muss Werte für die Register I2SCLH und I2SCLL einstellen, um die entsprechende Datenrate und den entsprechenden Arbeitszyklus auszuwählen. I2SCLH definiert die Anzahl der PCLK-Zyklen für die SCL-Hochzeit, I2SCLL definiert die Anzahl der PCLK-Zyklen für die SCL-Niedrigzeit. Dafür wird die folgende Formel benutzt:
+
+\begin{equation}
+I^2C_{bitfrequency} =  \frac{F_{PCLK}}{I2SCLH + I2SCLL }
+\end{equation}\\
+
+Da es mit der Frequenz von 400KHz gearbeitet wird, wird ins PCONP-Register die entsprechenden Werte geschrieben:
+\begin{lstlisting}
+I21SCLH = 0xF;
+I21SCLL  = 0xF;
+\end{lstlisting}
+
+Steuerregister I2CONSET und I2CONCLR enthalten Bits, die zur Steuerung der folgenden I2C-Blockfunktionen verwendet werden: Start und Neustart einer seriellen Übertragung, Beenden einer seriellen Übertragung, Bitrate, Adresserkennung und Bestätigung. Der Inhalt des I2C-Steuerregisters kann als I2CONSET gelesen werden. Beim Schreiben auf I2CONSET werden Bits im I2C-Steuerregister gesetzt, die denen im geschriebenen Wert entsprechen. Umgekehrt löscht das Schreiben in I2CONCLR Bits im I2C-Steuerregister, die denen im geschriebenen Wert entsprechen. Während die Initialisierung wird folgendes in die I2CONSET und I2CONCLR geschrieben: \\
 
 \begin{lstlisting}
-bla
-
+I21CONCLR = 0x000000FF; // Clear all I2C settings
+I21CONSET = 0x00000040; // Enable the I2C interface
 \end{lstlisting}
 
 Schieberegister I2DAT enthält ein Byte der zu übertragenden seriellen Daten oder ein gerade empfangenes Byte. Daten in I2DAT werden immer von rechts nach links verschoben. Das erste zu sendende Bit ist das MSB (Bit 7), und nachdem ein Byte empfangen wurde, befindet sich das erste Bit der empfangenen Daten im MSB von I2DAT. \\
 
-Steuerregister I2CONSET und I2CONCLR enthalten Bits, die zur Steuerung der folgenden I2C-Blockfunktionen verwendet werden: Start und Neustart einer seriellen Übertragung, Beenden einer seriellen Übertragung, Bitrate, Adresserkennung und Bestätigung. Der Inhalt des I2C-Steuerregisters kann als I2CONSET gelesen werden. Beim Schreiben auf I2CONSET werden Bits im I2C-Steuerregister gesetzt, die denen im geschriebenen Wert entsprechen. Umgekehrt löscht das Schreiben in I2CONCLR Bits im I2C-Steuerregister, die denen im geschriebenen Wert entsprechen.\\
+Der Master-Sendermodus kann jetzt durch Setzen des STA-Bits aufgerufen werden. Die I2C-Logik testet nun den I2C-Bus und generiert eine Startbedingung, sobald der Bus frei wird. Wenn eine START-Bedingung übertragen wird, wird das serielle Interrupt-Flag (SI) gesetzt und der Statuscode im Statusregister (I2STAT) wird 0x08 sein. Dieser Statuscode wird von der Interrupt-Service-Routine verwendet, um die entsprechende Status-Service-Routine einzugeben, die I2DAT mit der Slave-Adresse und dem Datenrichtungsbit (SLA + W) lädt.\\
+
+Im Master-Empfängermodus werden einige Datenbytes von einem Slave-Sender empfangen. Die Übertragung wird wie im Mastersender-Modus initialisiert. Wenn die Startbedingung übertragen wurde, muss die Interrupt-Service-Routine I2DAT mit der 7-Bit-Slave-Adresse und dem Datenrichtungsbit (SLA + R) laden. Wenn die Slaveadresse und das Datenrichtungsbit gesendet und ein Bestätigungsbit empfangen wurde, wird das serielle Interrupt-Flag (SI) erneut gesetzt und eine Nummer festgelegt Statuscodes in I2STAT sind möglich. 
+
 
 \subsection{Software}
+
+%
 
 \begin{lstlisting}
 unsigned int ADXLI2CAdresss = 0x3A;
