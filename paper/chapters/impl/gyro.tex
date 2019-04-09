@@ -40,11 +40,22 @@ Für unseres Projekt haben wir I2C1 Block gewählt. Mithilfe von Schaltbild habe
 	\label{fig:i2cpins}
 \end{figure}
 
-Das PCONP-Register ermöglicht das Deaktivieren ausgewählter Peripheriefunktionen, um Energie zu sparen. Wenn ein Peripheriesteuerbit 1 ist, ist dieses Peripheriegerät aktiviert. Wenn ein Peripherie-Bit 0 ist, wird die Uhr des Peripheriegeräts deaktiviert, um Energie zu sparen. Dem I2C1 entspricht das Bit 19 in PCONP-Register. Um I2C1 zu aktivieren, muss man den Wert $2^{19}$ ins Register schreiben, was in Hexadezimal Format $0x00080000$ entspricht. Mit der Verwendung von logischen Operator $OR$ wird die I2C1 aktiviert und die andere Peripheriefunktionen unverändert geblieben.
+\textbf{START- und STOPP-Bedingungen}. Die I2C-Kommunikation mit diesem Gerät wird initiiert, indem der Master eine START-Bedingung sendet und beendet, indem der Master eine STOP-Bedingung sendet. Ein High-to-Low-Übergang auf der SDA-Leitung, während der SCL-Pegel hoch ist, definiert eine START-Bedingung. Ein Low-to-High-Übergang Die SDA-Leitung definiert die STOP-Bedingung, während der SCL hoch ist. Dies ist mit der folgenden Abbildung\footnote{/http://www.ti.com/lit/an/slva704/slva704.pdf} gezeigt. 
+
+\begin{figure}[!hb]
+	\centering
+	\includegraphics[width=0.6\linewidth]{start_stop.png}
+	\caption[I2C1 Example of START and STOP Condition]{I2C1 Example of START and STOP Condition}
+	\label{fig:startstop}
+\end{figure}
+
+Eine \textbf{wiederholte START-Bedingung} sieht ähnlich einer START-Bedingung aus, unterscheidet sich jedoch von einer START-Bedingung, da sie vor einer STOP-Bedingung auftritt (wenn der Bus nicht im Leer ist).\\
+
+Das \textbf{PCONP}-Register ermöglicht das Deaktivieren ausgewählter Peripheriefunktionen, um Energie zu sparen. Wenn ein Peripheriesteuerbit 1 ist, ist dieses Peripheriegerät aktiviert. Wenn ein Peripherie-Bit 0 ist, wird die Uhr des Peripheriegeräts deaktiviert, um Energie zu sparen. Dem I2C1 entspricht das Bit 19 in PCONP-Register. Um I2C1 zu aktivieren, muss man den Wert $2^{19}$ ins Register schreiben, was in Hexadezimal Format $0x00080000$ entspricht. Mit der Verwendung von logischen Operator $OR$ wird die I2C1 aktiviert und die andere Peripheriefunktionen unverändert geblieben.
 \begin{lstlisting}
 PCONP |= 0x00080000;
 \end{lstlisting}
-Die nächste Schritte erlauben es, die Interrupt zu aktivieren. Da dem I2C1 das Bit 19 entspricht, wird es immer mit 19 Bit in jedem Register gearbeitet. Vector Address Registers 0-31 (VICVectAddr0-31 sind schreibgeschützte Register. Diese Register enthalten die Adressen der Interrupt-Service-Routinen (ISRs) für die 32 vektorisierten IRQ-Slots.
+Die nächste Schritte erlauben es, die Interrupt zu aktivieren. Da dem I2C1 das Bit 19 entspricht, wird es immer mit 19 Bit in jedem Register gearbeitet. \textbf{Vector Address Registers 0-31} (VICVectAddr0-31 sind schreibgeschützte Register. Diese Register enthalten die Adressen der Interrupt-Service-Routinen (ISRs) für die 32 vektorisierten IRQ-Slots.
 \begin{lstlisting}
 VICVectCntl19 = 0x0000001;   // select a priority slot for interrupt
 VICVectAddr19 = (unsigned)i2c_irq; //pass the address of the IRQ
@@ -52,7 +63,7 @@ VICIntEnable |= 0x00080000; // enable interrupt
 PINSEL1 |= 0x000003C0; //Switch GPIO to I2C pins
 \end{lstlisting}
 
-Als nächstes wird ein Auswahl der geeigneten I2C-Datenrate und des Arbeitszyklus durchgeführt. Man muss Werte für die Register I2SCLH und I2SCLL einstellen, um die entsprechende Datenrate und den entsprechenden Arbeitszyklus auszuwählen. I2SCLH definiert die Anzahl der PCLK-Zyklen für die SCL-Hochzeit, I2SCLL definiert die Anzahl der PCLK-Zyklen für die SCL-Niedrigzeit. Dafür wird die folgende Formel benutzt:
+Als nächstes wird ein Auswahl der geeigneten I2C-Datenrate und des Arbeitszyklus durchgeführt. Man muss Werte für die Register \textbf{I2SCLH} und \textbf{I2SCLL} einstellen, um die entsprechende Datenrate und den entsprechenden Arbeitszyklus auszuwählen. I2SCLH definiert die Anzahl der PCLK-Zyklen für die SCL-Hochzeit, I2SCLL definiert die Anzahl der PCLK-Zyklen für die SCL-Niedrigzeit. Dafür wird die folgende Formel benutzt:
 
 \begin{equation}
 I^2C_{bitfrequency} =  \frac{F_{PCLK}}{I2SCLH + I2SCLL }
@@ -64,28 +75,33 @@ I21SCLH = 0xF;
 I21SCLL  = 0xF;
 \end{lstlisting}
 
-Steuerregister I2CONSET und I2CONCLR enthalten Bits, die zur Steuerung der folgenden I2C-Blockfunktionen verwendet werden: Start und Neustart einer seriellen Übertragung, Beenden einer seriellen Übertragung, Bitrate, Adresserkennung und Bestätigung. Der Inhalt des I2C-Steuerregisters kann als I2CONSET gelesen werden. Beim Schreiben auf I2CONSET werden Bits im I2C-Steuerregister gesetzt, die denen im geschriebenen Wert entsprechen. Umgekehrt löscht das Schreiben in I2CONCLR Bits im I2C-Steuerregister, die denen im geschriebenen Wert entsprechen. Während die Initialisierung wird folgendes in die I2CONSET und I2CONCLR geschrieben: \\
+Steuerregister \textbf{I2CONSET} und \textbf{I2CONCLR} enthalten Bits, die zur Steuerung der folgenden I2C-Blockfunktionen verwendet werden: Start und Neustart einer seriellen Übertragung, Beenden einer seriellen Übertragung, Bitrate, Adresserkennung und Bestätigung. Der Inhalt des I2C-Steuerregisters kann als I2CONSET gelesen werden. Beim Schreiben auf I2CONSET werden Bits im I2C-Steuerregister gesetzt, die denen im geschriebenen Wert entsprechen. Umgekehrt löscht das Schreiben in I2CONCLR Bits im I2C-Steuerregister, die denen im geschriebenen Wert entsprechen. Während die Initialisierung wird folgendes in die I2CONSET und I2CONCLR geschrieben: \\
 
 \begin{lstlisting}
 I21CONCLR = 0x000000FF; // Clear all I2C settings
 I21CONSET = 0x00000040; // Enable the I2C interface
 \end{lstlisting}
 
-Schieberegister I2DAT enthält ein Byte der zu übertragenden seriellen Daten oder ein gerade empfangenes Byte. Daten in I2DAT werden immer von rechts nach links verschoben. Das erste zu sendende Bit ist das MSB (Bit 7), und nachdem ein Byte empfangen wurde, befindet sich das erste Bit der empfangenen Daten im MSB von I2DAT. \\
+Schieberegister \textbf{I2DAT} enthält ein Byte der zu übertragenden seriellen Daten oder ein gerade empfangenes Byte. Daten in I2DAT werden immer von rechts nach links verschoben. Das erste zu sendende Bit ist das MSB (Bit 7), und nachdem ein Byte empfangen wurde, befindet sich das erste Bit der empfangenen Daten im MSB von I2DAT. \\
 
-Der Master-Sendermodus kann jetzt durch Setzen des STA-Bits aufgerufen werden. Die I2C-Logik testet nun den I2C-Bus und generiert eine Startbedingung, sobald der Bus frei wird. Wenn eine START-Bedingung übertragen wird, wird das serielle Interrupt-Flag (SI) gesetzt und der Statuscode im Statusregister (I2STAT) wird 0x08 sein. Dieser Statuscode wird von der Interrupt-Service-Routine verwendet, um die entsprechende Status-Service-Routine einzugeben, die I2DAT mit der Slave-Adresse und dem Datenrichtungsbit (SLA + W) lädt.\\
+Der \textbf{Master-Sendermodus} kann jetzt durch Setzen des STA-Bits aufgerufen werden. Die I2C-Logik testet nun den I2C-Bus und generiert eine Startbedingung, sobald der Bus frei wird. Wenn eine START-Bedingung übertragen wird, wird das serielle Interrupt-Flag (SI) gesetzt und der Statuscode im \textbf{Statusregister (I2STAT)} wird 0x08 sein. Dieser Statuscode wird von der Interrupt-Service-Routine verwendet, um die entsprechende Status-Service-Routine einzugeben, die I2DAT mit der Slave-Adresse und dem Datenrichtungsbit (SLA + W) lädt.\\
 
-Im Master-Empfängermodus werden einige Datenbytes von einem Slave-Sender empfangen. Die Übertragung wird wie im Mastersender-Modus initialisiert. Wenn die Startbedingung übertragen wurde, muss die Interrupt-Service-Routine I2DAT mit der 7-Bit-Slave-Adresse und dem Datenrichtungsbit (SLA + R) laden. Wenn die Slaveadresse und das Datenrichtungsbit gesendet und ein Bestätigungsbit empfangen wurde, wird das serielle Interrupt-Flag (SI) erneut gesetzt und eine Nummer festgelegt Statuscodes in I2STAT sind möglich. 
+Im \textbf{Master-Empfängermodus} werden einige Datenbytes von einem Slave-Sender empfangen. Die Übertragung wird wie im Mastersender-Modus initialisiert. Wenn die Startbedingung übertragen wurde, muss die Interrupt-Service-Routine I2DAT mit der 7-Bit-Slave-Adresse und dem Datenrichtungsbit (SLA + R) laden. Wenn die Slaveadresse und das Datenrichtungsbit gesendet und ein Bestätigungsbit empfangen wurde, wird das serielle Interrupt-Flag (SI) erneut gesetzt und eine Nummer festgelegt Statuscodes in I2STAT sind möglich. 
 
 
 \subsection{Software}
-
-%
+Die Slave-Adresse und die zu sendenden Daten werden in globalen Variablen abgelegt, damit sie vom I2C Interrupt-Routine verwendet werden können. Die Adresse ist eine Sieben-Bit-Adresse, wobei das LSB zum Schreiben eingestellt und zum Lesen gelöscht ist. Als nächstes löscht die Routine die I2C-Steuerflaggen, aktiviert die I2C-Peripherie und gibt eine Startbedingung aus. Nachdem die Startbedingung auf den Bus geschrieben wurde, wird ein Interrupt generiert, und ein Ergebniscode kann aus dem I2C-Statusregister gelesen werden.
 
 \begin{lstlisting}
 unsigned int ADXLI2CAdresss = 0x3A;
-
+unsigned char GlobalI2CAddr;
+unsigned char GlobalI2CReg;
+unsigned char GlobalI2CData;
+unsigned char GlobalI2CRead;
 \end{lstlisting}
 
+Wenn die Startbedingung erfolgreich war, lautet der Code im I2STAT-Register 0x08. Als nächstes muss die Anwendungssoftware die Slave-Adresse und das R / W-Bit in das I2Cdata-Register schreiben. Wenn die Bestätigung empfangen wird, wird ein weiterer Interrupt generiert, und das Statusregister I2STAT enthält den Code 0x18, wenn die Übertragung erfolgreich war. Nachdem der Slave nun adressiert wurde und bereit ist, Daten zu empfangen, können wir eine Bytefolge in das I2C-Datenregister schreiben. Wenn jedes Byte geschrieben wird, wird es übertragen und bestätigt. Bei Bestätigung wird ein Interrupt generiert und 0x28 befindet sich im Statusregister, wenn die Übertragung erfolgreich war. Wenn es fehlschlug und ein NACK vorhanden war, lautet der Code 0x20 und das Byte muss erneut gesendet werden. Wenn also jedes Byte übertragen wird, wird ein Interrupt generiert, der Statuscode kann geprüft und das nächste Byte gesendet werden. Nachdem alle Bytes gesendet wurden, kann die Stoppbedingung durch Schreiben in das I2C-Steuerregister aktiviert werden, und die Transaktion ist abgeschlossen. 
 
-\subsection{Probleme und Lösungen}
+
+
+Der I2C-Interrupt ist wirklich eine Zustandsmaschine, die das Statusregister für jeden Interrupt untersucht und die erforderliche Aktion ausführt. Dies kann leicht als switch-Anweisung implementiert werden, wie unten gezeigt.
