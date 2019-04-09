@@ -12,20 +12,20 @@ sync_marker_t _exp_marker = STD_VAL_SYNC_MARKER_T;
 void _uart_rx_handle(void)
 {
     acc_data_t rec_acc_data;
-    while(get_rx_buf_size() >= sizeof(acc_data_t))
+    while(uart0_get_rx_buf_size() >= sizeof(acc_data_t))
     {
-        memcpy(&rec_acc_data, get_rx_buf(), sizeof(acc_data_t));
+        memcpy(&rec_acc_data, uart0_get_rx_buf(), sizeof(acc_data_t));
         if((rec_acc_data.sync_marker.a == _exp_marker.a) && 
            (rec_acc_data.sync_marker.b == _exp_marker.b) &&
            (rec_acc_data.sync_marker.c == _exp_marker.c) &&
            (rec_acc_data.sync_marker.d == _exp_marker.d))
         {
             memcpy(&_last_acc_data, &rec_acc_data, sizeof(acc_data_t));
-            remove_n_rx_buf(sizeof(acc_data_t));
+            uart0_remove_n_rx_buf(sizeof(acc_data_t));
         }
         else
         {
-            remove_n_rx_buf(1); //resync by checking byte-for-byte untill sync-marker has been found
+            uart0_remove_n_rx_buf(1); //resync by checking byte-for-byte untill sync-marker has been found
         }
     }
 }
@@ -33,7 +33,7 @@ void _uart_rx_handle(void)
 
 void protocol_init(void)
 {
-    uart_init(_uart_rx_handle);
+    uart0_init(_uart_rx_handle);
 }
 
 
@@ -51,7 +51,7 @@ void protocol_send_pixel(pixeldata_t pixel)
     memcpy(buff, &pixel, sizeof(pixeldata_t));
     for(uint32_t i = 0; i < sizeof(pixeldata_t); ++i)
     {
-        uart_putc(buff[i]);
+        uart0_putc(buff[i]);
     }
     time_usec_wait(MSEC2USEC(2));
 }
