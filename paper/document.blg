@@ -1,4 +1,4 @@
-This is BibTeX, Version 0.99d (TeX Live 2016)
+This is BibTeX, Version 0.99d (TeX Live 2015/Debian)
 Capacity: max_strings=35307, hash_size=35307, hash_prime=30011
 The top-level auxiliary file: document.aux
 The style file: alphadin.bst
@@ -21,45 +21,45 @@ while executing---line 2205 of file alphadin.bst
 Name 1 in "Colin Braley, and Adrian Sandu" has a comma at the end for entry fluid.tutorial_paper
 while executing---line 2205 of file alphadin.bst
 Warning--empty year in fluid.tutorial_paper
-You've used 1 entry,
+You've used 3 entries,
             4793 wiz_defined-function locations,
-            893 strings with 6419 characters,
-and the built_in function-call counts, 537 in all, are:
-= -- 51
-> -- 19
-< -- 15
-+ -- 19
-- -- 6
-* -- 31
-:= -- 106
-add.period$ -- 0
-call.type$ -- 1
-change.case$ -- 5
-chr.to.int$ -- 1
-cite$ -- 2
-duplicate$ -- 13
-empty$ -- 28
-format.name$ -- 11
-if$ -- 95
-int.to.chr$ -- 1
+            904 strings with 6661 characters,
+and the built_in function-call counts, 1365 in all, are:
+= -- 131
+> -- 35
+< -- 31
++ -- 36
+- -- 10
+* -- 75
+:= -- 238
+add.period$ -- 4
+call.type$ -- 3
+change.case$ -- 13
+chr.to.int$ -- 2
+cite$ -- 4
+duplicate$ -- 43
+empty$ -- 98
+format.name$ -- 23
+if$ -- 273
+int.to.chr$ -- 2
 int.to.str$ -- 0
-missing$ -- 4
-newline$ -- 14
-num.names$ -- 3
-pop$ -- 10
+missing$ -- 16
+newline$ -- 26
+num.names$ -- 9
+pop$ -- 24
 preamble$ -- 1
-purify$ -- 7
+purify$ -- 19
 quote$ -- 0
-skip$ -- 30
+skip$ -- 79
 stack$ -- 0
-substring$ -- 25
-swap$ -- 3
-text.length$ -- 2
-text.prefix$ -- 0
+substring$ -- 61
+swap$ -- 9
+text.length$ -- 6
+text.prefix$ -- 2
 top$ -- 0
-type$ -- 10
+type$ -- 34
 warning$ -- 1
-while$ -- 5
-width$ -- 2
-write$ -- 16
+while$ -- 11
+width$ -- 4
+write$ -- 42
 (There were 5 error messages)

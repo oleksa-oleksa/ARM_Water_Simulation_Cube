@@ -5,7 +5,80 @@ Es gibt zwei grundlegende Ansätze für die Simulation von Flüssigkeiten: entwe
 
 \subsection{Grundlagen}
 
+Die Simulation von Flüssigkeiten beruht auf den Navier Stokes Gleichungen \cite{fluid.tutorial_paper}\footnote{$\overrightarrow{u}$ ist die Geschwindigkeit der Flüssigkeit, $\rho$ die Dichte. Der Druck innerhalb der Flüssigkeit wird durch $p$ dargestellt und $v$ entspricht der kinematische Viskosität}: 
+
+\begin{align}
+	\frac{\partial \overrightarrow{u}}{\partial t} + \overrightarrow{u} + \frac{1}{\rho} \nabla p &= \overrightarrow{F} + v \nabla \cdot \nabla \overrightarrow{u} \\
+	\nabla \cdot \overrightarrow{u} &= 0
+\end{align}
+
+\cite{fluid.website} und \cite{fluid.website2} führt aus, wie mit Hilfe der Kernel \texttt{poly6}, \texttt{spiky} und \texttt{viscosity} die folgenden Formeln für die Dichte, den Druck und die Viskosität erstellt werden können:
+
+\begin{align}
+	\rho_i &= \sum^{j} m_j W(|r_i - r_j|, h) \\
+	F_i^{pressure} &= - \sum^{j} m_i m_j (\frac{p_i}{\rho_j^2} + \frac{p_j}{\rho_j^2}) \nabla W(|r_i - r_j|, h) \\
+	F_i^{viscosity} &= \eta \sum^{j} m_j \frac{|u_j - u_i|}{\rho_j} \nabla^2 W(|r_i - r_j|, h)
+\end{align}
+
+Für die einzelnen Kernel gilt:
+\begin{align}
+	W_{poly6}(r, h) &= \frac{315}{56 \pi h^9} 	\begin{cases}
+													(h^2 - r^2)^3,   & 0 \leq r \leq h\\
+													0, & \text{andernfalls}\\
+												\end{cases} \\
+	W_{spiky}(r, h) &= \frac{15}{\pi h^6}		\begin{cases}
+													(h - r),   & 0 \leq r \leq h\\
+													0, & \text{andernfalls}\\
+												\end{cases} \\
+	W_{viscosity}(r, h) &= \frac{15}{2 \pi h^3}		\begin{cases}
+													-\frac{r^3}{2h^3} + \frac{r^2}{h^2} + \frac{h}{2r} - 1,   & 0 \leq r \leq h\\
+													0, & \text{andernfalls}\\
+												\end{cases}
+\end{align}
+
+Ein Problem in der Simulation ist, dass alle Partikel auf alle anderen einwirken. Dies stellt eine $O(n^2)$ Beziehung da, die sich sehr negativ auf den Rechenaufwand auswirkt. Ein Weg die Berechnung zu Beschleunigen beruht auf dem Fakt, dass der Einfluss von entfernteren Partikeln auf das gerade betrachtete stetig abnimmt. Wenn man nun die aktuelle Position der Partikel auf einem Schachbrett aufträgt, so reicht es nur die Partikel, die sich in den umliegenden Feldern befinden, in die Berechnung der Kräfte die auf einen gegebenen Partikel wirken, zu betrachten.
+
 \subsection{Umsetzung}
+
+Die Simulation der Partikel wurde in \texttt{C} für den 2D-Raum umgesetzt. In einem 2D-Array sind in jedem Eintrag doppelt verkettete Listen aus den Partikeln verlinkt, die sich aktuell innerhalb dem Feld befinden (siehe \ref{code.sph.structs}). Zur Berechnung der nächsten Position eines jeden Partikels werden Dichte, Druck und Viskosität des Partikels unter Berücksichtigung der Umliegenden berechnet. Addiert man nun die soeben berechneten Kräfte mit der extern Einwirkenden (Erdanziehungskraft) und integriert dies über die verstrichene Zeit erhält man den Beschleunigungsvektor des Teilchens. Die Multiplikation der Beschleunigung mit der verstrichenen Zeit ergibt nun die Positionsveränderung des Partikels.
+
+\begin{lstlisting}[language={c}, caption={Datenstrukturen der SPH}, label={code.sph.structs}]
+typedef struct
+{
+	double position[2];
+	double velocity[2];
+	double mass;
+	double density;
+	double pressure;
+	double force[2];
+} particle_t;
+
+
+typedef struct particle_list_element_s
+{
+	particle_t particle;
+	struct particle_list_element_s* prev;
+	struct particle_list_element_s* next;
+} particle_list_element_t;
+
+
+typedef struct
+{
+	particle_list_element_t* particle_list;
+	uint32_t particle_count;
+} particle_grid_element_t;
+
+typedef particle_grid_element_t panel_t[PARTICLE_GRID_X][PARTICLE_GRID_Y];
+\end{lstlisting}
+
+\begin{wrapfigure}{r}{0.5\textwidth}
+	\centering
+	\includegraphics[width=.45\linewidth]{IMG_20190409_212603.jpg}
+	\caption{Würfelmodell mit Koordinatensystem der LED-Panels und der 2D-Arrays}
+	\label{fig:sph:cube_model}
+\end{wrapfigure}
+
+Um den Würfel darzustellen werden nun sechs der 2D-Arrays genutzt. Wenn die neue Position eines Partikels nun die Außengrenzen des Arrays überschreiten würde, so wird es auf die andere Würfelseite übertragen. Die Implementierung der Simulation wurde während der Entwicklung auf einem Linux-PC getestet. Hierzu wurde sie in ein Programm eingebettet, die Position der einzelnen Partikel ausließt und über X11 auf dem Bildschirm darstellt. Da die Simulation nur mit elementaren Rechenoperationen arbeitet konnte sie im Anschluss problemlos in das ARM-Programm eingefügt werden. Dieses stellt nun die Anzahl der Partikel in einem Feld der 2D-Arrays als Farbschattierung auf dem LED-Display dar.
 
 \section{Rechenbeschleunigung durch RaspberryPi 1B}
 
