@@ -93,8 +93,8 @@ void c_irq_handler ( void )
         }
     }
     rb = GET32(UART0_MIS);
-    if( (rb & 0x10) == 1)
-    {//got UART0 Rx irq
+    // if( (rb & 0x10) == 1)
+    // {//got UART0 Rx irq
         while(1)
         {
             rb = GET32(UART0_FR);
@@ -109,7 +109,7 @@ void c_irq_handler ( void )
                 break;
             }
         }
-    }
+    // }
 }
 
 
@@ -189,8 +189,8 @@ void uart0_init(rx_handler_fp_t rx_handler)
     PUT32(UART0_IBRD, 1);       //set integer baud rate
     PUT32(UART0_FBRD, 40);      //set fractional baud rate
     PUT32(UART0_LCRH, 0x70);    //0111 0000 <- no sticky parity, 8bits word length, FiFo mode, one stopbit, no parity, no break
-    PUT32(UART0_CR, 0x301);     //0011 0000 0001 <- Rx enable, Tx enable, UART enable
     PUT32(UART0_IMSC, 0x7EF);   //111 1110 1111 <- Unmask receive interrupt
+    PUT32(UART0_CR, 0x301);     //0011 0000 0001 <- Rx enable, Tx enable, UART enable
 
     _mini_uart_rx_handler = rx_handler;
 
@@ -361,5 +361,17 @@ uint32_t mini_uart_get_rx_buf_size(void)
 uint32_t uart0_get_rx_buf_size(void)
 {
     return uart0_rxhead;
+}
+
+uint8_t uart0_getc(void)
+{
+    while(1)
+    {
+        if( (GET32(UART0_FR) & 0x10) == 0) 
+        {
+            break;
+        }
+    }
+    return GET32(UART0_DR);
 }
 

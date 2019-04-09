@@ -40,4 +40,6 @@ void uart0_remove_n_rx_buf(uint32_t n);
 
 uint32_t uart0_get_rx_buf_size(void);
 
+uint8_t uart0_getc(void);
+
 #endif
