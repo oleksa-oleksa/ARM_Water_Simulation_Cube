@@ -12,13 +12,13 @@
 #define M_PI 3.141592653589793238
 #endif
 
-#if (PARTICLE_DEBUG == 0)
+#if (PARTICLE_DEBUG == 1)
     #define DEBUG(...) fprintf(stdout, __VA_ARGS__)
 #else
     #define DEBUG(...) {;}
 #endif
 
-#if (PARTICLE_DEBUG == 0)
+#if (PARTICLE_DEBUG == 1)
     #define ERROR(...) fprintf(stderr, __VA_ARGS__)
 #else
     #define ERROR(...) {;}
