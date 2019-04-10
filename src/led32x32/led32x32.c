@@ -41,7 +41,7 @@ void led32x32_init(void)
 
     // Set port 3
     PINSEL6 = 0;     ///< Set function GPIO on port 3.0..5
-    FIO3DIR = 0xFF;  ///< P3.0..7 defined as output
+    FIO3DIR = 0x7F;  ///< P3.0..6 defined as output
     FIO3MASK = 0;    ///< Enable write, set, clear, and read to R/W port 3
 }
 
