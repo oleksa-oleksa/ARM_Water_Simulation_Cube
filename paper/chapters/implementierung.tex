@@ -14,11 +14,9 @@ Sämtlicher Quellcode des Projekts wurde in C geschrieben und Doxygen-konform do
 
 \begin{figure}
 	\centering
-	\includegraphics[width=0.8\linewidth]{example-image}
+	\includegraphics[clip, trim=4cm 5cm 13cm 5cm, width=.99\textwidth]{pinbelegung}
 	\caption[Pinbelegung]{Pinbelegung}
 	\label{fig:pins}
 \end{figure}
 
 Der Beschleunigungssensor und eines der 6 Panele werden durch freie GPIO-Pins mit dem Board verbunden. Abbildung \ref{fig:pins} zeigt die genutzte Pinbelegung. Es ist dabei zu beachten, die bereits vom Hersteller belegten Pins des Boards zu vermeiden, andernfalls kann es zu Problemen beim Betrieb kommen. Ebenso wird ein Raspberry Pi 1B (siehe \ref{chap:impl:sph:rp}) über den \texttt{UART0} angebunden.
-
-Die belegten Pins und die relevanten Ports 2 und 3 müssen im Code \ref{code:led-init} initialisiert werden, um diese als GPIO-Pins verwenden zu können.

@@ -1,9 +1,8 @@
-\subsection{Serielle Kommunikationsschnittstelle}
-Als Schnittstelle zwischen dem Board und einem Raspberry Pi wird eine einfache serielle Kommunikationsschnittstelle bzw. Universal Asynchron Receive and Transmitter (UART) ausgewählt. Diese benötigt nur zwei Kabel \texttt{Tx} und \texttt{Rx}, welche mit den freien GPIO Pins auf Port 0.2 bzw. 0.3 verbunden werden. Der Softwareteil einschließlich einer Interrupt-Service-Routine-Funktion sowie Senden und Empfangen der Daten hat sich größtenteils auf einen Referenz-Code bezogen und seine Beschreibung entfällt dementsprechend. Die Initialisierungsschritte insbesondere Einstellung einer gewünschten Baudrate wurden selbst angegangen und werden daher vorgelegt (Quelltext \ref{code:uart:init}).
+
+Die Schnittstelle \texttt{UART0} auf dem Board benötigt nur zwei Kabel \texttt{Tx} und \texttt{Rx}, welche mit den freien GPIO Pins auf Port 0.2 bzw. 0.3 verbunden werden. Der Softwareteil einschließlich einer Interrupt-Service-Routine sowie Senden und Empfangen der Daten hat sich größtenteils auf einen Referenz-Code bezogen und seine Beschreibung entfällt dementsprechend. Die Initialisierungsschritte insbesondere Einstellung einer gewünschten Baudrate wurden selbst angegangen und werden daher vorgelegt (Quelltext \ref{code:uart:init}).
 
 \paragraph{Baudrate generieren} 
-
-Mit Bezug auf UM lpc23xx, Kapitel 4.12.1 können die Werte für den relevanten Register zur Einstellung einer gewünschten Baudrate berechnet werden. Die Register lauten UART0 Divisor Latch (U0DLL, U0DLM) und UART0 Fractional Divider Register (DIVADDVAL, MULVAL). Die Berechnungsschritte werden hiernach unter Hinweis auf Abb. 83 vom Benutzerhandbuch beschrieben.
+Mit Bezug auf \cite{nxp.lpc23xx.user_manual} (Kapitel 4.12.1) können die Werte für den relevanten Register zur Einstellung einer gewünschten Baudrate berechnet werden. Die Register lauten UART0 Divisor Latch (U0DLL, U0DLM) und UART0 Fractional Divider Register (DIVADDVAL, MULVAL). Die Berechnungsschritte werden hiernach unter Hinweis auf Abb. 83 von \cite{nxp.lpc23xx.user_manual} beschrieben.
 
 %TODO check values in debug mode
 \begin{enumerate}

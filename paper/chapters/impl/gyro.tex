@@ -1,5 +1,6 @@
 %Beschreibung der Implementierung der Kommunikation mit & Auswertung der Werte von dem Gyro
 
+\section{Beschleunigungssensor}
 \subsection{Hardware}
 Für die Ermittlung der Ausrichtung des Würfels wurde ein digitaler Beschleunigungsmesser verwendet. Für das Projekt standen anfangs zwei Geräte zur Verfügung: BNO055 von Adafruit und ADXL345 von Analog Devices. Zwar ist der Beschleunigungsmesser von Adafruit mächtiger, da dieser mehr Messungen vornimmt und eine größere Genauigkeit ermöglicht, dennoch wurde das Projekt am Ende unter der Verwendung des Beschleunigungsmessers ADXL345 umgesetzt. Grund dafür war, dass nach mehreren Versuchen mit dem Gerät von Adafruit zu kommunizieren festgestellt wurde, dass der Beschleunigungsmesser nicht defekt war. In alle Registern des Bausteins anstatt der vorprogrammierte Daten liegt nur die Zahl \texttt{0xE5}, was laut dem Hersteller zeigt, dass die Registern beim Startup nicht geleert werden.
 
