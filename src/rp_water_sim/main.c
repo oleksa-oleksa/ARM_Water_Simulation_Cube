@@ -7,6 +7,7 @@
 
 #define LED_BLINK_IVAL (500 * 1000)
 #define DT_SIM 0.05
+#define NO_PARTICLES_RP     50
 
 static panel_t panels[6];
 static particle_list_element_t particles[50];
@@ -22,28 +23,17 @@ void _particle_change_callback(enum side_e side, int x, int y)
 }
 
 
-void _echo_back(void)
-{
-    led_set(false);
-    while(uart0_get_rx_buf_size() != 0)
-    {
-        uart0_putc(*uart0_get_rx_buf());
-        uart0_remove_n_rx_buf(1);
-    }
-}
-
-
 int main(void)
 {
-    double force[3] = {0, 0, 0};
+    // double force[3] = {0, 0, 0};
     
     led_setup();
+    led_set(false);
     protocol_init();
-    // uart0_init(_echo_back);
 
     /*Initialise simulation*/
-    particle_init_list(particles, 50);
-    particle_init_grid(panels[side_top], particles, 50);
+    particle_init_list(particles, NO_PARTICLES_RP);
+    particle_init_grid(panels[side_top], particles, NO_PARTICLES_RP);
     particle_init_grid(panels[side_bottom], NULL, 0);
     particle_init_grid(panels[side_front], NULL, 0);
     particle_init_grid(panels[side_back], NULL, 0);
@@ -62,14 +52,14 @@ int main(void)
 
     while(1)
     {
-        led_set(true);
+        // led_set(true);
         time_usec_wait(MSEC2USEC(250));
-        force[0] = protocol_get_last_acc_data()->force_x;
-        force[1] = protocol_get_last_acc_data()->force_y;
-        force[2] = protocol_get_last_acc_data()->force_z;
+        // force[0] = protocol_get_last_acc_data()->force_x;
+        // force[1] = protocol_get_last_acc_data()->force_y;
+        // force[2] = protocol_get_last_acc_data()->force_z;
 
-        particle_move_cube(/*top=*/panels[0], /*bottom=*/panels[1], /*front=*/panels[2], /*back=*/panels[3], /*left=*/panels[4], /*right=*/panels[5], DT_SIM, force);
-        led_set(false);
+        // particle_move_cube(/*top=*/panels[0], /*bottom=*/panels[1], /*front=*/panels[2], /*back=*/panels[3], /*left=*/panels[4], /*right=*/panels[5], DT_SIM, force);
+        // led_set(false);
         time_usec_wait(MSEC2USEC(250));
     }
 }

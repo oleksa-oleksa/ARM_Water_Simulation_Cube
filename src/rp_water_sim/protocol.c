@@ -53,7 +53,7 @@ void protocol_send_pixel(pixeldata_t pixel)
     {
         uart0_putc(buff[i]);
     }
-    time_usec_wait(MSEC2USEC(2));
+    time_usec_wait(100);
 }
 
 

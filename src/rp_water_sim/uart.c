@@ -183,11 +183,13 @@ void uart0_init(rx_handler_fp_t rx_handler)
     PUT32(GPPUDCLK0, 0);
 
     PUT32(UART0_ICR, 0x7FF);    //0111 1111 1111 <- clear all interrupts
+    //UART baudrate set to 115200 baud in the config.txt
+    //UART reference clock: 3 000 000 Hz
     //(3000000 / (16 * 115200) = 1.627
     //(0.627*64)+0.5 = 40
     //int 1 frac 40
-    PUT32(UART0_IBRD, 1);       //set integer baud rate
-    PUT32(UART0_FBRD, 40);      //set fractional baud rate
+    // PUT32(UART0_IBRD, 1);       //set integer baud rate
+    // PUT32(UART0_FBRD, 40);      //set fractional baud rate
     PUT32(UART0_LCRH, 0x70);    //0111 0000 <- no sticky parity, 8bits word length, FiFo mode, one stopbit, no parity, no break
     PUT32(UART0_IMSC, 0x7EF);   //111 1110 1111 <- Unmask receive interrupt
     PUT32(UART0_CR, 0x301);     //0011 0000 0001 <- Rx enable, Tx enable, UART enable
@@ -206,7 +208,7 @@ void mini_uart_putc(uint8_t c)
 {
     while(1)
     {
-        if(GET32(AUX_MU_LSR_REG) & 0x20) 
+        if(GET32(AUX_MU_LSR_REG) & 0x20) //wait if the Tx FiFo is full (bit is SET if there is space remaining in FiFo)
         {
             break;
         }
@@ -219,7 +221,7 @@ void uart0_putc(uint8_t c)
 {
     while(1)
     {
-        if((GET32(UART0_FR) & 0x4) == 0) 
+        if((GET32(UART0_FR) & 0x20) == 0) //wait if Tx FiFo is full (bit is SET if FiFo is full)
         {//wait while BUSY
             break;
         }
