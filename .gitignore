@@ -22,6 +22,8 @@ Listings/
 
 # LaTex
 *.aux
+*.bbl
+*.blg
 *.ist
 *.lof
 *.lol
@@ -38,6 +40,9 @@ Listings/
 *.cb
 *.cb2
 paper/document.pdf
+# BibTex
+*.bbl
+*.blg
 
 # Mac
 .DS_Store

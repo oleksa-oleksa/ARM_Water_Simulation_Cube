@@ -1,25 +1,28 @@
 %Beschreibung der Implementierung der Darstellungen auf den Displays
-Die Komponente LED-Panels empfängt Daten der Panelinformationen von der Komponente Flüssigkeitssimulation und beleuchtet die Panels entsprechend dieser Daten. Die Anzahl der Wasserteilchen pro Pixel dient als Intensität der blauen Farbe.
+Die Komponente \texttt{LED-Panels} empfängt Daten der Panelinformationen von der Komponente \texttt{Flüssigkeitssimulation} und beleuchtet die Panels entsprechend dieser Daten. Die Anzahl der Wasserteilchen pro Pixel dient als Intensität der blauen Farbe einer LED. Als Referenz diente das Projekt \cite{rgbLedMatrix} in Adafruit.
 
 \subsection{Hardware}
-Der RGB-Würfel wird aus sechs 32$\times$32 RGB Matrix LED-Panels aufgebaut. Betrieb eines Panels benötigt den Strom von ungefähr $2A$. Die 6 Panels werden anhand einer Stromversorgung geschaltet. Auf der Rückseite des Panels befinden sich ein Eingangs- und ein Ausgangsport mit jeweils 16 Pins. Diese sind für die Farbinformation R1, G1, B1, R2, G2, B2, die Adresssignale A, B, C, D und die Steuersignale CLK (Takt), OE (Output Enable), LAT (Latch), und 3 GNDs. Ein Panel wird somit über 16 Kabel direkt mit dem Board verbunden (Abbildung \ref{fig:led:plug}) und die restlichen fünf Panels werden nebeneinander anhand Flachbandkabel verbunden, welches Daisy-Chain genannt wird (Abbildung \ref{fig:led:chain}). 
+Der RGB-Würfel wird aus sechs 32$\times$32 RGB Matrix LED-Panelen aufgebaut. Zum Betrieb eines Panels $2A$ an Strom benötigt. Die 6 Panele werden durch eine Stromversorgung aktiviert. Auf der Rückseite eines jeden Panels befinden sich ein Eingangs- und ein Ausgangsport mit jeweils 16 Pins. Diese sind für die Farbinformation R1, G1, B1, R2, G2, B2, die Adresssignale A, B, C, D und die Steuersignale CLK (Takt), OE (Output Enable), LAT (Latch), und 3 GNDs. Ein Panel wird über ein 16-Leitungs Kabel direkt mit dem Board verbunden (siehe Abbildung \ref{fig:led:plug}), die restlichen fünf Panels werden nacheinander mit Flachbandkabel verbunden (Ausgangsport des einen Panels wird mit dem Eingangsport eines Nächsten verbunden), welches Daisy-Chain genannt wird (Abbildung \ref{fig:led:chain}). 
 
-\begin{figure}
+\begin{figure}[h!]
 	\centering
 	\begin{minipage}[t]{0.45\linewidth}
-	\includegraphics[width=.9\linewidth]{example-image-a}
-	\caption{Daten- und Steuersignale mit Beschriftung von Buchse bzw. Flachbandkabel}
+	\includegraphics[width=.9\linewidth]{led/led_matrix_plug.png}
+	\caption{Port mit Beschriftung von Buchse bzw. Flachbandkabel}
 	\label{fig:led:plug}
+	\source{Quelle: \cite{rgbLedMatrix}(Connecting with Jumper Wires)}
 	\end{minipage}
 	\hspace{0.05\linewidth}
 	\begin{minipage}[t]{0.45\linewidth}
-	\includegraphics[width=.9\linewidth]{example-image-b}
+	\includegraphics[width=.9\linewidth]{led/led_matrix_ribbon}
 	\caption{Panels per Daisy-Chain}
 	\label{fig:led:chain}
+	\source{Quelle: \cite{rgbLedMatrix}(Connecting with Jumper Wires)}
 	\end{minipage}
 \end{figure}
 
-Die Eingänge der RGB-, Adress- und Steuersignale eines Panels werden mit GPIO (General Purpose Input Output) Pins auf dem Board verbunden, Port 2.0 bis 2.5 bzw. Port 3.0 bis 3.6. Als Default-Einstellung vom Hersteller sind Port 2.0 bis 2.7 direkt mit den LEDs vom Board verbunden. Daher muss der Jumber XX entnommen werden, um diese Pins für die Anzeige anzuwenden. Abbildung \ref{fig:assembly:dice} stellt den gesamten Aufbau der Komponente Würfel dar.
+Die Eingänge der RGB-, Adress- und Steuersignale des ersten Panels werden mit GPIO (General Purpose Input Output) Pins auf dem Board verbunden, Port 2.0 bis 2.5 bzw. Port 3.0 bis 3.6. Als Default-Einstellung vom Hersteller sind Port 2.0 bis 2.7 direkt mit den LEDs vom Board verbunden. Daher muss der Jumper \texttt{LED} entnommen werden, um diese Pins für die Anzeige anzuwenden. Abbildung \ref{fig:assembly:dice} stellt den gesamten Aufbau der Komponente Würfel dar.
+
 \begin{figure}
 	\centering
 	\includegraphics[width=0.95\linewidth]{example-image}
@@ -28,7 +31,7 @@ Die Eingänge der RGB-, Adress- und Steuersignale eines Panels werden mit GPIO (
 \end{figure}
 
 \subsection{Konfiguration und Mechanismus einer Anzeige}
-Hier wird beschrieben, wie ein aus 32 Zeilen $\times$ 32 Spalten insgesamt 1024 LEDs bestehendes Panel gesteuert wird. Die  RGB-Signale R1, G1 und B1 sowie R2, G2 und B2 enthalten die Farbinformationen eines Pixels des oberen bzw. unteren Teil des Panels. Das Panel installiert 32-bit Schieberegister, womit die kompletten Farbdaten einer Zeile gespeichert werden. Das Verschieben geschieht durch das Taktsignal. Es lässt somit zwei Zeilen gleichzeitig anzeigen. Dies soll in schneller als 20 $ms$ geschehen, damit menschliche Augen einen Anzeigewechsel nicht merken und diesen als ein Standbild erfassen. Diese zwei Zeilen sind erste und 17. Zeile, zweite und 18. Zeile, ..., und 16. und 32. Zeile, die jeweils durch eine Adresse festgelegt werden, welche von den Adresssignale A, B, C und D definiert wird.\\
+Hier wird beschrieben, wie ein aus 32 Zeilen $\times$ 32 Spalten insgesamt 1024 LEDs bestehendes Panel gesteuert wird. Die  RGB-Signale R1, G1 und B1 sowie R2, G2 und B2 bilden die LED-Farbe eines Pixels des oberen bzw. unteren Teils des Panels. Das Panel installiert 32-bit Schieberegister, womit die kompletten Farbdaten einer Zeile gespeichert werden. Das Verschieben geschieht durch das Taktsignal. Es lässt somit zwei Zeilen gleichzeitig anzeigen. Dies soll in schneller als 20 $ms$ geschehen, damit menschliche Augen einen Anzeigewechsel nicht merken und diesen als ein Standbild erfassen. Diese zwei Zeilen sind erste und 17. Zeile, zweite und 18. Zeile, ..., und 16. und 32. Zeile, die durch eine Adresse festgelegt werden, welche von den Adresssignale A, B, C und D definiert wird.\\
 
 \emph{<Schritte>}
 \begin{enumerate}
@@ -38,7 +41,7 @@ Hier wird beschrieben, wie ein aus 32 Zeilen $\times$ 32 Spalten insgesamt 1024 
 	\item \texttt{CLK} Pin auf \texttt{Low} setzen \\
 	(Farbinformation wird in den Schiebregister geladen.)
 	\item Schritte 2-4 für alle Spalten wiederholen
-	\item Mit Adresspins \texttt{ABCD} eine gezielte Zeile (von der oberen und unteren Hälfte) auswählen
+	\item Mit Adresspins \texttt{ABCD} eine gezielte Zeile (gleichzeitig von der oberen und unteren Hälfte) auswählen
 	\item \texttt{OE} Pin auf \texttt{High} setzen
 	\item \texttt{LAT} Pin auf \texttt{High} setzen (erleuchtet LED)
 	\item \texttt{LAT} Pin auf \texttt{Low} setzen
@@ -98,7 +101,7 @@ static inline void lp32x32_clearRgbPin(int pin)
 }
 \end{lstlisting}
 
-Überlagerung mehreren Schichten zur Realisierung einer 24-bit Farbe wird dadurch implementiert, dass der Zyklus der 1-zeiligen Anzeige entsprechend wiederholt wird. Dazu benötigt das System noch einen schnelleren Takt. Quelltext \ref{code:ledmain} zeigt die Hauptfunktion des Moduls LED32x32.
+Überlagerung mehreren Schichten zur Realisierung einer 24-bit Farbe wird dadurch implementiert, dass der Zyklus der 1-zeiligen Anzeige entsprechend der Schichtenanzahl wiederholt wird. Dazu benötigt das System einen noch schnelleren Takt. Quelltext \ref{code:ledmain} zeigt die Kernfunktion dieses Moduls.
 
 \begin{lstlisting}[language={c}, caption={Schritte von Panel-Anzeige}, label={code:ledmain}]
 
