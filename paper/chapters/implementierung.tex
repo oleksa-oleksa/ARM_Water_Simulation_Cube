@@ -11,9 +11,6 @@ Sämtlicher Quellcode des Projekts wurde in C geschrieben und Doxygen-konform do
 %Beschreibung der Konfiguration von IDE
 
 \section{Pinbelegung}
-Der Accelerometer und ein der 6 Panels werden durch freie GPIO-Pins mit dem Board verbunden. Abbildung \ref{fig:pins} zeigt diese Pinbelegung. Es ist dabei zu beachten, die bereits vom Hersteller belegten Pins zu vermeiden, um den Board erfolgreich in Betrieb zu nehmen.
-
-Die belegten Pins und die relevanten Ports 2 und 3 müssen wie Code \ref{code:led-init} initialisiert werden, um diese als GPIO/Output-Pins verwenden zu können.
 
 \begin{figure}
 	\centering
@@ -21,3 +18,7 @@ Die belegten Pins und die relevanten Ports 2 und 3 müssen wie Code \ref{code:le
 	\caption[Pinbelegung]{Pinbelegung}
 	\label{fig:pins}
 \end{figure}
+
+Der Beschleunigungssensor und eines der 6 Panele werden durch freie GPIO-Pins mit dem Board verbunden. Abbildung \ref{fig:pins} zeigt die genutzte Pinbelegung. Es ist dabei zu beachten, die bereits vom Hersteller belegten Pins des Boards zu vermeiden, andernfalls kann es zu Problemen beim Betrieb kommen. Ebenso wird ein Raspberry Pi 1B (siehe \ref{chap:impl:sph:rp}) über den \texttt{UART0} angebunden.
+
+Die belegten Pins und die relevanten Ports 2 und 3 müssen im Code \ref{code:led-init} initialisiert werden, um diese als GPIO-Pins verwenden zu können.
