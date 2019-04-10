@@ -25,10 +25,11 @@ void _particle_change_callback(enum side_e side, int x, int y)
 
 int main(void)
 {
-    // double force[3] = {0, 0, 0};
+    double force[3] = {0, 0, 0};
     
     led_setup();
     led_set(false);
+    time_usec_wait(MSEC2USEC(1000));
     protocol_init();
 
     /*Initialise simulation*/
@@ -52,14 +53,15 @@ int main(void)
 
     while(1)
     {
-        // led_set(true);
+        led_set(true);
         time_usec_wait(MSEC2USEC(250));
-        // force[0] = protocol_get_last_acc_data()->force_x;
-        // force[1] = protocol_get_last_acc_data()->force_y;
-        // force[2] = protocol_get_last_acc_data()->force_z;
+        uart0_putc(0xAC);
+        force[0] = protocol_get_last_acc_data()->force_x;
+        force[1] = protocol_get_last_acc_data()->force_y;
+        force[2] = protocol_get_last_acc_data()->force_z;
 
-        // particle_move_cube(/*top=*/panels[0], /*bottom=*/panels[1], /*front=*/panels[2], /*back=*/panels[3], /*left=*/panels[4], /*right=*/panels[5], DT_SIM, force);
-        // led_set(false);
+        particle_move_cube(/*top=*/panels[0], /*bottom=*/panels[1], /*front=*/panels[2], /*back=*/panels[3], /*left=*/panels[4], /*right=*/panels[5], DT_SIM, force);
+        led_set(false);
         time_usec_wait(MSEC2USEC(250));
     }
 }

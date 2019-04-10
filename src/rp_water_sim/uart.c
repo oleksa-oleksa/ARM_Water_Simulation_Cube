@@ -1,6 +1,8 @@
 #include "uart.h"
 
 #include <util.h>
+#include <gpio.h>
+#include <ll_time.h>
 
 #define GPFSEL1             0x20200004  ///< 
 #define GPSET0              0x2020001C  ///< 
@@ -47,7 +49,7 @@
 #define IRQ_BASIC           0x2000B200  ///< 
 #define IRQ_PEND1           0x2000B204  ///< 
 #define IRQ_PEND2           0x2000B208  ///< 
-#define IRQ_FIQ_CONTROL     0x2000B210  ///< 
+#define IRQ_FIQ_CONTROL     0x2000B20C  ///< 
 #define IRQ_ENABLE1         0x2000B210  ///< 
 #define IRQ_ENABLE2         0x2000B214  ///< 
 #define IRQ_ENABLE_BASIC    0x2000B218  ///< 
@@ -66,50 +68,73 @@ volatile uint32_t uart0_rxhead;
 volatile uint8_t mini_uart_rxbuffer[RXBUFMASK+1];
 volatile uint8_t uart0_rxbuffer[RXBUFMASK+1];
 
+enum uart_usage_e
+{
+    mini_uart,
+    uart0
+} uart_usage;
+
 //-------------------------------------------------------------------------
 
-void c_irq_handler ( void )
+void __attribute__((interrupt("IRQ"))) c_irq_handler ( void )
 {
     uint32_t rb,rc;
 
-    //an interrupt has occurred, find out why
-    while(1) //resolve all interrupts to mini uart
+    if(uart_usage == mini_uart)
     {
-        rb = GET32(AUX_MU_IIR_REG);
-        if( (rb & 1) == 1) 
+        //an interrupt has occurred, find out why
+        while(1) //resolve all interrupts to mini uart
         {
-            if(_mini_uart_rx_handler != NULL)
+            rb = GET32(AUX_MU_IIR_REG);
+            if( (rb & 1) == 1) 
             {
-                _mini_uart_rx_handler();
+                time_usec_wait(MSEC2USEC(500));
+                break; //no more interrupts
             }
-            break; //no more interrupts
-        }
-        if((rb & 6) == 4)
-        {
-            //receiver holds a valid byte
-            rc = GET32(AUX_MU_IO_REG); //read byte from rx fifo
-            mini_uart_rxbuffer[mini_uart_rxhead] = rc & 0xFF;
-            mini_uart_rxhead = (mini_uart_rxhead + 1) & RXBUFMASK;
+            if((rb & 6) == 4)
+            {
+                //receiver holds a valid byte
+                rc = GET32(AUX_MU_IO_REG); //read byte from rx fifo
+                mini_uart_rxbuffer[mini_uart_rxhead] = rc & 0xFF;
+                mini_uart_rxhead = (mini_uart_rxhead + 1) & RXBUFMASK;
+                if(_mini_uart_rx_handler != NULL)
+                {
+                    _mini_uart_rx_handler();
+                }
+            }
         }
     }
-    rb = GET32(UART0_MIS);
-    // if( (rb & 0x10) == 1)
-    // {//got UART0 Rx irq
-        while(1)
-        {
-            rb = GET32(UART0_FR);
-            if( (rb & 0x10) == 0) //Rx FiFo not empty
-            {
-                rc = GET32(UART0_DR);
-                uart0_rxbuffer[uart0_rxhead] = rc & 0xFF;
-                uart0_rxhead = (uart0_rxhead + 1) & RXBUFMASK;
+    else if(uart_usage == uart0)
+    {
+        if(GET32(IRQ_PEND2) & (1 << 25))
+        {//uart_int (generic UART0 interrupt pending)
+            rb = GET32(UART0_MIS);
+            if( (rb & 0x10) == 1)
+            {//got UART0 Rx irq
+                led_set(true);
+                time_usec_wait(MSEC2USEC(1000));
+                while(1)
+                {
+                    rb = GET32(UART0_FR);
+                    if( (rb & 0x10) == 0) //Rx FiFo not empty
+                    {
+                        rc = GET32(UART0_DR);
+                        uart0_rxbuffer[uart0_rxhead] = rc & 0xFF;
+                        uart0_rxhead = (uart0_rxhead + 1) & RXBUFMASK;
+                        if(_uart0_rx_handler != NULL)
+                        {
+                            _uart0_rx_handler();
+                        }
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
             }
-            else
-            {
-                break;
-            }
+            PUT32(UART0_ICR, 0x7F2);    //0111 1111 0010 <- clear all UART0 interrupts
         }
-    // }
+    }
 }
 
 
@@ -119,6 +144,8 @@ void c_irq_handler ( void )
 void mini_uart_init(rx_handler_fp_t rx_handler)
 {
     uint32_t ra;
+
+    uart_usage = mini_uart;
 
     PUT32(AUX_ENABLES, 1);
     PUT32(AUX_MU_IER_REG, 0);
@@ -161,6 +188,8 @@ void uart0_init(rx_handler_fp_t rx_handler)
 {
     unsigned int ra;
 
+    uart_usage = uart0;
+
     PUT32(UART0_CR, 0);
 
     ra = GET32(GPFSEL1);
@@ -182,7 +211,7 @@ void uart0_init(rx_handler_fp_t rx_handler)
     }
     PUT32(GPPUDCLK0, 0);
 
-    PUT32(UART0_ICR, 0x7FF);    //0111 1111 1111 <- clear all interrupts
+    PUT32(UART0_ICR, 0x7F2);    //0111 1111 0010 <- clear all UART0 interrupts
     //UART baudrate set to 115200 baud in the config.txt
     //UART reference clock: 3 000 000 Hz
     //(3000000 / (16 * 115200) = 1.627
@@ -194,7 +223,7 @@ void uart0_init(rx_handler_fp_t rx_handler)
     PUT32(UART0_IMSC, 0x7EF);   //111 1110 1111 <- Unmask receive interrupt
     PUT32(UART0_CR, 0x301);     //0011 0000 0001 <- Rx enable, Tx enable, UART enable
 
-    _mini_uart_rx_handler = rx_handler;
+    _uart0_rx_handler = rx_handler;
 
     uart0_reset_rx_buf();
 

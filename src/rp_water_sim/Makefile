@@ -91,4 +91,5 @@ bin: $(OBJDIR) elf
 	@echo === Extract kernel.img from kernel.elf
 	@echo
 	$(CC)-objcopy $(BINDIR)/kernel.elf -O binary $(BINDIR)/kernel.img
+	rm $(BINDIR)/kernel.elf
 	@echo
