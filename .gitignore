@@ -22,6 +22,8 @@ Listings/
 
 # LaTex
 *.aux
+*.bbl
+*.blg
 *.ist
 *.lof
 *.lol
