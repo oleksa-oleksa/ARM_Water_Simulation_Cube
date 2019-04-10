@@ -38,6 +38,9 @@ Listings/
 *.cb
 *.cb2
 paper/document.pdf
+# BibTex
+*.bbl
+*.blg
 
 # Mac
 .DS_Store
