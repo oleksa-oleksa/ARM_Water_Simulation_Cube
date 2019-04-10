@@ -167,52 +167,14 @@ unsigned char YRegs[] = {ADXL345_REG_DATAY0, ADXL345_REG_DATAY1};
 unsigned char ZRegs[] = {ADXL345_REG_DATAZ0, ADXL345_REG_DATAZ1};
 \end{lstlisting}
 	
-Der I2C-Interrupt ist einfach eine Zustandsmaschine, die das Statusregister für jeden Interrupt untersucht und die erforderliche Aktion ausführt. Dies kann als SWITCH-Anweisung implementiert werden, wie unten gezeigt.
+Der I2C-Interrupt ist einfach eine Zustandsmaschine, die das Statusregister für jeden Interrupt untersucht und die erforderliche Aktion ausführt. Dies kann als SWITCH-Anweisung implementiert werden, wie unten es der Teil der Funktion zeigt.
 \begin{lstlisting}
 __irq void i2c_irq(void) {
 	switch (I21STAT) // Read result code and switch to next action
 	{
-	case (0x08): // A START condition transmitted. Next: 0x18
-		// Case ADR -> STARTED
-		I21CONCLR = 0x20; // Clear start bit
-		I21DAT = GlobalI2CAddr; // Send address and write bit R/W = 0.
-		I21CONSET = 0x04; // Write 0x04 to I2CONSET to set the AA bit
-		I21CONCLR = 0x08; // Clear SI flag
-		GlobalI2CState = I2C_STARTED;
-		break;
+	...
 	
-	case (0x10): // A repeated START condition transmitted. Next: 0x18
-		if(GlobalI2CState == I2C_READ) {
-		// Write Slave Address with R/W bit to I2DAT
-		I21DAT = GlobalI2CAddr | 1; // Send address and read bit R/W = 1
-		}
-		if(GlobalI2CState == I2C_WRITE) {
-		// Write Slave Address with R/W bit to I2DAT
-		I21DAT = GlobalI2CAddr; // Send address and read bit R/W = 0
-		}
-		I21CONSET = 0x04; // Write 0x04 to I2CONSET to set the AA bit
-		I21CONCLR = 0x28; // Clear start bit and SI flag
-		break;
-		
-	// Previous state was State 8 or State 10, 
-	// Slave Address + Write has been transmitted, ACK has been received.
-	// The first data byte will be transmitted, an ACK bit will be received.
-	case (0x18): // Next: 0x28
-		// Case STARTED -> REG
-		//I21DAT = GlobalI2CReg; // Write data to TX register
-		I21DAT = I2CMasterBuffer[ReadIndex]; // Write data to TX register
-		//ReadIndex++;
-		I21CONCLR = 0x08; // Clear SI bit
-		GlobalI2CState = I2C_REG; // with re-start for write
-		break;
-	
-	case (0x20): // SLA+W has been transmitted; NOT ACK has been received
-		I21DAT = GlobalI2CData;
-		I21CONCLR = 0x08; // clear SI flag
-		GlobalI2CState = I2C_DAT;
-		break;
-	
-	case (0x28): // Data byte in I2DAT has been transmitted; ACK has been received.
+	case (0x28): // Data byte in I2DAT  transmitted; ACK  received.
 	case (0x30): // transmitted, NOT ACK has been received
 		// Repeated Start for Read Operation
 		// Case RESTART -> READ
@@ -240,23 +202,7 @@ __irq void i2c_irq(void) {
 			I21CONCLR = 0x08; // clear SI flag
 		}
 		break;
-		
-	case (0x38): // Arbitration lost
-		I21CONSET = 0x24; // to set the STA and AA bits
-		I21CONCLR = 0x08; // clear SI flag
-		GlobalI2CState = I2C_LOST;
-		break;
-	
-	case (0x40) : // SLA+R has been transmitted; ACK received. Next: 0x50
-		I21CONSET = 0x04; // Enable ACK for data byte
-		I21CONCLR = 0x08; // clear SI flag
-		break;
-	
-	case (0x48) : // Slave Address +R, Not Ack
-		I21CONSET = 0x14; // set the STO and AA bits
-		I21CONCLR = 0x08; // clear SI flag
-		GlobalI2CState = I2C_ERR;
-		break;
+	....
 	
 	/* Data has been received, ACK returned. Data read from I2DAT.
 	Additional data will be received. If this is the last data byte 
