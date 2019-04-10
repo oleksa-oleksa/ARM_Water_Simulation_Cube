@@ -152,42 +152,38 @@ void lp32x32_refresh_chain_blue(panel_t panels[CHAIN_LEN])
 {
     static uint8_t row = 0;
     uint8_t col;
-    uint8_t layer;
     uint8_t panelIndex = 0;
     uint32_t upperPixel = 0;
     uint32_t bottomPixel = 0;
 
-    for(layer = 0; layer < 1; ++layer)
+    for(col = 0; col < (COL_NUM * CHAIN_LEN); ++col)
     {
-        for(col = 0; col < (COL_NUM * CHAIN_LEN); ++col)
+        panelIndex = col / COL_NUM;
+        upperPixel = panels[panelIndex][row][col - COL_NUM * panelIndex].particle_count;
+        bottomPixel = panels[panelIndex][row + ROW_NUM / 2][col - COL_NUM * panelIndex].particle_count;
+        
+        lp32x32_clearAllRgb1Pins();
+        lp32x32_clearAllRgb2Pins();
+
+        /* Upper area */
+        if(upperPixel)
         {
-            panelIndex = col / COL_NUM;
-            upperPixel = panels[panelIndex][row][col - COL_NUM * panelIndex].particle_count;
-            bottomPixel = panels[panelIndex][row + ROW_NUM / 2][col - COL_NUM * panelIndex].particle_count;
-            
-            lp32x32_clearAllRgb1Pins();
-            lp32x32_clearAllRgb2Pins();
-
-            /* Upper area */
-            if(upperPixel)
-            {
-                lp32x32_setUpperPixelInfo(false, false, true);
-            }
-            
-            /* Bottom area */
-            if(bottomPixel)
-            {
-                lp32x32_setBottomPixelInfo(false, false, true);
-            }
-
-            lp32x32_clock(); ///< Shift RGB information of each pixel to horizontal direction
+            lp32x32_setUpperPixelInfo(false, false, true);
+        }
+        
+        /* Bottom area */
+        if(bottomPixel)
+        {
+            lp32x32_setBottomPixelInfo(false, false, true);
         }
 
-        lp32x32_setRow(row);
-        lp32x32_setCtrlPin(LED32X32_PIN_OE);
-        lp32x32_latch();
-        lp32x32_clearCtrlPin(LED32X32_PIN_OE);
+        lp32x32_clock(); ///< Shift RGB information of each pixel to horizontal direction
     }
+
+    lp32x32_setRow(row);
+    lp32x32_setCtrlPin(LED32X32_PIN_OE);
+    lp32x32_latch();
+    lp32x32_clearCtrlPin(LED32X32_PIN_OE);
     ++row;
     if(row >= (ROW_NUM/2))
     {
@@ -200,43 +196,40 @@ void lp32x32_refresh_chain_24bit_rgb(panel_t panels[CHAIN_LEN])
     static uint8_t row = 0;
     static uint8_t color_bit = 0;
     uint8_t col;
-    uint8_t layer;
     uint8_t panelIndex = 0;
     uint32_t upperPixel = 0;
     uint32_t bottomPixel = 0;
 
-    for(layer = 0; layer < 1; ++layer)
+    for(col = 0; col < (COL_NUM * CHAIN_LEN); ++col)
     {
-        for(col = 0; col < (COL_NUM * CHAIN_LEN); ++col)
-        {
-            panelIndex = col / COL_NUM;
-            upperPixel = panels[panelIndex][row][col - COL_NUM * panelIndex].particle_count;
-            bottomPixel = panels[panelIndex][row + ROW_NUM / 2][col - COL_NUM * panelIndex].particle_count;
-            
-            lp32x32_setUpperPixelInfo ((/*red=  */((upperPixel  & LED32X32_RGB24_R_MASK) >> 16) & (0x01 << color_bit)), 
-                                       (/*green=*/((upperPixel  & LED32X32_RGB24_G_MASK) >>  8) & (0x01 << color_bit)),
-                                       (/*blue= */((upperPixel  & LED32X32_RGB24_B_MASK)      ) & (0x01 << color_bit)));
-            lp32x32_setBottomPixelInfo((/*red=  */((bottomPixel & LED32X32_RGB24_R_MASK) >> 16) & (0x01 << color_bit)), 
-                                       (/*green=*/((bottomPixel & LED32X32_RGB24_G_MASK) >>  8) & (0x01 << color_bit)),
-                                       (/*blue= */((bottomPixel & LED32X32_RGB24_B_MASK)      ) & (0x01 << color_bit)));
+        panelIndex = col / COL_NUM;
+        upperPixel = panels[panelIndex][row][col - COL_NUM * panelIndex].particle_count;
+        bottomPixel = panels[panelIndex][row + ROW_NUM / 2][col - COL_NUM * panelIndex].particle_count;
+        
+        //for each color: out of 256 iterations display color channel (r, g, or b) for <color value> amounts (e.g. with r = 0x40 display red 64 out of 256 times)
+        lp32x32_setUpperPixelInfo ((/*red=  */((upperPixel  & LED32X32_RGB24_R_MASK) >> 16) > color_bit), 
+                                   (/*green=*/((upperPixel  & LED32X32_RGB24_G_MASK) >>  8) > color_bit),
+                                   (/*blue= */((upperPixel  & LED32X32_RGB24_B_MASK)      ) > color_bit));
+        lp32x32_setBottomPixelInfo((/*red=  */((bottomPixel & LED32X32_RGB24_R_MASK) >> 16) > color_bit), 
+                                   (/*green=*/((bottomPixel & LED32X32_RGB24_G_MASK) >>  8) > color_bit),
+                                   (/*blue= */((bottomPixel & LED32X32_RGB24_B_MASK)      ) > color_bit));
 
-            lp32x32_clock(); ///< Shift RGB information of each pixel to horizontal direction
-        }
-
-        lp32x32_setRow(row);
-        lp32x32_setCtrlPin(LED32X32_PIN_OE);
-        lp32x32_latch();
-        lp32x32_clearCtrlPin(LED32X32_PIN_OE);
+        lp32x32_clock(); ///< Shift RGB information of each pixel to horizontal direction
     }
+
+    lp32x32_setRow(row);
+    lp32x32_setCtrlPin(LED32X32_PIN_OE);
+    lp32x32_latch();
+    lp32x32_clearCtrlPin(LED32X32_PIN_OE);
     ++row;
     if(row >= (ROW_NUM/2))
     {
         row = 0;
         ++color_bit;
-    }
-    if(color_bit >= 8)
-    {
-        color_bit = 0;
+        if(color_bit >= 0xFF)
+        {
+            color_bit = 0;
+        }
     }
 }
 
