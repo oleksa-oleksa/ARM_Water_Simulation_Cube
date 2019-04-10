@@ -134,6 +134,7 @@
 %%
 \usepackage{trsym}
 \usepackage{bytefield}
+\usepackage{lstlangarm}
 
 %%
 %% Use git metadata
@@ -194,15 +195,23 @@
 \input{chapters/einfuehrung.tex}
 
 \chapter{Implementierung}
+\label{chap:implementierung}
 \input{chapters/implementierung.tex}
+\clearpage
 \section{Flüssigkeitssimulation}
+\label{chap:impl:sph}
 \input{chapters/impl/sph.tex}
+\clearpage
 \section{Accelerometer}
+\label{chap:impl:accel}
 \input{chapters/impl/gyro.tex}
-\section{Würfel mit LED-Panels}
+\clearpage
+\section{Würfel aus LED-Panels}
+\label{chap:impl:ledcube}
 \input{chapters/impl/display.tex}
 \section{Kommunikation mit RPi} %TODO integrate into RPi
 \input{chapters/impl/uart.tex}
+\clearpage
 
 \chapter{Ergebnis}
 

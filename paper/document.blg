@@ -14,6 +14,8 @@ Name 1 in "Colin Braley, and Adrian Sandu" has a comma at the end for entry flui
 while executing---line 2132 of file alphadin.bst
 Name 1 in "Colin Braley, and Adrian Sandu" has a comma at the end for entry fluid.tutorial_paper
 while executing---line 2132 of file alphadin.bst
+Warning--empty number in broadcom.bcm2835.user_manual
+Warning--empty note in broadcom.bcm2835.user_manual
 Name 1 in "Colin Braley, and Adrian Sandu" has a comma at the end for entry fluid.tutorial_paper
 while executing---line 2205 of file alphadin.bst
 Name 1 in "Colin Braley, and Adrian Sandu" has a comma at the end for entry fluid.tutorial_paper
@@ -21,49 +23,49 @@ while executing---line 2205 of file alphadin.bst
 Name 1 in "Colin Braley, and Adrian Sandu" has a comma at the end for entry fluid.tutorial_paper
 while executing---line 2205 of file alphadin.bst
 Warning--empty year in fluid.tutorial_paper
-Warning--empty number in ti.i2c_bus
-Warning--empty note in ti.i2c_bus
 Warning--empty number in nxp.lpc23xx.user_manual
 Warning--empty note in nxp.lpc23xx.user_manual
-You've used 6 entries,
+Warning--empty number in ti.i2c_bus
+Warning--empty note in ti.i2c_bus
+You've used 8 entries,
             4793 wiz_defined-function locations,
-            921 strings with 6969 characters,
-and the built_in function-call counts, 2743 in all, are:
-= -- 267
-> -- 59
-< -- 43
-+ -- 48
-- -- 16
-* -- 163
-:= -- 444
-add.period$ -- 12
-call.type$ -- 6
-change.case$ -- 25
-chr.to.int$ -- 5
-cite$ -- 11
-duplicate$ -- 94
-empty$ -- 247
-format.name$ -- 41
-if$ -- 590
+            932 strings with 7241 characters,
+and the built_in function-call counts, 3587 in all, are:
+= -- 347
+> -- 75
+< -- 47
++ -- 52
+- -- 20
+* -- 216
+:= -- 573
+add.period$ -- 17
+call.type$ -- 8
+change.case$ -- 33
+chr.to.int$ -- 7
+cite$ -- 15
+duplicate$ -- 127
+empty$ -- 339
+format.name$ -- 53
+if$ -- 785
 int.to.chr$ -- 2
 int.to.str$ -- 0
-missing$ -- 26
-newline$ -- 48
-num.names$ -- 18
-pop$ -- 45
+missing$ -- 34
+newline$ -- 62
+num.names$ -- 24
+pop$ -- 59
 preamble$ -- 1
-purify$ -- 37
+purify$ -- 49
 quote$ -- 0
-skip$ -- 159
+skip$ -- 206
 stack$ -- 0
-substring$ -- 103
-swap$ -- 18
-text.length$ -- 12
-text.prefix$ -- 5
+substring$ -- 127
+swap$ -- 23
+text.length$ -- 16
+text.prefix$ -- 7
 top$ -- 0
-type$ -- 74
-warning$ -- 5
-while$ -- 20
-width$ -- 8
-write$ -- 91
+type$ -- 98
+warning$ -- 7
+while$ -- 26
+width$ -- 10
+write$ -- 122
 (There were 5 error messages)

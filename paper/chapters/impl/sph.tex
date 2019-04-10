@@ -80,6 +80,70 @@ typedef particle_grid_element_t panel_t[PARTICLE_GRID_X][PARTICLE_GRID_Y];
 
 Um den Würfel darzustellen werden nun sechs der 2D-Arrays genutzt. Wenn die neue Position eines Partikels nun die Außengrenzen des Arrays überschreiten würde, so wird es auf die andere Würfelseite übertragen. Die Implementierung der Simulation wurde während der Entwicklung auf einem Linux-PC getestet. Hierzu wurde sie in ein Programm eingebettet, die Position der einzelnen Partikel ausließt und über X11 auf dem Bildschirm darstellt. Da die Simulation nur mit elementaren Rechenoperationen arbeitet konnte sie im Anschluss problemlos in das ARM-Programm eingefügt werden. Dieses stellt nun die Anzahl der Partikel in einem Feld der 2D-Arrays als Farbschattierung auf dem LED-Display dar.
 
-\section{Rechenbeschleunigung durch RaspberryPi 1B}
+\subsection{Rechenbeschleunigung durch RaspberryPi 1B}
+\label{chap:impl:sph:rp}
+\FloatBarrier
 
-\clearpage
+\begin{lstlisting}[caption={Memorymap des Raspberry Pi 1B}, label={code.sph.rp.memmap}]
+MEMORY
+{
+	ram : ORIGIN = 0x8000, LENGTH = 0x1000
+}
+
+SECTIONS
+{
+	.text : { *(.text*) } > ram
+	.bss  : { *(.bss* ) } > ram
+}
+\end{lstlisting}
+
+\begin{lstlisting}[language={[ARM]{Assembler}}, caption={ARM ASM startup code}, label={code.sph.rp.startup}]
+.globl _start
+_start:
+	ldr sp, stack_start
+	ldr r0, thumb_start_add
+	bx r0
+
+stack_start: .word 0x8000
+thumb_start_add: .word thumb_start
+	.word 0
+	.word 0
+
+.thumb
+.thumb_func
+thumb_start:
+	bl main
+hang: b hang
+
+\end{lstlisting}
+
+\begin{figure}
+	\begin{bytefield}[bitwidth=1.1em]{32}
+		\bitheader{0-31} \\
+		\wordbox{1}{sync-marker \tiny{\texttt{0xF3CFC3CF}}} \\
+		\bitbox{8}{panel\_no} & \bitbox{8}{x\_position} & \bitbox{8}{y\_position} & \bitbox{8}{color} \\
+		\bitbox[lrb]{24}{color}
+	\end{bytefield}
+	\caption{Raspberry Pi Pixeldaten}
+	\label{fig:sph:rp:pixels}
+\end{figure}
+
+\begin{figure}
+	\begin{bytefield}[bitwidth=1.1em]{32}
+		\bitheader{0-31} \\
+		\wordbox{1}{sync-marker \tiny{\texttt{0xF3CFC3CF}}} \\
+		\wordbox{1}{force\_x \tiny{(double)}} \\
+		\wordbox{1}{force\_y \tiny{(double)}} \\
+		\wordbox{1}{force\_z \tiny{(double)}}
+	\end{bytefield}
+	\caption{MCB2388 Accelerometer Daten}
+	\label{fig:sph:rp:acc_data}
+\end{figure}
+
+Mit der Zusammenführung aller Teilkomponenten (siehe auch die Kapitel \nameref{chap:impl:accel} und \nameref{chap:impl:ledcube}) wurde klar, dass die maximale Taktung des genutzten \texttt{LPC2388} zwar gerade so für eine flüssige Darstellung auf dem Würfel ausreicht, jedoch die Berechnungen der Simulation zu merklichen Stottern ($\geq 250$ms) führt. Auch das Triggern der Bildwiederholung via Timer-Interrupt führte zu keinem zufriedenstellendem Ergebnis: eine flüssige Darstellung war nur möglich, wenn der Intervall des Interrupts so weit hochgestellt wurde, dass er dauerhaft anliegt. Daraufhin entschieden wir uns die Simulation selber auf einen \texttt{Raspberry Pi 1B} auszulagern, da dieser mit einer Frequenz von 700MHz getaktet ist, etwa 10 mal höher als der \texttt{LPC2388}.
+
+Der Pi ist, mit Hilfe von \cite{rp1.headless.github}, ohne Nutzung eines Betriebssystems programmiert worden. Auf ihm ist ein \texttt{BCM2835} als Prozessor mit integrierter GPU verbaut. Die GPU sicht auf der ersten Partition der FAT32 formatierten SD-Karte beim Startup nach den boot-dateien \texttt{bootcode.bin} und \texttt{start.elf} und ließt anschließend die \texttt{kernel.img} und lädt diese in den Speicher. Nun wird der reset des ARMs freigegeben, dieser führt dann die \texttt{kernel.img} aus. \texttt{bootcode.bin} und \texttt{start.elf} können ohne weiteres dem firmware-repository\footnote{Siehe \url{https://github.com/raspberrypi/firmware/tree/master/boot}, Zugriff am 10.04.2019} der raspberrypi foundation entnommen werden.
+
+Der Programmcode wird mit dem \texttt{arm-none-eabi-gcc} kompilliert und gelinkt \footnote{Optionen: \texttt{-mfpu=vfp -march=armv6zk -mtune=arm1176jzf-s -nostdlib -nostartfiles -std=c99 -ffreestanding}}, die kernel.img wird aus der erstellten .elf mittels \texttt{arm-none-eabi-objcopy kernel.elf -O binary kernel.img} extrahiert. Hierbei ist es wichtig, beim Bauen der \texttt{.elf} eine Memorymap (Siehe \ref{code.sph.rp.memmap}) mit der Option \texttt{-T} mit einzubinden.
+
+Die SPH Simulation wurde nun um eine Callback-option beim Wechsel eines Partikels zu einem anderen Feld erweitert. Diese löst eine Kommunikation mittels dem \texttt{UART0} aus (\cite{rp1.headless.github}[uartx01] und \cite{broadcom.bcm2835.user_manual}[S.177 ff]) die ein Update zu den betroffenen Pixeln zum \texttt{LPC2388} schickt (vgl. \ref{fig:sph:rp:pixels}). Letzterer überträgt in regelmäßigen Abständen die vom \texttt{ADXL345} (vgl. Kapitel \ref{chap:impl:accel}) ausgelesenen Werte an den Pi (vgl. \ref{fig:sph:rp:acc_data}). Das Empfangen dieser Bytes löst einen Interrupt aus, welcher diese parst und die Werte der externen Kräfte aktualisiert.
