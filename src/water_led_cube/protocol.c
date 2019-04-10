@@ -15,7 +15,7 @@ panel_t* _panels = NULL;
 
 
 
-void _uart_rx_handle(void) __irq
+void _uart_rx_handle(void)
 {
     pixeldata_t rec_pixel;
     while(*uart0_buf_size() >= sizeof(pixeldata_t))
