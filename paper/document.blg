@@ -23,21 +23,21 @@ while executing---line 2205 of file alphadin.bst
 Name 1 in "Colin Braley, and Adrian Sandu" has a comma at the end for entry fluid.tutorial_paper
 while executing---line 2205 of file alphadin.bst
 Warning--empty year in fluid.tutorial_paper
-Warning--empty number in ti.i2c_bus
-Warning--empty note in ti.i2c_bus
 Warning--empty number in nxp.lpc23xx.user_manual
 Warning--empty note in nxp.lpc23xx.user_manual
+Warning--empty number in ti.i2c_bus
+Warning--empty note in ti.i2c_bus
 You've used 8 entries,
             4793 wiz_defined-function locations,
-            931 strings with 7222 characters,
-and the built_in function-call counts, 3631 in all, are:
-= -- 353
+            932 strings with 7241 characters,
+and the built_in function-call counts, 3587 in all, are:
+= -- 347
 > -- 75
-< -- 53
-+ -- 58
+< -- 47
++ -- 52
 - -- 20
 * -- 216
-:= -- 581
+:= -- 573
 add.period$ -- 17
 call.type$ -- 8
 change.case$ -- 33
@@ -46,7 +46,7 @@ cite$ -- 15
 duplicate$ -- 127
 empty$ -- 339
 format.name$ -- 53
-if$ -- 791
+if$ -- 785
 int.to.chr$ -- 2
 int.to.str$ -- 0
 missing$ -- 34
@@ -56,9 +56,9 @@ pop$ -- 59
 preamble$ -- 1
 purify$ -- 49
 quote$ -- 0
-skip$ -- 211
+skip$ -- 206
 stack$ -- 0
-substring$ -- 133
+substring$ -- 127
 swap$ -- 23
 text.length$ -- 16
 text.prefix$ -- 7
@@ -66,6 +66,6 @@ top$ -- 0
 type$ -- 98
 warning$ -- 7
 while$ -- 26
-width$ -- 11
+width$ -- 10
 write$ -- 122
 (There were 5 error messages)
