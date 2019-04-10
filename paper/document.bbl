@@ -7,6 +7,15 @@
   \providecommand{\doi}[1]{doi: #1}\else
   \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
 
+\bibitem[Bro12]{broadcom.bcm2835.user_manual}
+\textsc{Broadcom}:
+\newblock BCM2835 ARM Peripherals / Broadcom.
+\newblock \,Version:\,February 2012.
+\newblock
+  \url{https://www.raspberrypi.org/app/uploads/2012/02/BCM2835-ARM-Peripherals.pdf}.
+\newblock Broadcom, February 2012. --
+\newblock Forschungsbericht
+
 \bibitem[BS]{fluid.tutorial_paper}
 \textsc{Braley}, Colin ; \textsc{Sandu}, Adrian:
 \newblock \emph{Fluid Simulation For Computer Graphics: A Tutorial in Grid
@@ -46,5 +55,11 @@
 \newblock
   \url{https://bigtheta.io/2016/05/23/particle-based-fluid-simulation.html}.
 \newblock \,Version:\,May 2016
+
+\bibitem[Wel12]{rp1.headless.github}
+\textsc{Welch}, David:
+\newblock \emph{RaspberryPi 1 low level Beispielprojekte}.
+\newblock \url{https://github.com/dwelch67/raspberrypi}.
+\newblock \,Version:\,2012
 
 \end{thebibliography}
