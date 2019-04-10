@@ -2,14 +2,13 @@
 Die Schnittstelle \texttt{UART0} auf dem Board benötigt nur zwei Kabel \texttt{Tx} und \texttt{Rx}, welche mit den freien GPIO Pins auf Port 0.2 bzw. 0.3 verbunden werden. Der Softwareteil einschließlich einer Interrupt-Service-Routine sowie Senden und Empfangen der Daten hat sich größtenteils auf einen Referenz-Code bezogen und seine Beschreibung entfällt dementsprechend. Die Initialisierungsschritte insbesondere Einstellung einer gewünschten Baudrate wurden selbst angegangen und werden daher vorgelegt (Quelltext \ref{code:uart:init}).
 
 \paragraph{Baudrate generieren} 
-Mit Bezug auf \cite{nxp.lpc23xx.user_manual} (Kapitel 4.12.1) können die Werte für den relevanten Register zur Einstellung einer gewünschten Baudrate berechnet werden. Die Register lauten UART0 Divisor Latch (U0DLL, U0DLM) und UART0 Fractional Divider Register (DIVADDVAL, MULVAL). Die Berechnungsschritte werden hiernach unter Hinweis auf Abb. 83 von \cite{nxp.lpc23xx.user_manual} beschrieben.
+Mit Bezug auf \cite{nxp.lpc23xx.user_manual} (Kapitel 4.12.1) können die Werte für den relevanten Register zur Einstellung einer gewünschten Baudrate berechnet werden. Die Register lauten UART0 Divisor Latch (U0DLL, U0DLM) und UART0 Fractional Divider Register (DIVADDVAL, MULVAL). Die Berechnungsschritte werden hiernach unter Hinweis auf Abb. 83 von \cite{nxp.lpc23xx.user_manual} beschrieben. Dabei zu beachten ist, dass der Systemtakt auf 72 MHz eingestellt ist. Das heißt, \texttt{PCLK} ist $72/4 = 18$ MHz.
 
-%TODO check values in debug mode
 \begin{enumerate}
-\item $DL_{est} = PCLK/(16 \times BR) = 39,0625$, wobei $PCLK = 72 MHz$ und $BR = 115200$.
+\item $DL_{est} = PCLK/(16 \times BR) = 18 MHz/(16 \times 115200) = 9,765625$.
 \item $DL_{est}$ ist keine ganze Zahl, dann $FR_{est} = 1,5$.
-\item $DL_{est} = Int ( PCLK/(16 \times BR \times FR_{est}) ) = 26$.
-\item $FR_{est} = PCLK/(16 \times BR \times DL_{est}) = 1,5024$.
+\item $DL_{est} = Int ( PCLK/(16 \times BR \times FR_{est}) ) = 6$.
+\item $FR_{est} = PCLK/(16 \times BR \times DL_{est}) = 1,6276$.
 \item $1,1 < FR_{est} < 1,9$, dann
 \item $DivAddVal = table (FR_{est}) = 5$ und $MulVal = table (FR_{est}) = 8$.
 \item $DLM = DL_{est}[15:8] =$ 0x00 und $DLL = DL_{est}[7:0] =$ 0x06.
