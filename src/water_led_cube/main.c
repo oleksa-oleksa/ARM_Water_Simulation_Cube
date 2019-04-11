@@ -2,7 +2,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#define RUN_SIM_PER_DISPLAY_REFRESHS          50    ///< Iterations of refreshing the displays until an other step in the simulation is done 
+#define RUN_SIM_PER_DISPLAY_REFRESHS          20    ///< Iterations of refreshing the displays until an other step in the simulation is done 
 #define UPDATE_ACC_DATA_PER_DISPLAY_REFRESHS 250    ///< Iterations of refreshing the displays until a new measurement with the accelerometer is done and send to the Raspberry Pi 1B
 #define NO_PARTICLES_LOCAL                    50    ///< Number of particles simulated when local simulation has been enabled
 #define DT_SIM                                 0.05 ///< Timestep of the simulation in sec
