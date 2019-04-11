@@ -34,11 +34,6 @@ int _sim_on_dev(void)
     char i2c_msg[16];
     uint32_t no_refreshed = 0;
 
-    if(protocol_init(panels))
-    {
-        return 1;
-    }
-
     /*Initialise simulation*/
     particle_init_list(particles, NO_PARTICLES_LOCAL);
     particle_init_grid(panels[0], particles, NO_PARTICLES_LOCAL);
