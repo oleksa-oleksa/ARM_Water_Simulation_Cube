@@ -3,7 +3,7 @@
 #include <unistd.h>
 
 #define SEC_TO_USEC(sec) (sec * 1000000)
-#define DT 0.005
+#define DT 0.0005
 #define NO_PARTICLES_PC 250
 
 #include <particle.h>
@@ -75,7 +75,7 @@ void _cube()
 
 void _single_panel()
 {
-    double force[3] = {1, 9.8, 1};
+    double force[3] = {1*1200, 9.8*1200, 1*1200};
     particle_list_element_t particles[NO_PARTICLES_PC];
     particle_grid_element_t grid_top[PARTICLE_GRID_X][PARTICLE_GRID_Y];
     x11_win_struct x11_top;

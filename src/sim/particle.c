@@ -397,7 +397,15 @@ void _compute_density_pressure(particle_grid_element_t grid[PARTICLE_GRID_X][PAR
 double _kernel_smoothing_density(double distance)
 {
     //poly6 kernel funciton
-    return 315.0 / (65.0 * M_PI * pow(KERNEL_RADIUS, 9.0) * pow(KERNEL_RADIUS_SQ - pow(distance, 2), 3.0));
+    double divisor = (65.0 * M_PI * pow(KERNEL_RADIUS, 9.0) * pow(KERNEL_RADIUS_SQ - pow(distance, 2), 3.0));
+    if(divisor != 0)
+    {
+        return 315.0 / divisor;
+    }
+    else
+    {
+        return 0;
+    }
 }
 
 
@@ -452,15 +460,32 @@ void _compute_forces(particle_grid_element_t grid[PARTICLE_GRID_X][PARTICLE_GRID
                                                             pow(curr->particle.position[Y] - partner->particle.position[Y], 2) );
                                     double x_normalized = 0;
                                     double y_normalized = 0;
-                                    if(distance > 0)
+                                    if(distance != 0)
                                     {
                                         x_normalized = v_ij[X] / distance;
                                         y_normalized = v_ij[Y] / distance;
                                     }
-                                    double multiplicator = partner->particle.mass * (curr->particle.pressure + partner->particle.pressure) / (2.0 * partner->particle.density) * _kernel_smoothing_pressure(distance);
+                                    double divisor = (2.0 * partner->particle.density) * _kernel_smoothing_pressure(distance);
+                                    double multiplicator;
+                                    if(divisor != 0)
+                                    {
+                                        multiplicator = partner->particle.mass * (curr->particle.pressure + partner->particle.pressure) / divisor;
+                                    }
+                                    else
+                                    {
+                                        multiplicator = 0;
+                                    }
                                     f_pressure[X]  += x_normalized * multiplicator;
                                     f_pressure[Y]  += y_normalized * multiplicator;
-                                    f_viscosity[X] += VISCOSITY * partner->particle.mass * (partner->particle.velocity[X] - curr->particle.velocity[X]) / partner->particle.density * _kernel_smoothing_viscosity(distance);
+                                    divisor = partner->particle.density * _kernel_smoothing_viscosity(distance);
+                                    if(divisor != 0)
+                                    {
+                                        f_viscosity[X] += VISCOSITY * partner->particle.mass * (partner->particle.velocity[X] - curr->particle.velocity[X]) / divisor;
+                                    }
+                                    else
+                                    {
+                                        f_viscosity[X] += 0;
+                                    }
                                     partner = partner->next;
                                 }
                             }
@@ -479,14 +504,30 @@ void _compute_forces(particle_grid_element_t grid[PARTICLE_GRID_X][PARTICLE_GRID
 double _kernel_smoothing_pressure(double distance)
 {
     //spiky gradient kernel (constant scalar)
-    return (-45.0) / (M_PI * pow(KERNEL_RADIUS, 6.0))  * pow(KERNEL_RADIUS - distance, 2.0);
+    double divisor = (M_PI * pow(KERNEL_RADIUS, 6.0))  * pow(KERNEL_RADIUS - distance, 2.0);
+    if(divisor != 0)
+    {
+        return (-45.0) / divisor;
+    }
+    else
+    {
+        return 0;
+    }
 }
 
 
 double _kernel_smoothing_viscosity(double distance)
 {
     //viscosity kernel (laplacian scalar)
-    return (45) / (M_PI * pow(KERNEL_RADIUS, 6.0)) * (KERNEL_RADIUS - distance);
+    double divisor = (M_PI * pow(KERNEL_RADIUS, 6.0)) * (KERNEL_RADIUS - distance);
+    if(divisor != 0)
+    {
+        return 45 / divisor;
+    }
+    else
+    {
+        return 0;
+    }
 }
 
 
