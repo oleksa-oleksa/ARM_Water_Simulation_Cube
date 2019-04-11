@@ -3,7 +3,7 @@
 #include <unistd.h>
 
 #define SEC_TO_USEC(sec) (sec * 1000000)
-#define DT 0.0005
+#define DT 0.00005
 #define NO_PARTICLES_PC 250
 
 #include <particle.h>

@@ -24,10 +24,10 @@
     #define ERROR(...) {;}
 #endif
 
-#define PARTICLE_MASS       6.5    ///< 
-#define REST_DENS           1.0    ///< rest density
-#define GAS_CONST           2.0    ///< gas constant for equation of state
-#define VISCOSITY            2.5    ///< viscosity
+#define PARTICLE_MASS       65.0    ///< 
+#define REST_DENS           1000.0    ///< rest density
+#define GAS_CONST           2000.0    ///< gas constant for equation of state
+#define VISCOSITY            250.0    ///< viscosity
 #define BOUNDARY_DAMPENING  -0.5    ///< 
 #define KERNEL_RADIUS 1
 #define KERNEL_RADIUS_SQ (KERNEL_RADIUS * KERNEL_RADIUS)
@@ -70,9 +70,8 @@ bool particle_init_list(particle_list_element_t* list, uint32_t size)
     uint32_t i;
     for(i = 0; i < size; ++i)
     {
-
-        list[i].particle.position[X] = (2 + (i % (PARTICLE_GRID_X/2))) * PARTICLE_GRID_CELL_WIDTH;
-        list[i].particle.position[Y] = (2 + (i / (PARTICLE_GRID_Y/2))) * PARTICLE_GRID_CELL_HEIGHT;
+        list[i].particle.position[X] = (2  * PARTICLE_GRID_CELL_WIDTH) + (i % (PARTICLE_GRID_X/2));
+        list[i].particle.position[Y] = (2  * PARTICLE_GRID_CELL_HEIGHT) + (i / (PARTICLE_GRID_Y/2));
         list[i].particle.velocity[0] = 0;
         list[i].particle.velocity[1] = 0;
         list[i].particle.mass        = PARTICLE_MASS;
